@@ -20,13 +20,15 @@ class ScriptsTest {
         assertTrue(s.contains("AUTH_PW='aaaa'"))
     }
 
+    /** DNS не ждём: Let's Encrypt спрашивает серверы имён домена напрямую; служба сама повторяет выпуск сертификата. */
     @Test
-    fun domainInstallWaitsForDns() {
-        val s = Scripts.install(params.copy(domain = "vpn.example.com", expectedIp = "203.0.113.10"))
+    fun domainInstallDoesNotWaitForDns() {
+        val s = Scripts.install(params.copy(domain = "vpn.example.com"))
         assertTrue(s.contains("DOMAIN='vpn.example.com'"))
-        assertTrue(s.contains("EXPECTED_IP='203.0.113.10'"))
-        assertTrue(s.contains("getent ahostsv4"))
         assertTrue(s.contains("acme:"))
+        assertTrue(!s.contains("Ожидание DNS") && !s.contains("EXPECTED_IP") && !s.contains("dns.google"))
+        assertTrue(s.contains("Restart=on-failure"))
+        assertTrue(s.contains("служба ждёт сертификат Let's Encrypt"))
     }
 
     /** Сохраняет скрипты в build/scripts, чтобы их можно было проверить `bash -n` / shellcheck. */
@@ -51,7 +53,7 @@ class ScriptsTest {
         val dir = File("build/scripts").apply { mkdirs() }
         File(dir, "install.sh").writeText(Scripts.install(params))
         File(dir, "install_domain.sh").writeText(
-            Scripts.install(params.copy(domain = "vpn.example.com", email = "me@example.com", expectedIp = "203.0.113.10")),
+            Scripts.install(params.copy(domain = "vpn.example.com", email = "me@example.com")),
         )
         File(dir, "status.sh").writeText(Scripts.status())
         File(dir, "restart.sh").writeText(Scripts.restart(Protocol.HY2))
@@ -73,7 +75,7 @@ class ScriptsTest {
         val pemCrt = "-----BEGIN CERTIFICATE-----\nTEST\n-----END CERTIFICATE-----\n"
         File(dir, "install_plus.sh").writeText(
             Scripts.install(
-                params.copy(domain = "vpn.example.com", sni = "vpn.example.com", expectedIp = "203.0.113.10", acmeHttp = true,
+                params.copy(domain = "vpn.example.com", sni = "vpn.example.com", acmeHttp = true,
                     cert = CertBackup(pemCrt, "-----BEGIN EC PRIVATE KEY-----\nK\n-----END EC PRIVATE KEY-----\n", "{\"sans\":[]}", 0)),
             ),
         )
@@ -86,7 +88,7 @@ class ScriptsTest {
         File(dir, "export_cert.sh").writeText(Scripts.exportCert("vpn.example.com"))
         // вкладка «Сервер», VLESS под свой домен: те же вызовы SelfMask, что делает приложение
         File(dir, "server_self_hy2.sh").writeText(
-            Scripts.install(SelfMask.hy2("vpn.example.com", 443, "aaaa", "bbbb", "", "https://www.bing.com/", "203.0.113.10")),
+            Scripts.install(SelfMask.hy2("vpn.example.com", 443, "aaaa", "bbbb", "", "https://www.bing.com/")),
         )
         File(dir, "server_self_vless.sh").writeText(
             Scripts.installVless(SelfMask.vless("vpn.example.com", 443, "11111111-2222-3333-4444-555555555555", "0123456789abcdef")),
@@ -94,7 +96,7 @@ class ScriptsTest {
         // Reality «под себя»: Hysteria2 отдаёт сайт по TCP на 127.0.0.1:8443, VLESS маскируется под свой домен
         File(dir, "install_plus_self.sh").writeText(
             Scripts.install(
-                params.copy(domain = "vpn.example.com", sni = "vpn.example.com", expectedIp = "203.0.113.10", acmeHttp = true,
+                params.copy(domain = "vpn.example.com", sni = "vpn.example.com", acmeHttp = true,
                     localHttps = true, cert = CertBackup(pemCrt, "K", "{}", 0)),
             ),
         )
@@ -159,5 +161,39 @@ class ScriptsTest {
         assertTrue(start.contains("systemd-run --quiet --unit=hy2setup-upd"))
         assertTrue(!Scripts.harden(false).contains("full-upgrade"))
         assertTrue(Scripts.harden(true).contains("dpkg --configure -a"))
+    }
+
+    /** XHTTP на том же порту: fallback из обычного VLESS во второй обработчик на локальном сокете. */
+    @Test
+    fun vlessWithXhttpFallback() {
+        val base = SelfMask.vless("vpn.example.com", 443, "11111111-2222-3333-4444-555555555555", "0123456789abcdef").copy(
+            privateKey = "iO2HTWeqgbV5Q-YiChZzgD9WnMleLH9aO0wt-FPL0Vo", publicKey = "OnzLYEwWXpv--0raqKhr-8YYr88Ix_cADvHl0LGKSHw",
+            extraUuids = listOf("99999999-2222-3333-4444-555555555555"),
+        )
+        val plain = Scripts.installVless(base)
+        assertTrue(!plain.contains("fallbacks") && !plain.contains(Scripts.XHTTP_SOCKET) && plain.contains("XPATH=\n"))
+        val s = Scripts.installVless(base.copy(xhttpPath = "/xh123"))
+        assertTrue(s.contains("\"fallbacks\": [ { \"dest\": \"@vpngramm-xhttp\", \"xver\": 0 } ], ${Scripts.XHTTP_TAG}"))
+        val inbound = s.lines().single { it.contains("\"listen\": \"@vpngramm-xhttp\"") }
+        assertTrue(inbound.trimEnd().endsWith(Scripts.XHTTP_TAG))
+        assertTrue(inbound.contains("\"network\": \"xhttp\"") && inbound.contains("\"path\": \"/xh123\""))
+        // у XHTTP те же люди, но без flow (Vision работает только поверх TCP)
+        assertTrue(inbound.contains("{ \"id\": \"${'$'}{UUID}\" }") && inbound.contains("99999999-2222-3333-4444-555555555555") && !inbound.contains("flow"))
+        assertTrue(s.contains("XPATH=/xh123"))
+        assertTrue(Scripts.exportLinks().contains(Scripts.LINK_MARKER_XHTTP))
+        // стенд: tools/vpn-test (xray run -test и подключение клиента)
+        val dir = File("build/scripts").apply { mkdirs() }
+        File(dir, "install_vless_xhttp.sh").writeText(s)
+        File(dir, "remove_xhttp.sh").writeText(Scripts.removeXhttp())
+    }
+
+    /** Версия Xray — по редиректу github.com (без api.github.com), с повтором и прежним способом в запасе. */
+    @Test
+    fun xrayInstallDoesNotDependOnGithubApi() {
+        val s = Scripts.installVless(VlessParams(443, "u", "www.microsoft.com", "ab", "vpn.example.com"))
+        assertTrue(s.contains("https://github.com/XTLS/Xray-core/releases/latest"))
+        assertTrue(s.contains("@ install --version \"${'$'}{XTAG}\""))
+        assertTrue(s.contains("bash -c \"${'$'}{XI}\" @ install && XOK=1"))
+        assertTrue(s.contains("for TRY in 1 2 3"))
     }
 }

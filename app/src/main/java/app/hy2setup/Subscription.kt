@@ -8,7 +8,7 @@ import java.util.Base64
  */
 object Subscription {
     /** Протоколы, которые понимает Happ (AmneziaWG и Telegram — в своих приложениях). */
-    private val HAPP = setOf(Protocol.VLESS.title, Protocol.HY2.title)
+    private val HAPP = setOf(Protocol.VLESS.title, Links.XHTTP_TITLE, Protocol.HY2.title)
 
     fun content(p: StableProfile, user: ProfileUser?): String {
         val title = "vpngramm · ${p.fqdn}" + (user?.let { " · ${it.name}" } ?: "")

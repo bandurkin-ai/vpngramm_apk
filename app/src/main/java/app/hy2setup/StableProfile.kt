@@ -93,7 +93,21 @@ data class StableProfile(
     val trafficGb: Double? = null,
     /** Когда сервер последний раз переехал на другой VPS. */
     val movedAt: Long = 0,
+    /** VLESS + Reality + XHTTP на том же порту и с теми же ключами, что VLESS. */
+    val xhttpOn: Boolean = false,
+    /** Путь XHTTP; пусто — постоянный путь, выведенный из UUID (см. [xhttpPathEff]). */
+    val xhttpPath: String = "",
 ) {
+    /** Путь XHTTP: заданный или постоянный (из UUID владельца), чтобы ссылка не менялась. */
+    val xhttpPathEff: String
+        get() = xhttpPath.ifEmpty {
+            "/" + java.security.MessageDigest.getInstance("SHA-256").digest("xhttp:$vlessUuid".toByteArray())
+                .take(5).joinToString("") { "%02x".format(it) }
+        }
+
+    /** XHTTP работает только поверх VLESS. */
+    val xhttpActive: Boolean get() = vlessOn && xhttpOn
+
     val fqdn: String get() = if (subdomain.isEmpty()) zone else "$subdomain.$zone"
 
     /**
@@ -135,10 +149,10 @@ data class StableProfile(
     fun subUrl(user: ProfileUser? = null): String = "https://$fqdn/s/${user?.subToken ?: subToken}"
 
     /** Параметры установки Hysteria2 из профиля. */
-    fun hy2Params(expectedIp: String, cert: CertBackup?) = InstallParams(
+    fun hy2Params(cert: CertBackup?) = InstallParams(
         port = hy2Port, authPassword = hy2Auth, obfsPassword = hy2Obfs,
         domain = fqdn, email = email, sni = fqdn, masqueradeUrl = masquerade,
-        expectedIp = expectedIp, acmeHttp = true, cert = cert, localHttps = realitySelf,
+        acmeHttp = true, cert = cert, localHttps = realitySelf,
         users = hy2Users(), siteDir = if (siteListen != null) SITE_DIR else "", siteListen = siteListen.orEmpty(),
     )
 
@@ -148,6 +162,7 @@ data class StableProfile(
         privateKey = realityPrivate, publicKey = realityPublic,
         dest = if (realitySelf) LOCAL_HTTPS else "",
         extraUuids = activeUsers.map { it.vlessUuid },
+        xhttpPath = if (xhttpOn) xhttpPathEff else "",
     )
 
     /** Ссылки владельца; всегда собираются только из профиля, поэтому совпадают побайтно при любом VPS. */
@@ -162,6 +177,8 @@ data class StableProfile(
         return listOfNotNull(
             // VLESS первым: работает по TCP, а UDP (Hysteria2) мобильные операторы часто режут
             ShareLink(Protocol.VLESS.title, Links.vless(fqdn, vlessPort, uuid, realitySni, realityPublic, realityShortId)).takeIf { vlessOn },
+            ShareLink(Links.XHTTP_TITLE, Links.vlessXhttp(fqdn, vlessPort, uuid, realitySni, realityPublic, realityShortId, xhttpPathEff))
+                .takeIf { xhttpActive },
             ShareLink(Protocol.HY2.title, hy).takeIf { hy2On },
             awg?.takeIf { awgOn }?.let { ShareLink(Awg.TITLE, it.vpnLink(fqdn + (user?.let { u -> " · ${u.name}" } ?: ""), peer)) },
             tg?.takeIf { tgOn }?.link(fqdn),
@@ -190,6 +207,8 @@ data class StableProfile(
         put("movedAt", movedAt)
         tg?.let { put("tg", JSONObject().put("port", it.port).put("secret", it.secret).put("front", it.front)) }
         put("tgOn", tgOn)
+        // только если XHTTP включали: у старых профилей JSON (и отпечаток копии) не меняется
+        if (xhttpOn || xhttpPath.isNotEmpty()) { put("xhttpOn", xhttpOn); put("xhttpPath", xhttpPath) }
     }.toString()
 
     companion object {
@@ -227,6 +246,7 @@ data class StableProfile(
                 status = o.optJSONObject("status")?.let { j -> j.keys().asSequence().associateWith { j.getBoolean(it) } }.orEmpty(),
                 trafficGb = if (o.has("trafficGb")) o.getDouble("trafficGb") else null,
                 movedAt = o.optLong("movedAt", 0),
+                xhttpOn = o.optBoolean("xhttpOn", false), xhttpPath = o.optString("xhttpPath"),
             )
         }
 
@@ -271,10 +291,10 @@ object Reality {
  * на [StableProfile.LOCAL_HTTPS], а Reality маскируется под этот же домен и отправляет туда чужие подключения.
  */
 object SelfMask {
-    fun hy2(domain: String, port: Int, auth: String, obfs: String, email: String, masquerade: String, expectedIp: String) =
+    fun hy2(domain: String, port: Int, auth: String, obfs: String, email: String, masquerade: String) =
         InstallParams(
             port = port, authPassword = auth, obfsPassword = obfs, domain = domain, email = email, sni = domain,
-            masqueradeUrl = masquerade, expectedIp = expectedIp, acmeHttp = true, localHttps = true,
+            masqueradeUrl = masquerade, acmeHttp = true, localHttps = true,
         )
 
     fun vless(domain: String, port: Int, uuid: String, shortId: String) = VlessParams(

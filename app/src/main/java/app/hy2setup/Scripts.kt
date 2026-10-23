@@ -11,8 +11,6 @@ data class InstallParams(
     /** SNI для самоподписанного сертификата. */
     val sni: String,
     val masqueradeUrl: String,
-    /** Публичный IPv4 сервера. Если задан вместе с доменом, скрипт дождётся обновления DNS. */
-    val expectedIp: String = "",
     /** ACME только через HTTP-01 (порт 80): TCP 443 занят Xray (Комбайн+). */
     val acmeHttp: Boolean = false,
     /** Сохранённый ранее сертификат Let's Encrypt (PEM) — ставится вместо нового выпуска. */
@@ -50,6 +48,11 @@ data class VlessParams(
     val dest: String = "",
     /** UUID остальных людей (у каждого свой ключ). */
     val extraUuids: List<String> = emptyList(),
+    /**
+     * Путь XHTTP (например, «/a1b2c3d4»); пусто — без XHTTP. XHTTP работает на том же порту: подключения с ключами
+     * Reality, которые не похожи на обычный VLESS, Xray передаёт (fallback) второму обработчику на локальном сокете.
+     */
+    val xhttpPath: String = "",
 )
 
 /** Bash-скрипты, которые приложение выполняет на VPS по SSH. */
@@ -95,7 +98,6 @@ object Scripts {
         EMAIL='${p.email}'
         SNI='${p.sni}'
         MASQ='${p.masqueradeUrl}'
-        EXPECTED_IP='${p.expectedIp}'
         ACME_HTTP=${if (p.acmeHttp) 1 else 0}
         ACME_DIR=/var/lib/hysteria/acme
 
@@ -192,31 +194,8 @@ ${acmePrepare(p)}
 ${firewall()}
         echo "ВАЖНО: если у хостинга есть свой файрвол (Security Group), откройте там: ${'$'}FW_PORTS."
 
-        if [ -n "${'$'}DOMAIN" ] && [ -n "${'$'}EXPECTED_IP" ]; then
-            step "Ожидание DNS: ${'$'}DOMAIN -> ${'$'}EXPECTED_IP"
-            DNS_OK=0
-            # публичный DNS (его же спросит Let's Encrypt), а не /etc/hosts: хостер часто пишет туда имя как 127.0.0.1
-            pub_a() {
-                for R in "https://dns.google/resolve" "https://cloudflare-dns.com/dns-query"; do
-                    A=${'$'}(curl -s -m 6 -H "accept: application/dns-json" "${'$'}R?name=${'$'}DOMAIN&type=A" 2>/dev/null |
-                        grep -oE '"data": ?"[0-9]+(\.[0-9]+){3}"' | grep -oE '[0-9]+(\.[0-9]+){3}')
-                    [ -n "${'$'}A" ] && { echo "${'$'}A"; return; }
-                done
-                getent ahostsv4 "${'$'}DOMAIN" 2>/dev/null | awk '${'$'}1 !~ /^127\./ {print ${'$'}1}'
-            }
-            for i in ${'$'}(seq 1 24); do
-                if pub_a | grep -qx "${'$'}EXPECTED_IP"; then
-                    DNS_OK=1; break
-                fi
-                sleep 5
-            done
-            if [ "${'$'}DNS_OK" = "1" ]; then
-                echo "DNS обновился."
-            else
-                echo "ПРЕДУПРЕЖДЕНИЕ: за 2 минуты имя ещё не стало указывать на этот сервер."
-                echo "Продолжаю: сертификат Let's Encrypt будет получен, когда DNS обновится."
-            fi
-        fi
+        # DNS не ждём: Let's Encrypt спрашивает серверы имён домена (name.com) напрямую, а они знают новую запись сразу.
+        # Если сертификат с первого раза не выдан, служба повторяет попытку сама (Restart ниже).
 
         step "Запуск службы hysteria-server"
         # Hysteria завершается, если сертификат ещё не выдан (DNS не обновился) — пусть systemd повторяет
@@ -227,11 +206,20 @@ ${firewall()}
         systemctl enable hysteria-server.service >/dev/null 2>&1 || true
         systemctl restart hysteria-server.service
         sleep 5
-        if systemctl is-active --quiet hysteria-server.service; then
+        HY_OK=0
+        systemctl is-active --quiet hysteria-server.service && HY_OK=1
+        if [ "${'$'}HY_OK" = "0" ] && [ -n "${'$'}DOMAIN" ]; then
+            # сертификат выдаётся при старте: даём службе ещё минуту (она перезапускается каждые 30 с)
+            for i in ${'$'}(seq 1 12); do
+                sleep 5
+                systemctl is-active --quiet hysteria-server.service && { HY_OK=1; break; }
+            done
+        fi
+        if [ "${'$'}HY_OK" = "1" ]; then
             echo "Служба работает."
-        elif [ -n "${'$'}DOMAIN" ] && [ "${'$'}{DNS_OK:-1}" = "0" ]; then
-            echo "ПРЕДУПРЕЖДЕНИЕ: служба ждёт сертификат Let's Encrypt — DNS ещё не указывает на сервер."
-            echo "Служба сама повторяет попытку каждые 30 секунд; ссылка заработает, когда DNS обновится."
+        elif [ -n "${'$'}DOMAIN" ] && journalctl -u hysteria-server.service -n 40 --no-pager 2>/dev/null | grep -qiE 'acme|certificate|challenge'; then
+            echo "ПРЕДУПРЕЖДЕНИЕ: служба ждёт сертификат Let's Encrypt для ${'$'}DOMAIN (DNS ещё не дошёл до Let's Encrypt)."
+            echo "Служба сама повторяет попытку каждые 30 секунд; ссылка заработает, как только сертификат будет выдан."
         else
             echo "ОШИБКА: служба не запустилась. Последние строки журнала:"
             journalctl -u hysteria-server.service -n 25 --no-pager || true
@@ -570,9 +558,28 @@ ${firewall()}
 
         step "Установка Xray (официальный скрипт XTLS/Xray-install)"
         # установщик вызывает tput под set -e; в SSH-сессии без терминала TERM не задан
-        TERM=xterm bash -c "${'$'}(curl -fsSL https://raw.githubusercontent.com/XTLS/Xray-install/main/install-release.sh)" @ install
-        if ! [ -x "${'$'}{XRAY}" ]; then
+        # последняя версия — по редиректу github.com/…/releases/latest: установщик сам спрашивает api.github.com
+        # и иногда не может разобрать ответ («Failed to get the latest release version»); с --version он туда не ходит
+        XTAG=${'$'}(curl -fsSI --max-time 20 https://github.com/XTLS/Xray-core/releases/latest 2>/dev/null \
+            | tr -d '\r' | sed -n 's#^[Ll]ocation: .*/tag/\(v[0-9][0-9.]*\)$#\1#p' | head -1)
+        XOK=0
+        for TRY in 1 2 3; do
+            XI=${'$'}(curl -fsSL https://raw.githubusercontent.com/XTLS/Xray-install/main/install-release.sh) || XI=""
+            if [ -z "${'$'}{XI}" ]; then
+                echo "Не удалось скачать установщик Xray (попытка ${'$'}{TRY} из 3)."
+            elif [ -n "${'$'}{XTAG}" ] && [ "${'$'}{TRY}" -lt 3 ]; then
+                echo "Версия Xray: ${'$'}{XTAG}"
+                TERM=xterm bash -c "${'$'}{XI}" @ install --version "${'$'}{XTAG}" && XOK=1
+            else
+                TERM=xterm bash -c "${'$'}{XI}" @ install && XOK=1
+            fi
+            [ "${'$'}{XOK}" = "1" ] && [ -x "${'$'}{XRAY}" ] && break
+            XOK=0
+            if [ "${'$'}{TRY}" -lt 3 ]; then echo "Установка Xray не удалась (попытка ${'$'}{TRY} из 3), повтор через 15 с…"; sleep 15; fi
+        done
+        if [ "${'$'}{XOK}" != "1" ] || ! [ -x "${'$'}{XRAY}" ]; then
             echo "ОШИБКА: Xray не установился — не удалось скачать установщик или Xray с GitHub. Проверьте интернет на сервере."
+            echo "Можно повторить: «Обновить сервер» на Главной или «Установить» ещё раз — ключи и ссылки не изменятся."
             exit 1
         fi
         ${'$'}{XRAY} version | head -1
@@ -603,7 +610,7 @@ ${firewall()}
               "protocol": "vless",
               "settings": {
                 "clients": [ ${(listOf("\${UUID}") + p.extraUuids).joinToString(", ") { "{ \"id\": \"$it\", \"flow\": \"xtls-rprx-vision\" }" }} ],
-                "decryption": "none"
+${if (p.xhttpPath.isEmpty()) "" else "                \"fallbacks\": [ { \"dest\": \"$XHTTP_SOCKET\", \"xver\": 0 } ], $XHTTP_TAG\n"}                "decryption": "none"
               },
               "streamSettings": {
                 "network": "tcp",
@@ -617,7 +624,10 @@ ${firewall()}
               },
               "sniffing": { "enabled": true, "destOverride": [ "http", "tls", "quic" ], "routeOnly": true }
             }
-          ],
+${if (p.xhttpPath.isEmpty()) "" else "            , { \"listen\": \"$XHTTP_SOCKET\", \"protocol\": \"vless\", \"settings\": { \"clients\": [ " +
+    (listOf("\${UUID}") + p.extraUuids).joinToString(", ") { "{ \"id\": \"$it\" }" } +
+    " ], \"decryption\": \"none\" }, \"streamSettings\": { \"network\": \"xhttp\", \"xhttpSettings\": { \"path\": \"${p.xhttpPath}\" } }, " +
+    "\"sniffing\": { \"enabled\": true, \"destOverride\": [ \"http\", \"tls\", \"quic\" ], \"routeOnly\": true } } $XHTTP_TAG\n"}          ],
           "outbounds": [
             { "protocol": "freedom", "tag": "direct", "settings": { "domainStrategy": "UseIPv4" } },
             { "protocol": "blackhole", "tag": "block" }
@@ -645,6 +655,7 @@ ${firewall()}
         PBK=${'$'}{PBK}
         SID=${'$'}{SID}
         ADDR=${'$'}{ADDR}
+        XPATH=${p.xhttpPath}
         EOF
         echo "${PBK_MARKER}${'$'}{PBK}"
         echo "OK"
@@ -732,6 +743,28 @@ ${firewall()}
     const val LINK_MARKER_HY2 = "##HY2|"
     const val LINK_MARKER_VLESS = "##VLESS|"
     const val LINK_MARKER_AWG = "##AWG|"
+    /** XHTTP поверх VLESS + Reality: путь (порт, UUID и ключи — из маркера VLESS). */
+    const val LINK_MARKER_XHTTP = "##XHTTP|"
+    /** Локальный сокет второго обработчика Xray (XHTTP) и пометка его строк в конфигурации — по ней XHTTP убирается. */
+    const val XHTTP_SOCKET = "@vpngramm-xhttp"
+    const val XHTTP_TAG = "// vpngramm-xhttp"
+
+    /** Убирает XHTTP с сервера: строки с пометкой из конфигурации Xray; обычный VLESS остаётся. */
+    fun removeXhttp(): String = HEADER + "\n" + """
+        step "Удаление VLESS XHTTP"
+        C=/usr/local/etc/xray/config.json
+        if ! grep -q '$XHTTP_TAG' "${'$'}{C}" 2>/dev/null; then echo "XHTTP на сервере не установлен."; exit 0; fi
+        cp "${'$'}{C}" "${'$'}{C}.bak"
+        sed -i '\#$XHTTP_TAG${'$'}#d' "${'$'}{C}"
+        sed -i 's/^XPATH=.*/XPATH=/' /usr/local/etc/xray/hy2setup.env 2>/dev/null || true
+        if ! /usr/local/bin/xray run -test -c "${'$'}{C}" >/dev/null 2>&1; then
+            mv "${'$'}{C}.bak" "${'$'}{C}"; echo "ОШИБКА: конфигурация без XHTTP не прошла проверку — оставлена прежняя."; exit 1
+        fi
+        rm -f "${'$'}{C}.bak"
+        systemctl restart xray.service
+        echo "XHTTP удалён, обычный VLESS работает как раньше."
+    """.trimIndent()
+
     /** Параметры AmneziaWG на сервере (для «Получить ссылки»): JSON [AwgParams]. */
     const val AWG_META = "/etc/amnezia/amneziawg/vpngramm.json"
 
@@ -759,7 +792,8 @@ ${firewall()}
         E=/usr/local/etc/xray/hy2setup.env
         if [ -f "${'$'}{E}" ]; then
             FOUND=1
-            ( . "${'$'}{E}"; echo "${LINK_MARKER_VLESS}${'$'}{PORT}|${'$'}{UUID}|${'$'}{SNI}|${'$'}{PBK}|${'$'}{SID}|${'$'}{ADDR}"; echo "VLESS: найдена конфигурация (порт ${'$'}{PORT}/tcp)." )
+            ( . "${'$'}{E}"; echo "${LINK_MARKER_VLESS}${'$'}{PORT}|${'$'}{UUID}|${'$'}{SNI}|${'$'}{PBK}|${'$'}{SID}|${'$'}{ADDR}"; echo "VLESS: найдена конфигурация (порт ${'$'}{PORT}/tcp)."
+              if [ -n "${'$'}{XPATH:-}" ]; then echo "${LINK_MARKER_XHTTP}${'$'}{XPATH}"; echo "VLESS XHTTP: найден (тот же порт ${'$'}{PORT}/tcp)."; fi )
         elif [ -f /usr/local/etc/xray/config.json ]; then
             echo "Xray установлен не этим приложением — собрать ссылку VLESS автоматически нельзя."
         fi

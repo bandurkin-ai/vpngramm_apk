@@ -12,6 +12,8 @@ import com.github.takahirom.roborazzi.captureRoboImage
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
 import org.junit.Test
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -63,11 +65,11 @@ class ScreenshotTest {
     fun serverMulti() {
         val model = vm(2).apply {
             serverMode = app.hy2setup.ServerMode.VLESS
-            toggleServerMode(app.hy2setup.ServerMode.AWG); toggleServerMode(app.hy2setup.ServerMode.TG)
+            toggleServerMode(app.hy2setup.ServerMode.XHTTP); toggleServerMode(app.hy2setup.ServerMode.TG)
             updateServerExpert(true)
         }
         org.junit.Assert.assertEquals(
-            listOf(app.hy2setup.ServerMode.VLESS, app.hy2setup.ServerMode.AWG, app.hy2setup.ServerMode.TG), model.serverModeList,
+            listOf(app.hy2setup.ServerMode.VLESS, app.hy2setup.ServerMode.XHTTP, app.hy2setup.ServerMode.TG), model.serverModeList,
         )
         captureRoboImage("build/screens/2-server-multi-light.png") { Hy2Theme(dark = false, dynamic = false) { AppRoot(model) } }
         model.updateServerExpert(false)
@@ -77,7 +79,7 @@ class ScreenshotTest {
     @Test
     fun vpnHysteria() {
         val model = vm(1).apply {
-            plusProfile = plusProfile!!.copy(awg = app.hy2setup.Awg.generate("vpn.example.org", 34127), awgOn = true)
+            plusProfile = plusProfile!!.copy(awg = app.hy2setup.Awg.generate("vpn.example.org", 34127), awgOn = true, xhttpOn = true)
             selectVpnProto(app.hy2setup.vpn.VpnProtocol.HY2)
         }
         org.junit.Assert.assertEquals(app.hy2setup.vpn.VpnProtocol.HY2, model.vpnProto)
@@ -122,13 +124,28 @@ class ScreenshotTest {
         }
     }
 
+    /** «Создать новый сервер»: выбор протоколов и портов (бывший комбайн). */
     @Test
-    @Config(qualifiers = "w411dp-h2600dp-xxhdpi")
-    fun combineLight() {
-        val model = vm(3, withProfile = false).apply { combineHy2 = false; combineTg = true; tgPort = "993" }
-        captureRoboImage("build/screens/5-combine-light.png") {
-            Hy2Theme(dark = false, dynamic = false) { ToolsScreen(model, startPage = "combine") }
+    @Config(qualifiers = "w411dp-h2000dp-xxhdpi")
+    fun newServerProtocols() {
+        val model = vm(0, withProfile = false).apply { plusHy2 = true; plusVless = true; plusXhttp = true; plusTg = true; tgPort = "993" }
+        captureRoboImage("build/screens/5-new-server-protocols-light.png") {
+            Hy2Theme(dark = false, dynamic = false) {
+                androidx.compose.material3.Surface {
+                    androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.padding(16.dp)) { NewServerProtocols(model) }
+                }
+            }
         }
+        // новый профиль получает выбранные протоколы и порты
+        val p = model.newServerProfile("example.org", "vpn3")
+        org.junit.Assert.assertTrue(p.hy2On && p.vlessOn && p.tgOn)
+        org.junit.Assert.assertEquals(993, p.tg!!.port)
+        org.junit.Assert.assertEquals("vpn3.example.org", p.realitySni)
+        // без Hysteria2 VLESS маскируется под чужой сайт
+        model.plusHy2 = false; model.plusTg = false; model.realitySni = "www.microsoft.com"
+        val q = model.newServerProfile("example.org", "vpn4")
+        org.junit.Assert.assertTrue(!q.hy2On && q.vlessOn && !q.tgOn && q.tg == null)
+        org.junit.Assert.assertEquals("www.microsoft.com", q.realitySni)
     }
 
     /** «Заменить сервер → Сервер из комбайна»: текущий сервер профиля в списке не показывается. */
@@ -189,6 +206,21 @@ class ScreenshotTest {
         compose.setContent { Hy2Theme(dark = false, dynamic = false) { ServerDeleteDialog(model, model.plusProfile!!) } }
         compose.waitForIdle()
         com.github.takahirom.roborazzi.captureScreenRoboImage("build/screens/1-home-delete-light.png")
+    }
+
+    /** Список «Протоколы» на вкладке «Сервер» открыт: столбец с галочками. */
+    @OptIn(com.github.takahirom.roborazzi.ExperimentalRoborazziApi::class)
+    @Test fun protocolsDropdown() {
+        val model = vm(2).apply { serverMode = app.hy2setup.ServerMode.VLESS; toggleServerMode(app.hy2setup.ServerMode.XHTTP) }
+        compose.setContent { Hy2Theme(dark = false, dynamic = false) { AppRoot(model) } }
+        compose.onNodeWithText("Протоколы").performClick()
+        compose.waitForIdle()
+        com.github.takahirom.roborazzi.captureScreenRoboImage("build/screens/2-server-protocols-light.png")
+        // список не закрывается при выборе: отметили ещё и Hysteria2
+        compose.onNodeWithText("Hysteria2 + Salamander").performClick()
+        compose.waitForIdle()
+        org.junit.Assert.assertTrue(app.hy2setup.ServerMode.HY2 in model.serverModes)
+        compose.onNodeWithText("AmneziaWG 3.1").assertExists()
     }
 
     private fun v2vm() = vm(0).apply {

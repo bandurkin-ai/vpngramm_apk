@@ -1,6 +1,7 @@
 package app.hy2setup
 
 import app.hy2setup.vpn.VpnConfig
+import app.hy2setup.vpn.VpnProtocol
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -92,6 +93,24 @@ class VpnConfigTest {
         assertTrue(e?.message.orEmpty().contains("RandomTrailers"))
     }
 
+    @Test
+    fun vlessXhttpThroughXray() {
+        val px = p.copy(xhttpOn = true)
+        val out = JSONObject(VpnConfig.vlessXhttp(px, null, "203.0.113.10")).getJSONArray("outbounds").getJSONObject(0)
+        assertEquals("xray", out.getString("type"))
+        val x = out.getJSONObject("xray")
+        val stream = x.getJSONObject("streamSettings")
+        assertEquals("xhttp", stream.getString("network"))
+        assertEquals(px.xhttpPathEff, stream.getJSONObject("xhttpSettings").getString("path"))
+        assertEquals(p.realityPublic, stream.getJSONObject("realitySettings").getString("publicKey"))
+        val user = x.getJSONObject("settings").getJSONArray("vnext").getJSONObject(0).getJSONArray("users").getJSONObject(0)
+        assertEquals(p.vlessUuid, user.getString("id"))
+        assertFalse(user.has("flow"))
+        engineAccepts(VpnConfig.vlessXhttp(px, null, "203.0.113.10", VpnConfig.Options(bypassRu = true)))
+        assertEquals(listOf(VpnProtocol.VLESS, VpnProtocol.XHTTP, VpnProtocol.HY2), VpnConfig.available(px))
+        assertFalse(VpnProtocol.XHTTP in VpnConfig.available(p))
+    }
+
     /** Конфигурация приложения для сквозного стенда tools/vpn-test (адрес сервера подставляет скрипт). */
     @Test
     fun dumpStandConfig() {
@@ -111,5 +130,8 @@ class VpnConfigTest {
         val awg = Awg.generate("SERVER_IP", 51820)
         File("build/scripts/vpn_app_awg.json").writeText(VpnConfig.amneziaWg(stand.copy(awg = awg, awgOn = true), null, "SERVER_IP", opts))
         File("build/scripts/vpn_awg_server.conf").writeText(awg.serverConf())
+        // XHTTP: ключи и путь — как у install_vless_xhttp.sh (ScriptsTest)
+        val xh = stand.copy(vlessUuid = "11111111-2222-3333-4444-555555555555", xhttpOn = true, xhttpPath = "/xh123")
+        File("build/scripts/vpn_app_xhttp.json").writeText(VpnConfig.vlessXhttp(xh, null, "SERVER_IP", opts))
     }
 }

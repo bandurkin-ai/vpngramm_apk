@@ -28,6 +28,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -45,7 +46,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.MultiChoiceSegmentedButtonRow
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -250,19 +250,29 @@ fun <T> Segmented(options: List<Pair<T, String>>, selected: T, onSelect: (T) -> 
     }
 }
 
-/** Сегментированный выбор нескольких вариантов сразу (Material 3). */
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Поле с выпадающим списком-столбцом и галочками: можно отметить несколько вариантов. Список не закрывается
+ * при выборе — закрывается касанием вне его.
+ */
 @Composable
-fun <T> MultiSegmented(options: List<Pair<T, String>>, selected: Set<T>, onToggle: (T) -> Unit, enabled: Boolean = true, modifier: Modifier = Modifier) {
-    MultiChoiceSegmentedButtonRow(modifier.fillMaxWidth()) {
-        options.forEachIndexed { i, (value, label) ->
-            SegmentedButton(
-                checked = value in selected,
-                onCheckedChange = { onToggle(value) },
-                enabled = enabled,
-                shape = SegmentedButtonDefaults.itemShape(i, options.size),
-                label = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-            )
+fun <T> MultiPicker(label: String, options: List<Pair<T, String>>, selected: Set<T>, onToggle: (T) -> Unit, enabled: Boolean = true) {
+    var open by remember { mutableStateOf(false) }
+    val text = options.filter { it.first in selected }.joinToString(", ") { it.second }
+    Box(Modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = text, onValueChange = {}, readOnly = true, enabled = enabled, maxLines = 3,
+            label = { Text(label) }, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium,
+            trailingIcon = { Icon(if (open) AppIcons.ExpandLess else AppIcons.ExpandMore, contentDescription = null) },
+        )
+        Box(Modifier.matchParentSize().clip(MaterialTheme.shapes.medium).clickable(enabled = enabled) { open = true })
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            options.forEach { (value, title) ->
+                DropdownMenuItem(
+                    text = { Text(title) },
+                    leadingIcon = { Checkbox(checked = value in selected, onCheckedChange = null) },
+                    onClick = { onToggle(value) },
+                )
+            }
         }
     }
 }

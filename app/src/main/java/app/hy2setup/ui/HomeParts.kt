@@ -42,6 +42,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.hy2setup.Awg
+import app.hy2setup.Links
 import app.hy2setup.LogSummary
 import app.hy2setup.MainViewModel
 import app.hy2setup.ProfileUser
@@ -53,6 +54,7 @@ import app.hy2setup.TgParams
 /** Протоколы профиля в порядке показа. */
 internal fun protocolsOf(p: StableProfile): List<String> = listOfNotNull(
     Protocol.VLESS.title.takeIf { p.vlessOn },
+    Links.XHTTP_TITLE.takeIf { p.xhttpActive },
     Protocol.HY2.title.takeIf { p.hy2On },
     Awg.TITLE.takeIf { p.awgOn },
     TgParams.TITLE.takeIf { p.tgOn },
@@ -83,7 +85,8 @@ internal fun ago(t: Long, now: Long = System.currentTimeMillis()): String {
 internal fun ProtocolStatusRow(p: StableProfile) {
     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         protocolsOf(p).forEach { title ->
-            val ok = p.status[title]
+            // XHTTP работает внутри той же службы xray, что и VLESS
+            val ok = p.status[if (title == Links.XHTTP_TITLE) Protocol.VLESS.title else title]
             StatusChip(
                 when (ok) { true -> LogSummary.State.OK; false -> LogSummary.State.ERROR; null -> LogSummary.State.INFO },
                 shortName(title),
@@ -240,7 +243,7 @@ internal fun LinksContent(vm: MainViewModel, p: StableProfile, startUser: Profil
         OutlinedButton(onClick = { copy("Ссылки", links.joinToString("\n") { it.uri }) }) { Text("Скопировать всё") }
     }
 
-    val happ = links.filter { it.title == Protocol.VLESS.title || it.title == Protocol.HY2.title }
+    val happ = links.filter { it.title == Protocol.VLESS.title || it.title == Links.XHTTP_TITLE || it.title == Protocol.HY2.title }
     if (happ.isNotEmpty()) {
         AppGroup("Happ", "Лучше всего — подписка: Happ сам подтянет новые ключи и протоколы. Добавьте её через «+» → «Из буфера» или QR.") {
             if (p.subAvailable) {

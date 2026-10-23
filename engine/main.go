@@ -308,6 +308,7 @@ func main() {
 	defer cancel()
 	outbounds := include.OutboundRegistry()
 	registerAWG(outbounds)
+	registerXray(outbounds)
 	ctx = box.Context(ctx, include.InboundRegistry(), outbounds, include.EndpointRegistry(),
 		include.DNSTransportRegistry(), include.ServiceRegistry())
 	options, err := sjson.UnmarshalExtendedContext[option.Options](ctx, data)
@@ -318,6 +319,11 @@ func main() {
 		for _, o := range options.Outbounds {
 			if ao, ok := o.Options.(*awgOptions); ok {
 				if _, err = awgUAPI(*ao); err != nil {
+					fatal("разбор конфигурации", err)
+				}
+			}
+			if xo, ok := o.Options.(*xrayOptions); ok {
+				if _, err = xrayConfig(*xo); err != nil {
 					fatal("разбор конфигурации", err)
 				}
 			}

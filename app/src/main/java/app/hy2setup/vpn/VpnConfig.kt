@@ -12,7 +12,7 @@ import org.json.JSONObject
  * те же значения стоят в inbound «tun», чтобы sing-box знал свою сеть.
  */
 /** Протокол встроенного клиента. */
-enum class VpnProtocol(val title: String) { VLESS("VLESS"), HY2("Hysteria2"), AWG("AmneziaWG") }
+enum class VpnProtocol(val title: String) { VLESS("VLESS"), XHTTP("VLESS XHTTP"), HY2("Hysteria2"), AWG("AmneziaWG") }
 
 object VpnConfig {
     const val TUN_V4 = "172.19.0.1/30"
@@ -48,6 +48,31 @@ object VpnConfig {
             })
         }
         return build(proxy, o)
+    }
+
+    /**
+     * VLESS + Reality + XHTTP к серверу [p]: в sing-box нет XHTTP, поэтому соединение строит встроенный в движок
+     * Xray-core (свой тип «xray»; внутри — исходящее соединение в формате Xray). Ключи и порт — как у VLESS.
+     */
+    fun vlessXhttp(p: StableProfile, user: ProfileUser?, serverIp: String, o: Options = Options()): String {
+        require(p.xhttpActive) { "На сервере нет VLESS XHTTP." }
+        val xray = JSONObject().apply {
+            put("protocol", "vless")
+            put("settings", JSONObject().put("vnext", JSONArray().put(JSONObject().apply {
+                put("address", serverIp); put("port", p.vlessPort)
+                put("users", JSONArray().put(JSONObject().put("id", user?.vlessUuid ?: p.vlessUuid).put("encryption", "none")))
+            })))
+            put("streamSettings", JSONObject().apply {
+                put("network", "xhttp")
+                put("xhttpSettings", JSONObject().put("path", p.xhttpPathEff).put("mode", "auto"))
+                put("security", "reality")
+                put("realitySettings", JSONObject().apply {
+                    put("serverName", p.realitySni); put("publicKey", p.realityPublic)
+                    put("shortId", p.realityShortId); put("fingerprint", "chrome")
+                })
+            })
+        }
+        return build(JSONObject().put("type", "xray").put("tag", "proxy").put("xray", xray), o)
     }
 
     /**
@@ -101,6 +126,7 @@ object VpnConfig {
     /** Протоколы, которые стоят на сервере [p] и подходят встроенному клиенту. */
     fun available(p: StableProfile): List<VpnProtocol> = listOfNotNull(
         VpnProtocol.VLESS.takeIf { p.vlessOn },
+        VpnProtocol.XHTTP.takeIf { p.xhttpActive },
         VpnProtocol.HY2.takeIf { p.hy2On },
         VpnProtocol.AWG.takeIf { p.awgOn && p.awg != null },
     )
@@ -108,6 +134,7 @@ object VpnConfig {
     /** Конфигурация для [proto]; IllegalArgumentException — с понятным текстом, если протокол не подходит. */
     fun forProtocol(proto: VpnProtocol, p: StableProfile, user: ProfileUser?, serverIp: String, o: Options = Options()): String = when (proto) {
         VpnProtocol.VLESS -> vless(p, user, serverIp, o)
+        VpnProtocol.XHTTP -> vlessXhttp(p, user, serverIp, o)
         VpnProtocol.HY2 -> hysteria2(p, user, serverIp, o)
         VpnProtocol.AWG -> amneziaWg(p, user, serverIp, o)
     }

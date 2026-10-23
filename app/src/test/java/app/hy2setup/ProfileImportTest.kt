@@ -155,4 +155,38 @@ class ProfileImportTest {
         assertFalse(s.contains("generate-secret"))
         assertTrue(Scripts.installTelegram(443, "www.microsoft.com").contains("generate-secret --hex"))
     }
+
+    @Test
+    fun xhttpFoundOnServerBecomesStableLink() {
+        val withX = markers() + "${Scripts.LINK_MARKER_XHTTP}/abc123"
+        val r = ProfileImport.fromServer(withX, "vpn2.example.org", "example.org", null)
+        assertTrue(r.profile.xhttpActive)
+        assertEquals("/abc123", r.profile.xhttpPathEff)
+        val x = r.profile.links().single { it.title == Links.XHTTP_TITLE }.uri
+        assertTrue(x.contains("type=xhttp") && x.contains("path=%2Fabc123") && x.contains("@vpn2.example.org:443") && !x.contains("flow="))
+        // «Проверить»: XHTTP, поставленный вкладкой «Сервер», попадает в постоянные ссылки
+        val base = ProfileImport.fromServer(markers(), "vpn2.example.org", "example.org", null).profile
+        assertFalse(base.xhttpOn)
+        val (synced, notes) = ProfileImport.syncWithServer(base, withX)
+        assertTrue(synced.xhttpActive && synced.xhttpPath == "/abc123")
+        assertTrue(notes.any { it.startsWith("VLESS XHTTP: найден") })
+        assertEquals(synced, StableProfile.fromJson(synced.toJson()))
+        // подписка Happ получает ссылку XHTTP
+        assertTrue(Subscription.content(synced, null).contains("type=xhttp"))
+        // ссылки сервера с вкладки «Сервер»
+        assertTrue(Links.fromExport(withX, "203.0.113.5").any { it.title == Links.XHTTP_TITLE })
+    }
+
+    @Test
+    fun oldProfileWithoutXhttpKeepsSameJson() {
+        val old = StableProfile.create("example.org", "vpn", "", "https://www.bing.com/")
+        assertFalse(old.toJson().contains("xhttp"))
+        // путь по умолчанию постоянный — из UUID
+        assertEquals(old.xhttpPathEff, old.copy(xhttpOn = true).xhttpPathEff)
+        assertTrue(old.xhttpPathEff.matches(Regex("/[0-9a-f]{10}")))
+        assertFalse(old.links().any { it.title == Links.XHTTP_TITLE })
+        // XHTTP без VLESS не работает
+        assertFalse(old.copy(xhttpOn = true, vlessOn = false).xhttpActive)
+        assertTrue(old.copy(xhttpOn = true).vlessParams().xhttpPath.isNotEmpty())
+    }
 }

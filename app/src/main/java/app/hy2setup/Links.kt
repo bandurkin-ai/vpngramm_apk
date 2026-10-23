@@ -31,6 +31,14 @@ object Links {
             "?encryption=none&flow=xtls-rprx-vision&security=reality&sni=$sni&fp=chrome" +
             "&pbk=$pbk&sid=$sid&type=tcp#${enc("VLESS-$host")}"
 
+    const val XHTTP_TITLE = "VLESS XHTTP"
+
+    /** VLESS + Reality + XHTTP: те же ключи и порт, что у VLESS, но без flow и с транспортом XHTTP. */
+    fun vlessXhttp(host: String, port: Int, uuid: String, sni: String, pbk: String, sid: String, path: String): String =
+        "vless://$uuid@${hostPart(host)}:$port" +
+            "?encryption=none&security=reality&sni=$sni&fp=chrome&pbk=$pbk&sid=$sid" +
+            "&type=xhttp&path=${enc(path)}&mode=auto#${enc("XHTTP-$host")}"
+
     /** Ссылка на MTProto-прокси: открывается в Telegram и из браузера/камеры. */
     fun telegram(host: String, port: Int, secret: String): String =
         "https://t.me/proxy?server=${host.removePrefix("[").removeSuffix("]")}&port=$port&secret=$secret"
@@ -65,6 +73,9 @@ object Links {
                     val port = f[0].toIntOrNull() ?: 443
                     val addr = f.getOrNull(5).orEmpty().ifEmpty { sshHost }
                     out += ShareLink(Protocol.VLESS.title, vless(addr, port, uuid = f[1], sni = f[2], pbk = f[3], sid = f[4]))
+                    lines.firstOrNull { it.startsWith(Scripts.LINK_MARKER_XHTTP) }?.removePrefix(Scripts.LINK_MARKER_XHTTP)?.trim()
+                        ?.takeIf { it.startsWith("/") }
+                        ?.let { out += ShareLink(XHTTP_TITLE, vlessXhttp(addr, port, uuid = f[1], sni = f[2], pbk = f[3], sid = f[4], path = it)) }
                 }
                 line.startsWith(Scripts.LINK_MARKER_AWG) -> {
                     val p = runCatching {

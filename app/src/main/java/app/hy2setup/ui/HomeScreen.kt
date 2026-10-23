@@ -256,7 +256,7 @@ private fun AddServerSheet(vm: MainViewModel, onDismiss: () -> Unit) {
 internal fun AddServerForm(vm: MainViewModel, onDone: () -> Unit) {
     Text("Добавить работающий сервер", style = MaterialTheme.typography.titleLarge)
     Hint(
-        "Например, сервер, сделанный комбайном. Приложение по SSH прочитает его пароли и ключи (сервер не изменяется) — " +
+        "Например, сервер, поставленный вкладкой «Сервер». Приложение по SSH прочитает его пароли и ключи (сервер не изменяется) — " +
             "и его можно будет переносить на другой VPS с теми же ссылками.",
     )
     AppField("Домен сервера (например, vpn2.example.org)", vm.importFqdn, { vm.importFqdn = it }, keyboard = KeyboardType.Uri, enabled = !vm.running)
@@ -290,6 +290,7 @@ private fun ProfileHero(vm: MainViewModel, profile: StableProfile, onLinks: () -
             InfoLine(AppIcons.Dns, profile.vps?.let { "${it.ip} · ${it.hostname.ifEmpty { "VPS ${it.id}" }}" } ?: "VPS ещё не создан")
             InfoLine(AppIcons.Lock, profile.cert?.let { "Сертификат до ${df.format(Date(it.notAfter))}" } ?: "Сертификат ещё не сохранён")
             if (profile.vlessOn) InfoLine(AppIcons.Shield, if (profile.realitySelf) "VLESS маскируется под ваш домен" else "VLESS маскируется под ${profile.realitySni}")
+            if (profile.xhttpActive) InfoLine(AppIcons.Shield, "VLESS XHTTP · тот же порт ${profile.vlessPort}/TCP")
             if (profile.hy2On) InfoLine(AppIcons.Tune, "Hysteria2 · порт ${profile.hy2Port}/UDP")
             profile.awg?.takeIf { profile.awgOn }?.let { InfoLine(AppIcons.Bolt, "AmneziaWG 3.1 · порт ${it.port}/UDP") }
             profile.tg?.takeIf { profile.tgOn }?.let { InfoLine(AppIcons.Send, "Telegram-прокси · порт ${it.port}/TCP") }
@@ -380,20 +381,34 @@ private fun NewServerSheet(vm: MainViewModel, profile: StableProfile?, onDismiss
                 Hint(if (vm.plannedFqdn.isEmpty()) "Укажите домен в карточке «Аккаунты»." else "В ссылках будет: ${vm.plannedFqdn}")
             }
             if (mode == "existing" && profile != null) CombineServerList(vm, profile) else VpsOrderForm(vm)
-            SwitchRow(
-                "AmneziaWG 3.1", vm.plusAwg, { vm.plusAwg = it }, enabled = !vm.running,
-                subtitle = when {
-                    !vm.plusAwg -> "Не ставить"
-                    profile?.awg != null -> "Прежняя ссылка, порт ${profile.awg.port}/UDP"
-                    else -> "Третья ссылка — для AmneziaVPN"
-                },
-            )
-            if (vm.plusAwg) {
-                val changes = profile?.awg != null && profile.awg.trailers != vm.plusTrailers
+            if (profile == null) {
+                // новый сервер: какие протоколы ставить и на каких портах
+                NewServerProtocols(vm)
+            } else {
+                // у существующего сервера протоколы заданы профилем — меняются только дополнительные
                 SwitchRow(
-                    "RandomTrailers", vm.plusTrailers, { vm.plusTrailers = it }, enabled = !vm.running,
-                    subtitle = if (changes) "Режим изменится — ссылку AmneziaWG нужно будет добавить заново" else if (vm.plusTrailers) "Сильнее маскировка, но скорость может упасть в десятки раз" else "Выключен: нормальная скорость (рекомендуется)",
+                    "VLESS XHTTP", vm.plusXhttp, { vm.plusXhttp = it }, enabled = !vm.running,
+                    subtitle = when {
+                        !vm.plusXhttp -> "Не ставить"
+                        profile.xhttpOn -> "Прежняя ссылка, тот же порт, что у VLESS"
+                        else -> "Ещё одна ссылка для Happ: VLESS + Reality поверх XHTTP"
+                    },
                 )
+                SwitchRow(
+                    "AmneziaWG 3.1", vm.plusAwg, { vm.plusAwg = it }, enabled = !vm.running,
+                    subtitle = when {
+                        !vm.plusAwg -> "Не ставить"
+                        profile.awg != null -> "Прежняя ссылка, порт ${profile.awg.port}/UDP"
+                        else -> "Третья ссылка — для AmneziaVPN"
+                    },
+                )
+                if (vm.plusAwg) {
+                    val changes = profile.awg != null && profile.awg.trailers != vm.plusTrailers
+                    SwitchRow(
+                        "RandomTrailers", vm.plusTrailers, { vm.plusTrailers = it }, enabled = !vm.running,
+                        subtitle = if (changes) "Режим изменится — ссылку AmneziaWG нужно будет добавить заново" else if (vm.plusTrailers) "Сильнее маскировка, но скорость может упасть в десятки раз" else "Выключен: нормальная скорость (рекомендуется)",
+                    )
+                }
             }
             SwitchRow(
                 "Безопасность", vm.plusSecure, { vm.plusSecure = it }, enabled = !vm.running,
@@ -413,7 +428,7 @@ private fun NewServerSheet(vm: MainViewModel, profile: StableProfile?, onDismiss
     }
 }
 
-/** Готовые серверы комбайна: выбор, куда переезжают постоянные ссылки. */
+/** Свободные серверы: выбор, куда переезжают постоянные ссылки. */
 @Composable
 internal fun CombineServerList(vm: MainViewModel, profile: StableProfile) {
     val list = vm.plusTargets
@@ -570,9 +585,9 @@ private fun HomeDialogs(
             title = "Переехать на свободный сервер?",
             text = "Сервер ${target.title} (${target.ip}) станет основным для ${profile.fqdn}. VPS не покупается.\n\n" +
                 "A-запись ${profile.fqdn} будет переведена на ${target.ip}" + (if (profile.vps != null) " (сейчас ${profile.vps.ip})" else "") +
-                ", затем на него ставятся Hysteria2, VLESS" + (if (vm.plusAwg) ", AmneziaWG 3.1" else "") + " с ключами профиля" +
+                ", затем на него ставятся " + existingProtocolList(vm, profile) + " с ключами профиля" +
                 (if (vm.plusSecure && !target.secured) " и включается безопасность." else ".") +
-                "\n\nПротоколы, которые комбайн ставил на этот сервер, будут заменены: прежние ссылки комбайна на него перестанут работать. " +
+                "\n\nПротоколы, которые раньше стояли на этом сервере, будут заменены: прежние ссылки на него перестанут работать. " +
                 "Ссылки ${profile.fqdn} останутся прежними. Обычно 5–15 минут; не закрывайте приложение.",
             confirm = "Переехать", onConfirm = vm::plusRun, onDismiss = { vm.plusConfirm = false },
         )
@@ -584,8 +599,9 @@ private fun HomeDialogs(
             text = "VPS для $name:\n${vm.opSelectedLocation?.title}\n${sz?.summary}\n${vm.opSelectedTemplate?.name}\n\n" +
                 "Стоимость: ${sz?.monthlyPrice}/мес (${sz?.hourlyPrice}/час) — спишется с баланса OneProvider.\n\n" +
                 "A-запись $name будет переведена на новый IP" + (if (profile?.vps != null) " (сейчас ${profile.vps.ip})" else "") +
-                ", затем установка Hysteria2, VLESS" + (if (vm.plusAwg) ", AmneziaWG 3.1 (на Debian 12 — с новым ядром и перезагрузкой)" else "") +
-                (if (vm.plusSecure) " и включение безопасности." else " без безопасности.") +
+                ", затем установка: " + (if (profile == null) newServerProtocolList(vm) else existingProtocolList(vm, profile)) +
+                (if (vm.plusAwg) " (AmneziaWG на Debian 12 — с новым ядром и перезагрузкой)" else "") +
+                (if (vm.plusSecure) ", а в конце — включение безопасности." else ", без безопасности.") +
                 (if (profile != null) " Ссылки останутся прежними." else "") + " Обычно 10–20 минут; не закрывайте приложение.",
             confirm = "Запустить", onConfirm = vm::plusRun, onDismiss = { vm.plusConfirm = false },
         )
@@ -661,3 +677,22 @@ private fun HomeDialogs(
         )
     }
 }
+
+/** Протоколы нового сервера для диалога подтверждения: что выбрано в шторке и на каких портах. */
+private fun newServerProtocolList(vm: MainViewModel): String = listOfNotNull(
+    "Hysteria2 + Salamander (порт ${vm.hyPort.trim()}/UDP)".takeIf { vm.plusHy2 },
+    ("VLESS + Reality (порт ${vm.vlessPort.trim()}/TCP, маскировка под " +
+        (if (vm.plusHy2) vm.plannedFqdn else vm.realitySni.trim()) + ")").takeIf { vm.plusVless },
+    "VLESS XHTTP (тот же порт)".takeIf { vm.plusVless && vm.plusXhttp },
+    "AmneziaWG 3.1 (порт ${vm.awgPort.trim()}/UDP)".takeIf { vm.plusAwg },
+    "Telegram-прокси (порт ${vm.tgPort.trim()}/TCP)".takeIf { vm.plusTg },
+).joinToString(", ")
+
+/** Протоколы существующего сервера при переезде: из профиля, плюс включённые в шторке XHTTP и AmneziaWG. */
+private fun existingProtocolList(vm: MainViewModel, p: StableProfile): String = listOfNotNull(
+    "Hysteria2".takeIf { p.hy2On },
+    "VLESS".takeIf { p.vlessOn },
+    "VLESS XHTTP".takeIf { p.vlessOn && vm.plusXhttp },
+    "AmneziaWG 3.1".takeIf { vm.plusAwg },
+    "Telegram-прокси".takeIf { p.tgOn },
+).joinToString(", ")

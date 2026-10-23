@@ -27,7 +27,8 @@ import app.hy2setup.ServerMode
 @Composable
 fun ServerScreen(vm: MainViewModel) {
     val modes = vm.serverModeList
-    val names = modes.joinToString(" + ") { if (it == ServerMode.AWG) "AWG" else it.title }
+    val names = modes.joinToString(" + ") { if (it == ServerMode.AWG) "AWG" else if (it == ServerMode.XHTTP) "XHTTP" else it.title }
+    val vlessAny = ServerMode.VLESS in modes || ServerMode.XHTTP in modes
     var menu by remember { mutableStateOf(false) }
     var confirmRemove by remember { mutableStateOf(false) }
     var confirmSecure by remember { mutableStateOf(false) }
@@ -43,7 +44,7 @@ fun ServerScreen(vm: MainViewModel) {
                     text = { Text("Перезапустить службу") }, leadingIcon = { Icon(AppIcons.Refresh, null) }, enabled = !vm.running,
                     onClick = { menu = false; vm.restartService() },
                 )
-                if (modes.any { it == ServerMode.HY2 || it == ServerMode.VLESS }) {
+                if (ServerMode.HY2 in modes || vlessAny) {
                     DropdownMenuItem(
                         text = { Text("Живая проверка") }, leadingIcon = { Icon(AppIcons.Speed, null) }, enabled = !vm.running,
                         onClick = { menu = false; vm.liveCheck() },
@@ -77,18 +78,20 @@ fun ServerScreen(vm: MainViewModel) {
             listOf(false to "Быстро", true to "Эксперт"), vm.serverExpert, { vm.updateServerExpert(it) },
             enabled = !vm.running, modifier = Modifier.fillMaxWidth(),
         )
-        MultiSegmented(
-            ServerMode.entries.map { it to if (it == ServerMode.AWG) "AWG" else it.title }, vm.serverModes,
+        MultiPicker(
+            "Протоколы",
+            ServerMode.entries.map { it to PROTOCOL_NAMES.getValue(it) }, vm.serverModes,
             onToggle = { vm.toggleServerMode(it) }, enabled = !vm.running,
         )
         Hint(
-            if (modes.size > 1) "Выбрано: $names — «Установить» поставит всё по очереди на один сервер. Нажмите протокол ещё раз, чтобы убрать его."
+            if (modes.size > 1) "Выбрано: $names — «Установить» поставит всё по очереди на один сервер."
             else when (modes.first()) {
                 ServerMode.HY2 -> "Hysteria2 + Salamander: быстрый протокол поверх UDP (QUIC)."
                 ServerMode.VLESS -> "VLESS + Reality (Xray): выглядит как обычный HTTPS поверх TCP."
+                ServerMode.XHTTP -> "VLESS + Reality + XHTTP: тот же Xray и порт, что у VLESS, но трафик идёт как обычные HTTP-запросы. Ставится вместе с VLESS."
                 ServerMode.AWG -> "AmneziaWG 3.1: WireGuard с маскировкой, для приложения AmneziaVPN. Работает поверх UDP."
                 ServerMode.TG -> "MTProto-прокси для Telegram (mtg) в режиме FakeTLS."
-            } + " Можно отметить несколько протоколов.",
+            } + " В списке «Протоколы» можно отметить несколько.",
         )
 
         // быстрые действия с уже установленным сервером
@@ -107,8 +110,8 @@ fun ServerScreen(vm: MainViewModel) {
                 "Свой домен, порты и защиту сервера — в режиме «Эксперт».")
         } else {
             if (modes.any { it != ServerMode.TG }) DnsNameCard(vm)
-            if (ServerMode.VLESS in modes) VlessParams(vm)
-            if (ServerMode.HY2 in modes && !(ServerMode.VLESS in modes && vm.vlessSelf)) Hy2Params(vm)
+            if (vlessAny) VlessParams(vm)
+            if (ServerMode.HY2 in modes && !(vlessAny && vm.vlessSelf)) Hy2Params(vm)
             if (ServerMode.AWG in modes) AwgParamsCard(vm)
             if (ServerMode.TG in modes) TelegramParams(vm)
         }
@@ -144,7 +147,8 @@ fun ServerScreen(vm: MainViewModel) {
             modes.joinToString("\n") {
                 when (it) {
                     ServerMode.HY2 -> "• Hysteria2: служба hysteria-server будет остановлена, программа и /etc/hysteria удалены."
-                    ServerMode.VLESS -> "• VLESS: служба xray будет остановлена, Xray и /usr/local/etc/xray удалены."
+                    ServerMode.VLESS -> "• VLESS: служба xray будет остановлена, Xray и /usr/local/etc/xray удалены (вместе с XHTTP)."
+                    ServerMode.XHTTP -> "• VLESS XHTTP: убирается из конфигурации Xray, обычный VLESS остаётся."
                     ServerMode.AWG -> "• AmneziaWG: служба awg-quick@awg0 будет остановлена, конфигурация удалена."
                     ServerMode.TG -> "• Telegram: служба mtg будет остановлена, программа и /etc/mtg.toml удалены."
                 }
@@ -183,8 +187,8 @@ private fun DnsNameCard(vm: MainViewModel) {
                 if (fqdn.isEmpty()) "Укажите домен — получится, например, vpn.example.com."
                 else "Имя сервера: $fqdn. В «Доступе по SSH» должен быть IPv4 сервера.",
             )
-        } else if (ServerMode.HY2 in vm.serverModes || ServerMode.AWG in vm.serverModes || (ServerMode.VLESS in vm.serverModes && vm.vlessSelf)) {
-            val vlessNeeds = ServerMode.VLESS in vm.serverModes && vm.vlessSelf
+        } else if (ServerMode.HY2 in vm.serverModes || ServerMode.AWG in vm.serverModes || (vlessSelected(vm) && vm.vlessSelf)) {
+            val vlessNeeds = vlessSelected(vm) && vm.vlessSelf
             AppField(
                 "Свой домен" + if (!vlessNeeds) " (необязательно)" else "",
                 vm.domain, { vm.domain = it }, keyboard = KeyboardType.Uri, enabled = !vm.running,
@@ -272,3 +276,14 @@ private fun AwgParamsCard(vm: MainViewModel) {
         )
     }
 }
+
+private fun vlessSelected(vm: MainViewModel) = ServerMode.VLESS in vm.serverModes || ServerMode.XHTTP in vm.serverModes
+
+/** Названия в списке «Протоколы». */
+private val PROTOCOL_NAMES = mapOf(
+    ServerMode.HY2 to "Hysteria2 + Salamander",
+    ServerMode.VLESS to "VLESS + Reality",
+    ServerMode.XHTTP to "VLESS + Reality + XHTTP",
+    ServerMode.AWG to "AmneziaWG 3.1",
+    ServerMode.TG to "Telegram-прокси",
+)

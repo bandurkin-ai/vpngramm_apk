@@ -58,7 +58,7 @@ fun FirstRunWizard(vm: MainViewModel, onAddExisting: () -> Unit, startStep: Int 
     val ok = when (step) {
         0 -> vm.opCatalogLoaded
         1 -> checkedZone
-        2 -> vm.plannedFqdn.isNotEmpty() && vm.subdomain.isNotBlank()
+        2 -> vm.plannedFqdn.isNotEmpty() && vm.subdomain.isNotBlank() && (vm.plusHy2 || vm.plusVless || vm.plusAwg || vm.plusTg)
         else -> true
     }
     SectionCard(STEPS[step], when (step) { 0 -> AppIcons.Cloud; 1 -> AppIcons.Dns; 2 -> AppIcons.Globe; else -> AppIcons.Rocket }) {
@@ -87,17 +87,11 @@ fun FirstRunWizard(vm: MainViewModel, onAddExisting: () -> Unit, startStep: Int 
                     AppField("TTL, с", vm.ttl, { vm.ttl = it }, Modifier.weight(1f), KeyboardType.Number, enabled = !vm.running)
                 }
                 Hint(if (vm.plannedFqdn.isEmpty()) "Укажите поддомен." else "В ссылках будет: ${vm.plannedFqdn}")
-                Text("VLESS и Hysteria2 ставятся всегда: VLESS — для мобильного интернета, Hysteria2 — быстрый, по UDP.", style = MaterialTheme.typography.bodySmall)
-                SwitchRow("AmneziaWG 3.1", vm.plusAwg, { vm.plusAwg = it }, enabled = !vm.running, subtitle = "Ещё одна ссылка — для приложения AmneziaVPN")
+                NewServerProtocols(vm)
                 SwitchRow(
                     "Безопасность", vm.plusSecure, { vm.plusSecure = it }, enabled = !vm.running,
                     subtitle = if (vm.plusSecure) "В конце: вход только по SSH-ключу, обновления" else "Вход по паролю root останется",
                 )
-                MoreHint(
-                    "E-mail и сайт-маскировка — по желанию.",
-                    "E-mail Let's Encrypt пришлёт напоминание, если сертификат не продлится.",
-                )
-                AppField("E-mail для Let's Encrypt (необязательно)", vm.email, { vm.email = it }, keyboard = KeyboardType.Email, enabled = !vm.running)
             }
             else -> {
                 Text("Выберите регион, локацию и тариф — сервер будет куплен и настроен (10–20 минут).", style = MaterialTheme.typography.bodyMedium)

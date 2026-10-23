@@ -212,3 +212,74 @@ fun KeyRow(k: OpSshKey, checked: Boolean, enabled: Boolean, onToggle: () -> Unit
         modifier = Modifier.clip(MaterialTheme.shapes.medium).clickable(enabled = enabled) { onToggle() },
     )
 }
+
+/**
+ * Протоколы нового сервера (шторка «Создать сервер» и мастер первого запуска): что ставить и на каких портах.
+ * Каждый включённый протокол даёт свою постоянную ссылку.
+ */
+@Composable
+fun NewServerProtocols(vm: MainViewModel) {
+    val on = listOfNotNull(
+        "Hysteria2".takeIf { vm.plusHy2 }, "VLESS".takeIf { vm.plusVless }, "XHTTP".takeIf { vm.plusVless && vm.plusXhttp },
+        "AmneziaWG".takeIf { vm.plusAwg }, "Telegram".takeIf { vm.plusTg },
+    )
+    SectionCard("Протоколы", AppIcons.Tune, subtitle = on.joinToString(" · ").ifEmpty { "Ничего не выбрано" }, collapsible = true) {
+        SwitchRow(
+            "Hysteria2 + Salamander", vm.plusHy2, { vm.plusHy2 = it }, enabled = !vm.running,
+            subtitle = "UDP, очень быстрый; даёт сертификат и сайт, под которые маскируется VLESS",
+        )
+        if (vm.plusHy2) {
+            AppField("Порт Hysteria2 (UDP)", vm.hyPort, { vm.hyPort = it }, keyboard = KeyboardType.Number, enabled = !vm.running)
+            AppField("E-mail для Let's Encrypt (необязательно)", vm.email, { vm.email = it }, keyboard = KeyboardType.Email, enabled = !vm.running)
+            AppField("Сайт-маскировка (https://…)", vm.masquerade, { vm.masquerade = it }, keyboard = KeyboardType.Uri, enabled = !vm.running)
+        }
+        SwitchRow(
+            "VLESS + Reality", vm.plusVless, { vm.plusVless = it }, enabled = !vm.running,
+            subtitle = "TCP — надёжнее всего на мобильном интернете в России",
+        )
+        if (vm.plusVless) {
+            AppField("Порт VLESS (TCP)", vm.vlessPort, { vm.vlessPort = it }, keyboard = KeyboardType.Number, enabled = !vm.running)
+            SwitchRow(
+                "VLESS + Reality + XHTTP", vm.plusXhttp, { vm.plusXhttp = it }, enabled = !vm.running,
+                subtitle = "Ещё одна ссылка для Happ — тот же порт и ключи",
+            )
+            if (vm.plusHy2) {
+                Hint("Маскировка под свой домен: сертификат и сайт даёт Hysteria2. Нужны открытые 80/TCP, 443/TCP и 443/UDP.")
+            } else {
+                AppField("Сайт для маскировки Reality", vm.realitySni, { vm.realitySni = it }, keyboard = KeyboardType.Uri, enabled = !vm.running)
+                Hint(
+                    "Без Hysteria2 VLESS маскируется под чужой сайт. В России такую маскировку режут чаще: имя сайта не совпадает " +
+                        "с адресом сервера. Надёжнее включить Hysteria2.",
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+        }
+        SwitchRow(
+            "AmneziaWG 3.1", vm.plusAwg, { vm.plusAwg = it }, enabled = !vm.running,
+            subtitle = "Для приложения AmneziaVPN",
+        )
+        if (vm.plusAwg) {
+            AppField("Порт AmneziaWG (UDP)", vm.awgPort, { vm.awgPort = it }, keyboard = KeyboardType.Number, enabled = !vm.running)
+            SwitchRow(
+                "RandomTrailers", vm.plusTrailers, { vm.plusTrailers = it }, enabled = !vm.running,
+                subtitle = if (vm.plusTrailers) "Сильнее маскировка, но скорость может упасть в десятки раз" else "Выключен: нормальная скорость (рекомендуется)",
+            )
+            Hint("Модуль ядра собирается 5–15 минут; на Debian 12 сначала ставится ядро 6.12 и сервер перезагружается.")
+        }
+        SwitchRow(
+            "Telegram-прокси", vm.plusTg, { v ->
+                vm.plusTg = v
+                // 443/TCP обычно занят VLESS — сразу предлагаем свободный порт
+                if (v && vm.plusVless && vm.tgPort.trim() == vm.vlessPort.trim()) vm.tgPort = "993"
+            }, enabled = !vm.running,
+            subtitle = "MTProto (mtg) с маскировкой FakeTLS — только для Telegram",
+        )
+        if (vm.plusTg) {
+            AppField("Порт Telegram (TCP)", vm.tgPort, { vm.tgPort = it }, keyboard = KeyboardType.Number, enabled = !vm.running)
+            AppField("Домен маскировки Telegram", vm.tgDomain, { vm.tgDomain = it }, keyboard = KeyboardType.Uri, enabled = !vm.running)
+            if (vm.plusVless && vm.tgPort.trim() == vm.vlessPort.trim()) {
+                Hint("Порт ${vm.tgPort}/TCP уже занят VLESS — укажите другой, например 993.", color = MaterialTheme.colorScheme.error)
+            }
+        }
+    }
+}

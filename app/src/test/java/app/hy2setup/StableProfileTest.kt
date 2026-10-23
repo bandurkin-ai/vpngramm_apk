@@ -46,13 +46,13 @@ class StableProfileTest {
         val p = StableProfile.create("example.com", "vpn", "", "https://www.bing.com/")
         assertTrue(p.realitySelf)
         assertEquals(StableProfile.LOCAL_HTTPS, p.vlessParams().dest)
-        assertTrue(p.hy2Params("203.0.113.7", null).localHttps)
+        assertTrue(p.hy2Params(null).localHttps)
         assertTrue(p.links()[0].uri.contains("sni=vpn.example.com"))
         // старый профиль с чужим сайтом: dest — сам сайт
         val old = p.copy(realitySni = "www.microsoft.com")
         assertFalse(old.realitySelf)
         assertEquals("", old.vlessParams().dest)
-        assertFalse(old.hy2Params("203.0.113.7", null).localHttps)
+        assertFalse(old.hy2Params(null).localHttps)
         // переход «под себя» меняет в ссылке VLESS только sni
         val a = old.links()[0].uri; val b = old.copy(realitySni = old.fqdn).links()[0].uri
         assertEquals(a.replace("sni=www.microsoft.com", "sni=vpn.example.com"), b)

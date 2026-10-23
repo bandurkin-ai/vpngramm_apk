@@ -44,10 +44,11 @@ fun VpnScreen(vm: MainViewModel) {
             if (avail.isEmpty()) {
                 Hint("На сервере ${profile.fqdn} нет ни VLESS, ни Hysteria2, ни AmneziaWG.")
             } else {
-                Segmented(avail.map { it to if (it == VpnProtocol.AWG) "AWG" else it.title }, proto, { vm.selectVpnProto(it) }, enabled = !busy)
+                Segmented(avail.map { it to SHORT.getValue(it) }, proto, { vm.selectVpnProto(it) }, enabled = !busy)
                 Hint(
                     when (proto) {
                         VpnProtocol.VLESS -> "VLESS + Reality: похож на обычный HTTPS и работает почти везде. Рекомендуется."
+                        VpnProtocol.XHTTP -> "VLESS + Reality + XHTTP: тот же сервер и порт, но трафик идёт как обычные HTTP-запросы. Попробуйте, если VLESS режут."
                         VpnProtocol.HY2 -> "Hysteria2: самый быстрый, идёт по UDP. Если оператор режет UDP и подключение не идёт — выберите VLESS."
                         VpnProtocol.AWG -> "AmneziaWG: WireGuard с маскировкой, по UDP. Режим RandomTrailers встроенный клиент не поддерживает."
                     },
@@ -69,3 +70,6 @@ fun VpnScreen(vm: MainViewModel) {
         }
     }
 }
+
+/** Короткие подписи протоколов (четыре кнопки в ряд). */
+private val SHORT = mapOf(VpnProtocol.VLESS to "VLESS", VpnProtocol.XHTTP to "XHTTP", VpnProtocol.HY2 to "Hy2", VpnProtocol.AWG to "AWG")

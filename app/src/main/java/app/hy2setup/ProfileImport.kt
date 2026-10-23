@@ -72,6 +72,10 @@ object ProfileImport {
                     )
                     val addr = f.getOrNull(5).orEmpty()
                     if (addr.isNotEmpty() && addr != name) notes += "VLESS: адрес в ссылке был $addr, теперь $name — ссылку нужно один раз заново раздать."
+                    marker(Scripts.LINK_MARKER_XHTTP)?.takeIf { it.startsWith("/") }?.let { path ->
+                        found++
+                        p = p.copy(xhttpOn = true, xhttpPath = path)
+                    }
                 }
             }
         }
@@ -144,6 +148,14 @@ object ProfileImport {
             notes += "VLESS: в профиле есть, а на сервере не найден — ссылка сейчас не работает; при переносе он будет установлен."
         } else if (has(Scripts.LINK_MARKER_VLESS) && !p.vlessOn) {
             notes += "VLESS: на сервере есть, но без приватного ключа Reality — добавить в постоянные ссылки нельзя."
+        }
+        if (srv.vlessOn && srv.xhttpOn) {
+            if (!p.xhttpOn || p.xhttpPathEff != srv.xhttpPath) {
+                notes += if (p.xhttpOn) "VLESS XHTTP: на сервере другой путь — ссылка обновлена по серверу." else "VLESS XHTTP: найден на сервере — ссылка добавлена."
+                p = p.copy(xhttpOn = true, xhttpPath = srv.xhttpPath)
+            }
+        } else if (p.xhttpActive && srv.vlessOn) {
+            notes += "VLESS XHTTP: в профиле есть, а на сервере не найден — ссылка сейчас не работает; «Обновить сервер» или перенос его поставят."
         }
 
         // на сервере AmneziaWG хранит и остальных людей — в профиле владельца только его ключи

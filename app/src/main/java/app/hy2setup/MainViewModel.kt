@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 /** Всё, что нужно для создания A-записи. */
 /** Что настраивается в разделе «Сервер». */
-enum class ServerMode(val title: String) { HY2("Hysteria2"), VLESS("VLESS"), AWG("AmneziaWG"), TG("Telegram") }
+enum class ServerMode(val title: String) { HY2("Hysteria2"), VLESS("VLESS"), XHTTP("VLESS XHTTP"), AWG("AmneziaWG"), TG("Telegram") }
 
 /** Режим раздела «Сервер» для протокола. */
 fun modeOf(p: Protocol) = when (p) { Protocol.HY2 -> ServerMode.HY2; Protocol.VLESS -> ServerMode.VLESS; Protocol.AWG -> ServerMode.AWG }
@@ -158,7 +158,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         serverModes = modes
         when (ServerMode.entries.firstOrNull { it in modes && it != ServerMode.TG }) {
             ServerMode.HY2 -> protocol = Protocol.HY2
-            ServerMode.VLESS -> protocol = Protocol.VLESS
+            ServerMode.VLESS, ServerMode.XHTTP -> protocol = Protocol.VLESS
             ServerMode.AWG -> protocol = Protocol.AWG
             else -> Unit
         }
@@ -221,25 +221,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val tgLinks = mutableStateListOf<ShareLink>()
     var tgError by mutableStateOf<String?>(null)
 
-    // ---------- Комбайн ----------
-    val combineLog = mutableStateListOf<String>()
-    val combineLinks = mutableStateListOf<ShareLink>()
-    val combineSteps = mutableStateMapOf<CombineStep, StepStatus>()
-    var combineError by mutableStateOf<String?>(null)
-    /** Комбайн с безопасностью: вход по ключу, обновления, автообновления, без входа по паролю. */
-    var combineSecure by mutableStateOf(prefs.getBoolean("combineSecure", true))
-    /** Ставить вместе с Hysteria2 ещё и VLESS + Reality с маскировкой под свой домен. */
-    var combineVless by mutableStateOf(prefs.getBoolean("combineVless", true))
-    /** Ставить в комбайне ещё и AmneziaWG 3.1. */
-    var combineAwg by mutableStateOf(prefs.getBoolean("combineAwg", true))
-    /** Ставить в комбайне Hysteria2 + Salamander (без неё VLESS маскируется под чужой сайт). */
-    var combineHy2 by mutableStateOf(prefs.getBoolean("combineHy2", true))
-    /** Ставить в комбайне Telegram-прокси (mtg); порт и домен — общие с вкладкой «Сервер». */
-    var combineTg by mutableStateOf(prefs.getBoolean("combineTg", false))
-    /** Серверы, сделанные комбайном: на любой из них можно перевести постоянные ссылки. */
+    // ---------- Свободные серверы ----------
+    /** Свободные серверы (например, прежние VPS после переезда): на любой из них можно перевести постоянные ссылки. */
     val combineServers = mutableStateListOf<CombineServer>().apply { addAll(CombineServers.decode(prefs.getString("combineServers", null))) }
 
-    // ---------------- Комбайн+ ----------------
+    // ---------------- Серверы с постоянными ссылками (Главная) ----------------
     /** Серверы с постоянными ссылками (Главная). У каждого свой домен и свои ключи. */
     val stableProfiles = mutableStateListOf<StableProfile>().apply {
         val stored = secrets.get(STABLE_PROFILES)
@@ -266,8 +252,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             selectStableQuiet(v.fqdn)
         }
     var plusSecure by mutableStateOf(prefs.getBoolean("plusSecure", true))
+    // Протоколы нового сервера (до 3.3 так настраивался комбайн — его выбор переносится сюда при первом запуске)
+    /** Hysteria2 + Salamander (без неё VLESS маскируется под чужой сайт). */
+    var plusHy2 by mutableStateOf(prefs.getBoolean("plusHy2", prefs.getBoolean("combineHy2", true)))
+    /** VLESS + Reality с маскировкой под свой домен (или под [realitySni] без Hysteria2). */
+    var plusVless by mutableStateOf(prefs.getBoolean("plusVless", prefs.getBoolean("combineVless", true)))
+    /** Telegram-прокси (mtg); порт и домен — общие с вкладкой «Сервер». */
+    var plusTg by mutableStateOf(prefs.getBoolean("plusTg", prefs.getBoolean("combineTg", false)))
     /** Ставить при замене сервера ещё и AmneziaWG 3.1 (ключи — в профиле, ссылка постоянная). */
     var plusAwg by mutableStateOf(prefs.getBoolean("plusAwg", true))
+    /** Ставить на сервер с постоянными ссылками ещё и VLESS XHTTP (путь — постоянный, из профиля). */
+    var plusXhttp by mutableStateOf(prefs.getBoolean("plusXhttp", prefs.getBoolean("combineXhttp", false)))
     /** RandomTrailers для AmneziaWG профиля (своя настройка: смена меняет постоянную ссылку). */
     var plusTrailers by mutableStateOf(prefs.getBoolean("plusTrailers", false))
     val plusLog = mutableStateListOf<String>()
@@ -287,16 +282,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     var plusConfirmSelf by mutableStateOf(false)
     /** Куда переезжает профиль: пусто — новый VPS, иначе VPS из [combineServers]. */
     var plusTargetId by mutableStateOf("")
-    /** Сервер комбайна, на который идёт текущий переезд (для подписей шагов). */
+    /** Свободный сервер, на который идёт текущий переезд (для подписей шагов). */
     var plusRunTarget by mutableStateOf<CombineServer?>(null)
         private set
     private var plusJob: Job? = null
-    var combineConfirm by mutableStateOf(false)
-    var combineActive by mutableStateOf(false)
-        private set
-    var combineCreated by mutableStateOf<OpCreated?>(null)
-        private set
-    private var combineJob: Job? = null
 
     // ---------- Вкладка DNS: новая запись ----------
     var newType by mutableStateOf("A")
@@ -400,14 +389,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val withDns = useDns && modes.any { it != ServerMode.TG }
         val dnsPlan: DnsPlan? = if (withDns) buildDnsPlan(withSubdomain = true) ?: return else null
         // VLESS «под свой домен» сам ставит Hysteria2 (с сертификатом и сайтом) — вторая установка затёрла бы её
-        val hy2InVless = ServerMode.VLESS in modes && vlessSelf && ServerMode.HY2 in modes
-        if (ServerMode.TG in modes && ServerMode.VLESS in modes && tgPort.trim() == vlessPort.trim()) {
+        // XHTTP ставится вместе с VLESS (тот же порт и ключи) — одной установкой
+        val withXhttp = ServerMode.XHTTP in modes
+        val withVless = ServerMode.VLESS in modes || withXhttp
+        val hy2InVless = withVless && vlessSelf && ServerMode.HY2 in modes
+        if (ServerMode.TG in modes && withVless && tgPort.trim() == vlessPort.trim()) {
             return fail("Telegram-прокси и VLESS не могут работать на одном порту TCP (${vlessPort.trim()}) — смените порт одного из них.")
         }
-        val jobs = modes.filterNot { hy2InVless && it == ServerMode.HY2 }.map { m ->
+        val jobs = modes.filterNot { (hy2InVless && it == ServerMode.HY2) || (it == ServerMode.XHTTP && ServerMode.VLESS in modes) }.map { m ->
             m to (when (m) {
                 ServerMode.HY2 -> planHy2(dnsPlan)
-                ServerMode.VLESS -> planVless(dnsPlan)
+                ServerMode.VLESS, ServerMode.XHTTP -> planVless(dnsPlan, withXhttp)
                 ServerMode.AWG -> planAwg()
                 ServerMode.TG -> planTg()
             } ?: return)
@@ -520,7 +512,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 email = e,
                 sni = s,
                 masqueradeUrl = m,
-                expectedIp = dns?.ip.orEmpty(),
             )
             val pin = AtomicReference<String?>(null)
             val code = runner.runScript(ssh, Scripts.install(params)) { line ->
@@ -545,10 +536,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    private fun planVless(dnsPlan: DnsPlan?): ProtoJob? {
+    /** Новый путь XHTTP для установки с вкладки «Сервер». */
+    private fun newXhttpPath() = "/" + randomHex(5)
+
+    private fun planVless(dnsPlan: DnsPlan?, xhttp: Boolean = false): ProtoJob? {
         val portNum = vlessPort.trim().toIntOrNull()
         if (portNum == null || portNum !in 1..65535) return null.also { fail("Порт VLESS должен быть числом 1–65535.") }
-        if (vlessSelf) return planVlessSelf(dnsPlan, portNum)
+        val xpath = if (xhttp) newXhttpPath() else ""
+        if (vlessSelf) return planVlessSelf(dnsPlan, portNum, xpath)
         val target = realitySni.trim().lowercase()
         if (!ZONE.matches(target)) return null.also { fail("Сайт для маскировки Reality — имя хоста, например www.microsoft.com.") }
         return ProtoJob { ssh, dns ->
@@ -559,6 +554,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 sni = target,
                 shortId = randomHex(8),
                 address = address,
+                xhttpPath = xpath,
             )
             val pbk = AtomicReference<String?>(null)
             val code = runner.runScript(ssh, Scripts.installVless(params)) { line ->
@@ -571,6 +567,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val key = pbk.get()
             if (code == 0 && !key.isNullOrEmpty()) {
                 resultLinks.add(ShareLink(Protocol.VLESS.title, Links.vless(address, portNum, params.uuid, target, key, params.shortId)))
+                if (xpath.isNotEmpty()) {
+                    resultLinks.add(ShareLink(Links.XHTTP_TITLE, Links.vlessXhttp(address, portNum, params.uuid, target, key, params.shortId, xpath)))
+                }
                 true
             } else {
                 addLog(log, "Установка VLESS завершилась с ошибкой (код $code).")
@@ -583,7 +582,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * VLESS под свой домен: Hysteria2 (сертификат Let's Encrypt и сайт на 127.0.0.1:8443)
      * → VLESS + Reality с SNI = домен. Получаются две ссылки.
      */
-    private fun planVlessSelf(dnsPlan: DnsPlan?, portNum: Int): ProtoJob? {
+    private fun planVlessSelf(dnsPlan: DnsPlan?, portNum: Int, xpath: String): ProtoJob? {
         val name = dnsPlan?.fqdn ?: domain.trim().lowercase()
         if (name.isEmpty() || !ZONE.matches(name)) {
             return null.also { fail("Для маскировки под свой домен укажите домен: включите name.com или впишите домен, который уже указывает на этот сервер.") }
@@ -596,10 +595,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         if (!Regex("^https://[A-Za-z0-9._~:/?@&=%+-]+$").matches(m)) {
             return null.also { fail("Сайт-маскировка должен начинаться с https:// и не содержать пробелов и кавычек.") }
         }
-        return ProtoJob { ssh, dns ->
-            val ip = dns?.ip ?: resolveIpv4(ssh.host).orEmpty()
+        return ProtoJob { ssh, _ ->
             addLog(log, "Hysteria2: сертификат Let's Encrypt на $name и сайт для маскировки VLESS")
-            val hy = SelfMask.hy2(name, hyPortNum, randomSecret(), randomSecret(), e, m, ip)
+            val hy = SelfMask.hy2(name, hyPortNum, randomSecret(), randomSecret(), e, m)
             val hyCode = runner.runScript(ssh, Scripts.install(hy)) { if (!Links.isMarker(it)) postLog(log, it) }
             if (hyCode != 0) {
                 addLog(log, "Установка Hysteria2 завершилась с ошибкой (код $hyCode) — без неё VLESS не на что маскироваться, VLESS не ставится.")
@@ -607,7 +605,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
             addLog(log, "")
             addLog(log, "VLESS + Reality с маскировкой под $name")
-            val vl = SelfMask.vless(name, portNum, UUID.randomUUID().toString(), randomHex(8))
+            val vl = SelfMask.vless(name, portNum, UUID.randomUUID().toString(), randomHex(8)).copy(xhttpPath = xpath)
             val pbk = AtomicReference<String?>(null)
             val code = runner.runScript(ssh, Scripts.installVless(vl)) { line ->
                 if (line.startsWith(Scripts.PBK_MARKER)) pbk.set(line.removePrefix(Scripts.PBK_MARKER).trim()) else postLog(log, line)
@@ -616,6 +614,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             resultLinks.add(ShareLink(Protocol.HY2.title, Links.hy2(name, hy.port, hy.authPassword, hy.obfsPassword, name, name, null)))
             if (code == 0 && !key.isNullOrEmpty()) {
                 resultLinks.add(resultLinks.size - 1, ShareLink(Protocol.VLESS.title, Links.vless(name, portNum, vl.uuid, name, key, vl.shortId)))
+                if (xpath.isNotEmpty()) {
+                    resultLinks.add(resultLinks.size - 1, ShareLink(Links.XHTTP_TITLE, Links.vlessXhttp(name, portNum, vl.uuid, name, key, vl.shortId, xpath)))
+                }
                 addLog(log, "VLESS (маскировка под $name) и Hysteria2 установлены. Если сертификат Let's Encrypt ещё выпускается, " +
                     "VLESS заработает через минуту-другую после него.")
                 true
@@ -802,16 +803,27 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         return problems
     }
     /** Перезапуск служб всех выбранных протоколов. */
-    fun restartService() = simpleServerScript(*serverModeList.map { if (it == ServerMode.TG) Scripts.restartTelegram() else Scripts.restart(protoOf(it)) }.toTypedArray())
+    fun restartService() = simpleServerScript(
+        *serverModeList.map { if (it == ServerMode.TG) Scripts.restartTelegram() else Scripts.restart(protoOf(it)) }.distinct().toTypedArray(),
+    )
 
     /** Удаление всех выбранных протоколов с сервера. */
     fun remove() {
         resultLinks.clear()
-        simpleServerScript(*serverModeList.map { if (it == ServerMode.TG) Scripts.removeTelegram() else Scripts.remove(protoOf(it)) }.toTypedArray())
+        // XHTTP без VLESS — убрать только XHTTP; вместе с VLESS он уйдёт и так
+        simpleServerScript(
+            *serverModeList.mapNotNull {
+                when (it) {
+                    ServerMode.TG -> Scripts.removeTelegram()
+                    ServerMode.XHTTP -> Scripts.removeXhttp().takeIf { ServerMode.VLESS !in serverModes }
+                    else -> Scripts.remove(protoOf(it))
+                }
+            }.toTypedArray(),
+        )
     }
 
     private fun protoOf(m: ServerMode) = when (m) {
-        ServerMode.VLESS -> Protocol.VLESS
+        ServerMode.VLESS, ServerMode.XHTTP -> Protocol.VLESS
         ServerMode.AWG -> Protocol.AWG
         else -> Protocol.HY2
     }
@@ -1324,66 +1336,31 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     // =====================================================================
-    //  Комбайн: VPS → загрузка → DNS → проверка DNS → Hysteria2 → ссылка
+    //  Новый сервер: проверка протоколов и ключа безопасности
     // =====================================================================
 
-    /** Проверяет все данные и открывает диалог подтверждения (с ценой). */
-    fun combineRequest() {
-        combineError = null
-        val problem = when {
-            opApiKey.isBlank() || opClientKey.isBlank() -> "Введите Api-Key и Client-Key OneProvider."
-            !opCatalogLoaded -> "Загрузите локации и тарифы OneProvider."
-            opSelectedLocation == null -> "Выберите локацию."
-            opSelectedSize == null -> "Выберите тариф."
-            opSelectedTemplate == null -> "Выберите операционную систему."
-            else -> combineProtocolsProblem()
-        }
-        if (problem != null) {
-            combineError = problem
-            return
-        }
-        if (combineSecure) {
-            val keyProblem = secureKeyProblem()
-            if (keyProblem != null) {
-                combineError = keyProblem
-                return
-            }
-        }
-        val plan = buildDnsPlan(withSubdomain = true) ?: run { combineError = errorMessage; return }
-        if (plan.subdomain.isEmpty()) {
-            combineError = "Укажите поддомен (например, vpn1) — корень домена комбайн не перезаписывает."
-            return
-        }
-        if (stableProfiles.any { it.fqdn == plan.fqdn }) {
-            combineError = "${plan.fqdn} уже есть на Главной со своими постоянными ссылками. Чтобы перенести его на новый VPS, " +
-                "выберите его на Главной и нажмите «Заменить сервер». Для нового сервера укажите другой поддомен."
-            return
-        }
-        combineConfirm = true
-    }
-
-    /** Проверка выбора протоколов комбайна и их портов (TCP и UDP порты не должны пересекаться). */
-    private fun combineProtocolsProblem(): String? {
-        if (!combineHy2 && !combineVless && !combineAwg && !combineTg) return "Включите хотя бы один протокол."
+    /** Проверка протоколов нового сервера и их портов (TCP и UDP порты не должны пересекаться). */
+    private fun plusProtocolsProblem(): String? {
+        if (!plusHy2 && !plusVless && !plusAwg && !plusTg) return "Включите хотя бы один протокол."
         val hy = hyPort.trim().toIntOrNull()
         val vl = vlessPort.trim().toIntOrNull()
         val aw = awgPort.trim().toIntOrNull()
         val tg = tgPort.trim().toIntOrNull()
         return when {
-            combineHy2 && (hy == null || hy !in 1..65535) -> "Порт Hysteria2 должен быть числом 1–65535."
-            (combineHy2 || combineVless) && !Regex("^https://[A-Za-z0-9._~:/?@&=%+-]+$").matches(masquerade.trim()) ->
+            plusHy2 && (hy == null || hy !in 1..65535) -> "Порт Hysteria2 должен быть числом 1–65535."
+            (plusHy2 || plusVless) && !Regex("^https://[A-Za-z0-9._~:/?@&=%+-]+$").matches(masquerade.trim()) ->
                 "Сайт-маскировка должен начинаться с https://."
             !SAFE_NAME.matches(email.trim()) -> "E-mail может содержать только латиницу, цифры и символы . _ @ + -"
-            combineVless && (vl == null || vl !in 1..65535) -> "Порт VLESS должен быть числом 1–65535."
-            combineVless && !combineHy2 && !ZONE.matches(realitySni.trim().lowercase()) ->
+            plusVless && (vl == null || vl !in 1..65535) -> "Порт VLESS должен быть числом 1–65535."
+            plusVless && !plusHy2 && !ZONE.matches(realitySni.trim().lowercase()) ->
                 "Без Hysteria2 VLESS маскируется под чужой сайт — укажите его, например www.microsoft.com."
-            combineAwg && (aw == null || aw !in 1..65535) -> "Порт AmneziaWG должен быть числом 1–65535."
-            combineAwg && combineHy2 && aw == hy -> "AmneziaWG и Hysteria2 не могут слушать один UDP-порт $aw — смените порт AmneziaWG."
-            combineTg && (tg == null || tg !in 1..65535) -> "Порт Telegram-прокси должен быть числом 1–65535."
-            combineTg && !ZONE.matches(tgDomain.trim().lowercase()) -> "Домен маскировки Telegram — имя хоста, например www.microsoft.com."
-            combineTg && combineVless && tg == vl -> "VLESS и Telegram-прокси не могут слушать один TCP-порт $tg — смените порт Telegram."
-            combineTg && tg == 80 && (combineHy2 || combineVless) -> "Порт 80/TCP нужен для сертификата Let's Encrypt — выберите для Telegram другой."
-            combineTg && tg == 8443 && combineHy2 && combineVless -> "Порт 8443 занят сайтом Hysteria2 для маскировки VLESS — выберите для Telegram другой (например, 993)."
+            plusAwg && (aw == null || aw !in 1..65535) -> "Порт AmneziaWG должен быть числом 1–65535."
+            plusAwg && plusHy2 && aw == hy -> "AmneziaWG и Hysteria2 не могут слушать один UDP-порт $aw — смените порт AmneziaWG."
+            plusTg && (tg == null || tg !in 1..65535) -> "Порт Telegram-прокси должен быть числом 1–65535."
+            plusTg && !ZONE.matches(tgDomain.trim().lowercase()) -> "Домен маскировки Telegram — имя хоста, например www.microsoft.com."
+            plusTg && plusVless && tg == vl -> "VLESS и Telegram-прокси не могут слушать один TCP-порт $tg — смените порт Telegram."
+            plusTg && tg == 80 && (plusHy2 || plusVless) -> "Порт 80/TCP нужен для сертификата Let's Encrypt — выберите для Telegram другой."
+            plusTg && tg == 8443 && plusHy2 && plusVless -> "Порт 8443 занят сайтом Hysteria2 для маскировки VLESS — выберите для Telegram другой (например, 993)."
             else -> null
         }
     }
@@ -1401,224 +1378,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             !SshKeys.matchesAny(privateKey, passphrase, selectedPubs) ->
                 "Безопасность: приватный ключ на вкладке «Сервер» не соответствует ни одному из отмеченных ключей кабинета."
             else -> null
-        }
-    }
-
-    fun combineStop() {
-        combineJob?.cancel()
-    }
-
-    fun combineRun() {
-        combineConfirm = false
-        if (running) return
-        val loc = opSelectedLocation ?: return
-        val size = opSelectedSize ?: return
-        val tpl = opSelectedTemplate ?: return
-        val plan = buildDnsPlan(withSubdomain = true) ?: return
-        val op = OneProviderClient(opApiKey.trim(), opClientKey.trim())
-        val keys = opKeySel.toList()
-        val withHy2 = combineHy2
-        val port = hyPort.trim().toIntOrNull() ?: 443
-        val mail = email.trim()
-        val masq = masquerade.trim()
-        val allowOverwrite = overwrite
-        val secure = combineSecure
-        val withVless = combineVless
-        val vlPort = vlessPort.trim().toIntOrNull() ?: 443
-        // VLESS «под свой домен» опирается на Hysteria2 (сертификат и сайт на 127.0.0.1:8443)
-        val foreignSni = realitySni.trim().lowercase()
-        val withAwg = combineAwg
-        val awgPortNum = awgPort.trim().toIntOrNull() ?: Awg.randomPort()
-        val trailers = awgTrailers
-        val withTg = combineTg
-        val tgPortNum = tgPort.trim().toIntOrNull() ?: 443
-        val tgFront = tgDomain.trim().lowercase()
-        // постоянный профиль сервера: все пароли и ключи создаются здесь, на телефоне
-        var profile = StableProfile.create(plan.zone, plan.subdomain, mail, masq).copy(
-            hy2On = withHy2, hy2Port = port, vlessOn = withVless, vlessPort = vlPort,
-            realitySni = if (withHy2) plan.fqdn else foreignSni,
-            awg = if (withAwg) Awg.generate(plan.fqdn, awgPortNum, trailers) else null, awgOn = withAwg,
-            tg = if (withTg) TgParams.generate(tgPortNum, tgFront) else null, tgOn = withTg,
-        )
-        persist()
-
-        running = true
-        combineActive = true
-        combineLog.clear()
-        combineLinks.clear()
-        combineSteps.clear()
-        CombineStep.entries.forEach { combineSteps[it] = StepStatus.PENDING }
-        combineCreated = null
-        var current = CombineStep.CREATE
-
-        combineJob = viewModelScope.launch {
-            fun step(s: CombineStep) {
-                current = s
-                combineSteps[s] = StepStatus.RUNNING
-                addLog(combineLog, "")
-                addLog(combineLog, "▶ ${s.title}")
-            }
-            fun done(s: CombineStep) {
-                combineSteps[s] = StepStatus.DONE
-            }
-            try {
-                // 1. Создание VPS
-                step(CombineStep.CREATE)
-                val created = createVmChecked(op, loc, size, tpl, plan.fqdn, keys)
-                combineCreated = created
-                addLog(combineLog, "VPS создан: ID ${created.id}, ${loc.title}, ${size.summary}, ${size.monthlyPrice}/мес")
-                var ip = created.ip
-                var tries = 0
-                while (!IPV4.matches(ip) && tries < 30) {
-                    addLog(combineLog, "Жду назначения IPv4…")
-                    delay(10_000)
-                    ip = op.listVms().firstOrNull { it.id == created.id }?.ip.orEmpty()
-                    tries++
-                }
-                if (!IPV4.matches(ip)) throw IllegalStateException("VPS не получил IPv4-адрес за 5 минут.")
-                addLog(combineLog, "IPv4: $ip")
-                done(CombineStep.CREATE)
-
-                // 2. Ожидание загрузки (порт SSH)
-                step(CombineStep.BOOT)
-                waitForSsh(ip, combineLog, 10 * 60_000, op, created.id)
-                addLog(combineLog, "SSH доступен. Даю системе ещё 20 секунд на старт служб.")
-                delay(20_000)
-                done(CombineStep.BOOT)
-
-                // Вход для установки: по паролю root (если выдан), иначе по ключу.
-                // Безопасность включается в самом конце, после установки.
-                val keyCfg = SshConfig(
-                    host = ip, port = 22, user = "root",
-                    password = created.password, privateKey = privateKey, keyPassphrase = passphrase,
-                )
-                var ssh: SshConfig = when {
-                    created.password.isNotEmpty() -> keyCfg.copy(privateKey = "", keyPassphrase = "")
-                    privateKey.isNotBlank() -> keyCfg
-                    else -> throw IllegalStateException("Провайдер не выдал пароль root, а приватный ключ на вкладке «Сервер» не задан.")
-                }
-
-                // 3. A-запись в name.com
-                step(CombineStep.DNS)
-                setupDnsRecord(ip, plan, allowOverwrite, combineLog)
-                done(CombineStep.DNS)
-
-                // 4. Проверка обновления DNS через публичные резолверы
-                step(CombineStep.DNS_CHECK)
-                val dnsStart = System.currentTimeMillis()
-                var ok = false
-                while (System.currentTimeMillis() - dnsStart < 5 * 60_000) {
-                    val got = DnsCheck.resolveA(plan.fqdn)
-                    if (ip in got) {
-                        ok = true
-                        break
-                    }
-                    addLog(combineLog, "${plan.fqdn} → ${got.joinToString().ifEmpty { "пока нет ответа" }}; жду…")
-                    delay(15_000)
-                }
-                if (ok) {
-                    addLog(combineLog, "✓ Google DNS / Cloudflare видят ${plan.fqdn} → $ip")
-                    done(CombineStep.DNS_CHECK)
-                } else {
-                    addLog(combineLog, "Публичные DNS ещё не обновились за 5 минут — продолжаю: сервер дождётся DNS сам.")
-                    combineSteps[CombineStep.DNS_CHECK] = StepStatus.WARN
-                }
-
-                /** Скрипт с повторами, пока SSH на свежем VPS ещё не готов. */
-                suspend fun runWithRetry(script: String, onLine: (String) -> Unit): Int {
-                    var attempt = 0
-                    while (true) {
-                        attempt++
-                        try {
-                            return runner.runScript(ssh, script, onLine)
-                        } catch (e: SshException) {
-                            val msg = e.message.orEmpty()
-                            val fatal = "не принял" in msg || "Неверный" in msg || "пароль" in msg || "Ключ сервера" in msg || "Вставлен" in msg
-                            if (fatal || attempt >= 6) throw e
-                            addLog(combineLog, "SSH пока не готов ($msg). Повтор через 20 с (попытка ${attempt + 1} из 6)…")
-                            delay(20_000)
-                        }
-                    }
-                }
-
-                // 5. Протоколы — с ключами нового постоянного профиля, поэтому сервер потом можно переносить без смены ссылок
-                if (!withHy2 && withVless) addLog(combineLog, "Hysteria2 выключена — VLESS маскируется под $foreignSni (в России такую маскировку режут чаще).")
-                val res = installProfile(
-                    profile.copy(vps = ProfileVps(created.id, ip, created.hostname)), ip, combineLog, strict = false,
-                    run = { script, onLine -> runWithRetry(script, onLine) },
-                    ssh = { ssh },
-                    start = { st -> step(combineStepOf(st)) },
-                    finish = { st, status -> combineSteps[combineStepOf(st)] = status },
-                )
-                profile = res.first
-                val failed = res.second
-                rememberProfile(ssh)
-                val links = profile.links()
-                if (failed >= listOf(withHy2, withVless, withAwg, withTg).count { it }) {
-                    throw IllegalStateException("Ни один протокол не установился — подробности в журнале выше.")
-                }
-
-                // 6. Безопасность — в самом конце, после настройки сервера
-                if (secure) {
-                    step(CombineStep.SECURE)
-                    try {
-                        ssh = Hardener(runner) { postLog(combineLog, it) }.harden(keyCfg, created.password)
-                        rememberProfile(ssh)
-                        done(CombineStep.SECURE)
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (e: Exception) {
-                        // протокол уже работает — не теряем ссылку из-за ошибки защиты
-                        combineSteps[CombineStep.SECURE] = StepStatus.FAILED
-                        addLog(combineLog, "ОШИБКА БЕЗОПАСНОСТИ: ${e.message ?: e.javaClass.simpleName}")
-                        addLog(combineLog, "Протоколы установлены, но защита не включена. Её можно включить позже: «Сервер» → ⋮ → «Защитить сервер».")
-                    }
-                } else {
-                    combineSteps[CombineStep.SECURE] = StepStatus.SKIPPED
-                    addLog(combineLog, "")
-                    addLog(combineLog, "Безопасность выключена — обновления и отключение пароля пропущены.")
-                }
-
-                // 7. Ссылка и QR
-                step(CombineStep.LINK)
-                combineLinks.addAll(links)
-                host = ip
-                sshPort = "22"
-                user = "root"
-                useKey = ssh.privateKey.isNotBlank()
-                if (created.password.isNotEmpty()) password = created.password
-                persist()
-                // сервер попадает на Главную: его можно переносить на другой VPS, ссылки останутся прежними
-                storeStable(profile)
-                if (stableSelected.isEmpty()) selectStableQuiet(profile.fqdn)
-                done(CombineStep.LINK)
-                addLog(combineLog, "")
-                addLog(combineLog, "Готово! Сервер ${plan.fqdn} работает. " + (if (combineLinks.size > 1) "Ссылки и QR — ниже." else "Ссылка и QR — ниже.") +
-                    (if (failed > 0) " Не всё установилось ($failed) — см. предупреждения выше." else ""))
-                addLog(combineLog, "Сервер добавлен на Главную: выберите его там, чтобы проверять или переносить на другой VPS — ссылки не изменятся.")
-            } catch (e: CancellationException) {
-                combineSteps[current] = StepStatus.FAILED
-                addLog(combineLog, "Остановлено пользователем.")
-                combineLeftovers(plan)
-            } catch (e: Exception) {
-                combineSteps[current] = StepStatus.FAILED
-                addLog(combineLog, "ОШИБКА: ${e.message ?: e.javaClass.simpleName}")
-                combineLeftovers(plan)
-            } finally {
-                running = false
-                combineActive = false
-                combineJob = null
-            }
-        }
-    }
-
-    /** Подсказка, что осталось после прерванного комбайна. */
-    private fun combineLeftovers(plan: DnsPlan) {
-        val c = combineCreated ?: return
-        addLog(combineLog, "Внимание: VPS ${c.hostname.ifEmpty { c.id }} уже создан и оплачивается. " +
-            "Если он не нужен — удалите его на вкладке OneProvider.")
-        if (combineSteps[CombineStep.DNS] == StepStatus.DONE) {
-            addLog(combineLog, "A-запись ${plan.fqdn} создана в name.com — при необходимости удалите её на вкладке DNS.")
         }
     }
 
@@ -1706,7 +1465,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     // =====================================================================
-    //  Комбайн+: постоянные ссылки. VPS → DNS → Hysteria2 + VLESS с ключами профиля → безопасность
+    //  Постоянные ссылки: VPS → DNS → протоколы с ключами профиля → безопасность
     // =====================================================================
 
     /** Сохраняет профиль в список по его домену (выбор сервера не меняется). */
@@ -1851,7 +1610,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         plusLinks.addAll(p.links())
     }
 
-    /** Выбранный сервер комбайна для переезда (null — покупаем новый VPS). */
+    /** Выбранный свободный сервер для переезда (null — покупаем новый VPS). */
     val plusTarget: CombineServer? get() = plusTargetId.takeIf { it.isNotEmpty() }?.let { id -> combineServers.firstOrNull { it.vpsId == id } }
 
     /** Свободные готовые серверы: ни один профиль Главной на них сейчас не работает (иначе сломались бы его ссылки). */
@@ -1889,7 +1648,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         return secrets.get(secretKey(p, "password")) to key
     }
 
-    /** Есть ли VPS сервера комбайна в аккаунте OneProvider (null — список VPS ещё не загружен). */
+    /** Есть ли VPS свободного сервера в аккаунте OneProvider (null — список VPS ещё не загружен). */
     fun combineServerAlive(srv: CombineServer): Boolean? = if (!opLoaded) null else opVms.any { it.id == srv.vpsId || it.ip == srv.ip }
 
     fun plusRequest() {
@@ -1907,24 +1666,22 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         if (problem != null) { plusError = problem; return }
         val plan = plusPlan() ?: return
         if (plan.subdomain.isEmpty()) {
-            plusError = "Укажите поддомен (например, vpn) — корень домена Комбайн+ не перезаписывает."
+            plusError = "Укажите поддомен (например, vpn) — корень домена приложение не перезаписывает."
             return
         }
         if (plusCurrent == null) {
             if (stableProfiles.any { it.fqdn == plan.fqdn }) {
                 plusError = "Сервер ${plan.fqdn} уже есть на Главной — выберите его в списке или укажите другой поддомен."; return
             }
-            if (!Regex("^https://[A-Za-z0-9._~:/?@&=%+-]+$").matches(masquerade.trim())) {
-                plusError = "Сайт-маскировка должен начинаться с https://."; return
-            }
-            if (!SAFE_NAME.matches(email.trim())) { plusError = "E-mail может содержать только латиницу, цифры и . _ @ + -"; return }
+            // новый сервер: протоколы и порты выбраны в шторке (у существующего их задаёт профиль)
+            plusProtocolsProblem()?.let { plusError = it; return }
         }
         plusConfirm = true
     }
 
-    /** Переезд на готовый сервер комбайна: VPS не покупается, нужен только доступ по SSH. */
+    /** Переезд на свободный сервер: VPS не покупается, нужен только доступ по SSH. */
     private fun plusRequestExisting(t: CombineServer) {
-        val profile = plusProfile ?: run { plusError = "Сначала создайте постоянный профиль — сервер комбайна подходит только для переезда."; return }
+        val profile = plusProfile ?: run { plusError = "Сначала создайте сервер на Главной — свободный сервер подходит только для переезда."; return }
         val (pass, key) = savedCredentials(t.ip)
         val problem = when {
             t.vpsId == profile.vps?.id || t.ip == profile.vps?.ip -> "Профиль уже работает на этом сервере."
@@ -2029,6 +1786,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         plusJob?.cancel()
     }
 
+    /**
+     * Профиль нового сервера: протоколы и порты — из шторки «Создать сервер» (AmneziaWG и XHTTP добавляет [plusRun]).
+     * VLESS «под свой домен» опирается на Hysteria2; без неё Reality маскируется под [realitySni].
+     */
+    internal fun newServerProfile(zone: String, subdomain: String): StableProfile {
+        val p = StableProfile.create(zone, subdomain, email.trim(), masquerade.trim())
+        return p.copy(
+            hy2On = plusHy2, hy2Port = hyPort.trim().toIntOrNull() ?: 443,
+            vlessOn = plusVless, vlessPort = vlessPort.trim().toIntOrNull() ?: 443,
+            realitySni = if (plusHy2) p.fqdn else realitySni.trim().lowercase(),
+            tg = if (plusTg) TgParams.generate(tgPort.trim().toIntOrNull() ?: 443, tgDomain.trim().lowercase()) else null,
+            tgOn = plusTg,
+        )
+    }
+
     fun plusRun() {
         plusConfirm = false
         if (running) return
@@ -2045,7 +1817,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         // профиль создаётся до покупки VPS и сразу сохраняется
         val before = plusCurrent
         val isNew = before == null
-        var profile = before ?: StableProfile.create(plan.zone, plan.subdomain, email.trim(), masquerade.trim())
+        var profile = before ?: newServerProfile(plan.zone, plan.subdomain)
         if (isNew) {
             savePlusProfile(profile)
             selectStableQuiet(profile.fqdn)
@@ -2061,8 +1833,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val awgNow = profile.awg
         val trailersChanged = withAwg && awgNow != null && awgNow.trailers != plusTrailers
         if (trailersChanged && awgNow != null) profile = profile.copy(awg = awgNow.copy(trailers = plusTrailers))
-        if (profile.awgOn != withAwg || profile !== before) {
-            profile = profile.copy(awgOn = withAwg)
+        // XHTTP: путь постоянный (выведен из UUID), поэтому включение и выключение ссылку не портят; без VLESS не работает
+        val withXhttp = plusXhttp && profile.vlessOn
+        if (profile.awgOn != withAwg || profile.xhttpOn != withXhttp || profile !== before) {
+            profile = profile.copy(awgOn = withAwg, xhttpOn = withXhttp, xhttpPath = if (withXhttp) profile.xhttpPathEff else profile.xhttpPath)
             savePlusProfile(profile)
         }
         val oldVps = profile.vps
@@ -2109,6 +1883,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             try {
                 addLog(plusLog, if (isNew) "Создан новый постоянный профиль ${profile.fqdn}. Сохраните его копию после установки."
                     else "Профиль ${profile.fqdn}: ссылки останутся прежними.")
+                if (isNew && !profile.hy2On && profile.vlessOn) {
+                    addLog(plusLog, "Hysteria2 выключена — VLESS маскируется под ${profile.realitySni} (в России такую маскировку режут чаще).")
+                }
                 if (trailersChanged) {
                     addLog(plusLog, "Режим RandomTrailers AmneziaWG ${if (plusTrailers) "включён" else "выключен"} — ссылку AmneziaWG " +
                         "нужно заново добавить в AmneziaVPN (остальные ссылки прежние).")
@@ -2157,7 +1934,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         else -> throw IllegalStateException("Провайдер не выдал пароль root, а приватный ключ на вкладке «Сервер» не задан.")
                     }
                 } else {
-                    // 1. Готовый сервер комбайна — VPS не покупается
+                    // 1. Свободный сервер — VPS не покупается
                     step(PlusStep.CREATE)
                     ip = existing.ip
                     newId = existing.vpsId
@@ -2184,25 +1961,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 setupDnsRecord(ip, plan, allowOverwrite = true, target = plusLog, dropAaaa = true)
                 done(PlusStep.DNS)
 
-                // 4. Проверка DNS
-                step(PlusStep.DNS_CHECK)
-                val dnsStart = System.currentTimeMillis()
-                var ok = false
-                while (System.currentTimeMillis() - dnsStart < 5 * 60_000) {
-                    val got = DnsCheck.resolveA(plan.fqdn)
-                    if (ip in got) { ok = true; break }
-                    addLog(plusLog, "${plan.fqdn} → ${got.joinToString().ifEmpty { "пока нет ответа" }}; жду…")
-                    delay(15_000)
-                }
-                if (ok) {
-                    addLog(plusLog, "✓ Google DNS / Cloudflare видят ${plan.fqdn} → $ip")
-                    done(PlusStep.DNS_CHECK)
-                } else {
-                    addLog(plusLog, "Публичные DNS ещё не обновились за 5 минут — продолжаю: сервер дождётся DNS сам.")
-                    done(PlusStep.DNS_CHECK, StepStatus.WARN)
-                }
+                // DNS не ждём: Let's Encrypt спрашивает серверы имён name.com, а они знают новую запись сразу.
+                // Публичные DNS проверяются в конце («Проверка сервера и DNS») — только как предупреждение.
 
-                // 5–7. Протоколы с ключами профиля и копия сертификата
+                // 4–8. Протоколы с ключами профиля и копия сертификата
                 val res = installProfile(
                     profile, ip, plusLog, strict = true,
                     run = { script, onLine -> runWithRetry(ssh, script, onLine) },
@@ -2214,11 +1976,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 savePlusProfile(profile)
                 rememberProfile(ssh)
 
-                // 8. Безопасность — в самом конце
+                // 9. Безопасность — в самом конце
                 if (secure && existing?.secured == true && ssh.privateKey.isNotBlank()) {
                     done(PlusStep.SECURE)
                     addLog(plusLog, "")
-                    addLog(plusLog, "Безопасность: сервер уже защищён комбайном (вход только по ключу).")
+                    addLog(plusLog, "Безопасность: сервер уже защищён (вход только по ключу).")
                 } else if (secure) {
                     step(PlusStep.SECURE)
                     try {
@@ -2238,7 +2000,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     addLog(plusLog, "Безопасность выключена — обновления и отключение пароля пропущены.")
                 }
 
-                // 9. Проверка: службы, сертификат, выход в интернет, DNS, порт 443 с телефона
+                // 10. Проверка: службы, сертификат, выход в интернет, DNS, порт 443 с телефона
                 step(PlusStep.VERIFY)
                 val problems = try {
                     runDiagnose(ssh, profile.fqdn, plusLog, profile.realitySni)
@@ -2265,7 +2027,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     // сервер стал основным — в списке он больше не нужен
                     dropCombineServer(existing.vpsId)
                     if (!profile.awgOn && existing.protocols.contains(Awg.TITLE)) {
-                        addLog(plusLog, "На сервере остался AmneziaWG комбайна со своей ссылкой — удалить его можно на вкладке «Сервер».")
+                        addLog(plusLog, "На сервере остался прежний AmneziaWG со своей ссылкой — удалить его можно на вкладке «Сервер».")
                     }
                 }
                 if (oldVps != null && oldVps.id != newId) {
@@ -2291,13 +2053,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Шаги установки протоколов профиля — общие для переезда (PlusStep) и комбайна (CombineStep). */
+    /** Шаги установки протоколов профиля (новый сервер, переезд, «Обновить сервер»). */
     private enum class ProtoStep { HY2, VLESS, AWG, TG, CERT }
-
-    private fun combineStepOf(s: ProtoStep) = when (s) {
-        ProtoStep.HY2 -> CombineStep.INSTALL; ProtoStep.VLESS -> CombineStep.VLESS; ProtoStep.AWG -> CombineStep.AWG
-        ProtoStep.TG -> CombineStep.TG; ProtoStep.CERT -> CombineStep.CERT
-    }
 
     private fun plusStepOf(s: ProtoStep) = when (s) {
         ProtoStep.HY2 -> PlusStep.HY2; ProtoStep.VLESS -> PlusStep.VLESS; ProtoStep.AWG -> PlusStep.AWG
@@ -2306,7 +2063,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /**
      * Ставит на сервер протоколы, включённые в профиле, с его ключами — поэтому ссылки совпадают побайтно на любом VPS.
-     * [strict]: ошибка Hysteria2 или VLESS прерывает работу (переезд); иначе — предупреждение и следующий протокол (комбайн).
+     * [strict]: ошибка Hysteria2 или VLESS прерывает работу (переезд); иначе — предупреждение и следующий протокол.
      * Возвращает профиль с копией сертификата и число протоколов, которые не установились.
      */
     private suspend fun installProfile(
@@ -2344,7 +2101,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             val cert = profile.cert?.takeIf { it.daysLeft() > 10 }
             if (cert != null) addLog(target, "Ставлю сохранённый сертификат (ещё ${cert.daysLeft()} дн.) — Let's Encrypt не понадобится.")
             // TCP 443 занят VLESS или Telegram — сертификат выпускается через порт 80 (acmeHttp в hy2Params)
-            val code = run(Scripts.install(profile.hy2Params(ip, cert)), log)
+            val code = run(Scripts.install(profile.hy2Params(cert)), log)
             if (code == 0) { hy2Ok = true; finish(ProtoStep.HY2, StepStatus.DONE) }
             else warn(ProtoStep.HY2, "Установка Hysteria2 завершилась с ошибкой (код $code).")
         } else {
@@ -2415,7 +2172,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private fun plusLeftovers(created: OpCreated?, oldVps: ProfileVps?) {
         if (created != null) {
             addLog(plusLog, "Внимание: новый VPS ${created.hostname.ifEmpty { created.id }} уже создан и оплачивается. " +
-                "Можно запустить Комбайн+ ещё раз или удалить VPS на вкладке OneProvider.")
+                "Чтобы доставить протоколы, нажмите «Обновить сервер» на Главной (ключи и ссылки прежние) или удалите VPS во вкладке «Облако».")
         }
         if (plusSteps[PlusStep.DNS] == StepStatus.DONE && oldVps != null) {
             addLog(plusLog, "A-запись уже указывает на новый VPS. Старый VPS (${oldVps.ip}) не удалён.")
@@ -2441,7 +2198,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Проверка текущего сервера профиля (кнопка на вкладке «Комбайн+»). */
+    /** Проверка текущего сервера профиля (кнопка «Проверить» на Главной). */
     fun plusDiagnose() {
         val p = plusProfile ?: return
         val ssh = plusSsh() ?: return
@@ -2557,12 +2314,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun vpnDisconnect() = app.hy2setup.vpn.VpnTunnelService.stop(getApplication())
 
     // ---------- Работа в фоне и контроль ----------
-    /** Текст уведомления о ходе работы: текущий шаг комбайна или переезда, иначе последняя строка журнала. */
+    /** Текст уведомления о ходе работы: текущий шаг создания или переезда сервера, иначе последняя строка журнала. */
     val jobText: String
         get() {
-            combineSteps.entries.firstOrNull { it.value == StepStatus.RUNNING }?.let { return "Комбайн: ${it.key.title}" }
             plusSteps.entries.firstOrNull { it.value == StepStatus.RUNNING }?.let { return "${plusProfile?.fqdn.orEmpty()}: ${it.key.title}" }
-            return listOf(plusLog, combineLog, log, tgLog, opLog, dnsLog).firstOrNull { it.isNotEmpty() }
+            return listOf(plusLog, log, tgLog, opLog, dnsLog).firstOrNull { it.isNotEmpty() }
                 ?.lastOrNull { it.isNotBlank() }?.take(120) ?: "Работа с сервером…"
         }
 
@@ -2698,7 +2454,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         launchTask(plusLog) {
             addLog(plusLog, "Перевожу VLESS на маскировку под ${p.fqdn} на сервере ${ssh.host} …")
             val cert = p.cert?.takeIf { it.daysLeft() > 10 }
-            val hy = runner.runScript(ssh, Scripts.install(p.hy2Params(ssh.host, cert))) { if (!Links.isMarker(it)) postLog(plusLog, it) }
+            val hy = runner.runScript(ssh, Scripts.install(p.hy2Params(cert))) { if (!Links.isMarker(it)) postLog(plusLog, it) }
             if (hy != 0) throw IllegalStateException("Переустановка Hysteria2 завершилась с ошибкой (код $hy). Профиль не изменён.")
             val vl = runner.runScript(ssh, Scripts.installVless(p.vlessParams())) { if (!Links.isMarker(it)) postLog(plusLog, it) }
             if (vl != 0) throw IllegalStateException("Переустановка VLESS завершилась с ошибкой (код $vl). Профиль не изменён.")
@@ -3217,13 +2973,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         prefs.edit()
             .putBoolean("useKey", useKey)
             .putBoolean("harden", hardenBeforeInstall)
-            .putBoolean("combineSecure", combineSecure)
-            .putBoolean("combineVless", combineVless)
-            .putBoolean("combineAwg", combineAwg)
-            .putBoolean("combineHy2", combineHy2)
-            .putBoolean("combineTg", combineTg)
             .putBoolean("plusSecure", plusSecure)
+            .putBoolean("plusHy2", plusHy2).putBoolean("plusVless", plusVless).putBoolean("plusTg", plusTg)
             .putBoolean("plusAwg", plusAwg)
+            .putBoolean("plusXhttp", plusXhttp)
             .putBoolean("plusTrailers", plusTrailers)
             .putBoolean("vlessSelf", vlessSelf)
             .putString("tgPort", tgPort.trim()).putString("tgDomain", tgDomain.trim())

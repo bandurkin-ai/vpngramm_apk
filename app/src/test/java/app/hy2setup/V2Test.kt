@@ -22,7 +22,7 @@ class V2Test {
         assertTrue(p.users.isEmpty())
         assertEquals(24, p.subToken.length)
         // одна строка Hysteria2 — прежний режим password
-        assertTrue(Scripts.hy2Auth(p.hy2Params("1.2.3.4", null)).contains("type: password"))
+        assertTrue(Scripts.hy2Auth(p.hy2Params(null)).contains("type: password"))
     }
 
     @Test
@@ -41,7 +41,7 @@ class V2Test {
         assertTrue(mama[Protocol.VLESS.title]!!.uri.startsWith("vless://${u.vlessUuid}@"))
         assertTrue(mama[Protocol.HY2.title]!!.uri.startsWith("hysteria2://u1:${u.hy2Pass}@"))
         // конфигурации сервера знают обоих
-        val auth = Scripts.hy2Auth(p.hy2Params("1.2.3.4", null))
+        val auth = Scripts.hy2Auth(p.hy2Params(null))
         assertTrue(auth.contains("type: userpass") && auth.contains("u0: ${base.hy2Auth}") && auth.contains("u1: ${u.hy2Pass}"))
         val vl = Scripts.installVless(p.vlessParams())
         assertTrue(vl.contains("\"id\": \"${u.vlessUuid}\"") && vl.contains("\"id\": \"\${UUID}\""))
@@ -82,7 +82,7 @@ class V2Test {
         assertEquals("https://vpn.example.org/s/${u.subToken}", p.subUrl(u))
         // VLESS «под себя»: сайт виден через Reality на 127.0.0.1:8443
         assertEquals(StableProfile.LOCAL_HTTPS, p.siteListen)
-        val masq = Scripts.hy2Masquerade(p.hy2Params("1.2.3.4", null))
+        val masq = Scripts.hy2Masquerade(p.hy2Params(null))
         assertTrue(masq.contains("type: file") && masq.contains("dir: ${StableProfile.SITE_DIR}") && masq.contains("listenHTTPS: 127.0.0.1:8443"))
         // без Hysteria2 подписку отдавать некому
         assertFalse(p.copy(hy2On = false).subAvailable)
@@ -161,7 +161,7 @@ class V2Test {
             realityPrivate = "iO2HTWeqgbV5Q-YiChZzgD9WnMleLH9aO0wt-FPL0Vo", realityPublic = "OnzLYEwWXpv--0raqKhr-8YYr88Ix_cADvHl0LGKSHw",
             realityShortId = "0123456789abcdef", users = listOf(u),
         )
-        File(dir, "v2s_hy.sh").writeText(Scripts.install(p.hy2Params("203.0.113.10", CertBackup("CRT", "K", "{}", 0))))
+        File(dir, "v2s_hy.sh").writeText(Scripts.install(p.hy2Params(CertBackup("CRT", "K", "{}", 0))))
         File(dir, "v2s_vl.sh").writeText(Scripts.installVless(p.vlessParams()))
         File(dir, "v2s_site.sh").writeText(Scripts.writeSite(StableProfile.SITE_DIR, Subscription.siteFiles(p)))
         File(dir, "v2s_check.sh").writeText(ServerCheck.script())
@@ -177,7 +177,7 @@ class V2Test {
         val dir = File("build/scripts").apply { mkdirs() }
         val u = ProfileUser.create("Мама", emptyList())
         val p = base.copy(users = listOf(u))
-        File(dir, "v2_install_hy2.sh").writeText(Scripts.install(p.hy2Params("203.0.113.10", null)))
+        File(dir, "v2_install_hy2.sh").writeText(Scripts.install(p.hy2Params(null)))
         File(dir, "v2_install_vless.sh").writeText(Scripts.installVless(p.vlessParams()))
         File(dir, "v2_site.sh").writeText(Scripts.writeSite(StableProfile.SITE_DIR, Subscription.siteFiles(p)))
         File(dir, "v2_check.sh").writeText(ServerCheck.script())

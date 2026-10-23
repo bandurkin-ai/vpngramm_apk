@@ -32,3 +32,15 @@ func (b *protectedBind) Open(port uint16) ([]conn.ReceiveFunc, uint16, error) {
 }
 
 func bindUAPI() string { return "" }
+
+// protectFd — вывести сокет мимо туннеля через приложение (VpnService.protect).
+func protectFd(fd int) error {
+	reply, _, err := request("PROTECT", fd)
+	if err != nil {
+		return err
+	}
+	if reply != "OK" {
+		return E.New("protect: ", reply)
+	}
+	return nil
+}
