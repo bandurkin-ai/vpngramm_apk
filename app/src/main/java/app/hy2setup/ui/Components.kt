@@ -115,6 +115,8 @@ fun SectionCard(
     subtitle: String? = null,
     collapsible: Boolean = true,
     startExpanded: Boolean = true,
+    /** Вызывается при сворачивании и разворачивании (true — развернули). */
+    onExpandChange: ((Boolean) -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     var expanded by rememberSaveable(title) { mutableStateOf(startExpanded) }
@@ -125,7 +127,7 @@ fun SectionCard(
     ) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(
-                Modifier.fillMaxWidth().let { if (collapsible) it.clickable { expanded = !expanded } else it },
+                Modifier.fillMaxWidth().let { if (collapsible) it.clickable { expanded = !expanded; onExpandChange?.invoke(expanded) } else it },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (icon != null) {

@@ -122,6 +122,33 @@ class ScreenshotTest {
         }
     }
 
+    /** Главная → «Протоколы»: прочитано с сервера, XHTTP отмечен к установке, Telegram — к удалению. */
+    @Test
+    fun homeProtocolsCard() {
+        val model = vm(0).apply {
+            homeProtoInstalled = setOf(app.hy2setup.ServerMode.HY2, app.hy2setup.ServerMode.VLESS, app.hy2setup.ServerMode.TG)
+            homeProtoChosen = homeProtoInstalled!!
+            homeProtoToggle(app.hy2setup.ServerMode.XHTTP)
+            homeProtoToggle(app.hy2setup.ServerMode.TG)
+        }
+        org.junit.Assert.assertEquals(setOf(app.hy2setup.ServerMode.XHTTP), model.homeProtoAdd)
+        org.junit.Assert.assertEquals(setOf(app.hy2setup.ServerMode.TG), model.homeProtoRemove)
+        // снятый VLESS снимает и XHTTP
+        model.homeProtoToggle(app.hy2setup.ServerMode.VLESS)
+        org.junit.Assert.assertFalse(app.hy2setup.ServerMode.XHTTP in model.homeProtoChosen)
+        model.homeProtoToggle(app.hy2setup.ServerMode.XHTTP)
+        org.junit.Assert.assertTrue(app.hy2setup.ServerMode.VLESS in model.homeProtoChosen)
+        captureRoboImage("build/screens/1-home-protocols-light.png") {
+            Hy2Theme(dark = false, dynamic = false) {
+                androidx.compose.material3.Surface {
+                    androidx.compose.foundation.layout.Column(androidx.compose.ui.Modifier.padding(16.dp)) {
+                        ServerProtocolsCard(model, model.plusProfile!!, startExpanded = true)
+                    }
+                }
+            }
+        }
+    }
+
     /** Длинный журнал на вкладке «Сервер»: окно результата невысокое, внутри — пролистывание. */
     @Test
     fun serverLongLog() {

@@ -288,8 +288,8 @@ private fun AwgParamsCard(vm: MainViewModel) {
 
 private fun vlessSelected(vm: MainViewModel) = ServerMode.VLESS in vm.serverModes || ServerMode.XHTTP in vm.serverModes
 
-/** Названия в списке «Протоколы». */
-private val PROTOCOL_NAMES = mapOf(
+/** Названия в списке «Протоколы» (вкладка «Сервер» и блок «Протоколы» на Главной). */
+internal val PROTOCOL_NAMES = mapOf(
     ServerMode.HY2 to "Hysteria2 + Salamander",
     ServerMode.VLESS to "VLESS + Reality",
     ServerMode.XHTTP to "VLESS + Reality + XHTTP",

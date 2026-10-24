@@ -710,11 +710,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     //  Управление сервером
     // =====================================================================
 
+    /** Общий статус уже показывает и Telegram-прокси; отдельный — только если выбран один Telegram. */
     fun status() = simpleServerScript(
-        *listOfNotNull(
-            Scripts.status().takeIf { serverModes.any { it != ServerMode.TG } },
-            Scripts.statusTelegram().takeIf { ServerMode.TG in serverModes },
-        ).toTypedArray(),
+        if (serverModes.any { it != ServerMode.TG }) Scripts.status() else Scripts.statusTelegram(),
     )
 
     /** «Подключение есть, интернета нет»: проверка сервера и DNS имени. */
@@ -726,10 +724,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             else -> plusProfile?.fqdn.orEmpty()
         }
         val sni = if (protocol == Protocol.VLESS && vlessSelf && name.isNotEmpty()) name else realitySni.trim()
+        // с телефона проверяется порт VLESS (TCP) из параметров, а не всегда 443
+        val tcpPort = vlessPort.trim().toIntOrNull()?.takeIf { it in 1..65535 } ?: 443
         persist()
         launchTask(log) {
             addLog(log, "Проверяю сервер ${ssh.host}" + (if (name.isNotEmpty()) " и имя $name" else "") + " …")
-            runDiagnose(ssh, name, log, sni)
+            runDiagnose(ssh, name, log, sni, tcpPort)
         }
     }
 
@@ -737,10 +737,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * Проверка «заморозки» (ТСПУ): большая страница сайта маскировки Reality через сервер и напрямую.
      * Возвращает true, если найдена проблема.
      */
-    private suspend fun freezeCheck(serverIp: String, target: SnapshotStateList<String>, realityName: String): Boolean {
+    private suspend fun freezeCheck(serverIp: String, target: SnapshotStateList<String>, realityName: String, port: Int = 443): Boolean {
         val sni = realityName.trim().ifEmpty { "www.microsoft.com" }
         addLog(target, "Скачиваю страницу $sni через сервер (проверка «заморозки после 16 КБ»)…")
-        val via = FreezeTest.download(serverIp, sni)
+        val via = FreezeTest.download(serverIp, sni, port = port)
         if (via.bytes >= FreezeTest.ENOUGH) {
             addLog(target, "OK: через сервер скачано ${via.kb} КБ — соединение не замерзает")
             return false
@@ -769,7 +769,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * Диагностика: скрипт на сервере и проверки с телефона (публичный DNS, TCP 443).
      * Возвращает число найденных проблем.
      */
-    private suspend fun runDiagnose(ssh: SshConfig, fqdn: String, target: SnapshotStateList<String>, realityName: String): Int {
+    private suspend fun runDiagnose(ssh: SshConfig, fqdn: String, target: SnapshotStateList<String>, realityName: String, tcpPort: Int = 443): Int {
         var problems = 0
         runner.runScript(ssh, Scripts.diagnose(fqdn)) { line ->
             if (line.startsWith("ПРОБЛЕМА:")) problems++
@@ -792,12 +792,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
         val host = fqdn.ifEmpty { ssh.host }
-        if (tcpOpen(host, 443)) {
-            addLog(target, "OK: с телефона открывается $host:443/TCP")
-            if (freezeCheck(resolveIpv4(host) ?: host, target, realityName)) problems++
+        if (tcpOpen(host, tcpPort)) {
+            addLog(target, "OK: с телефона открывается $host:$tcpPort/TCP")
+            if (freezeCheck(resolveIpv4(host) ?: host, target, realityName, tcpPort)) problems++
         } else {
             problems++
-            addLog(target, "ПРОБЛЕМА: с телефона не открывается $host:443/TCP — закрыт файрвол хостинга или сервер недоступен")
+            addLog(target, "ПРОБЛЕМА: с телефона не открывается $host:$tcpPort/TCP — закрыт файрвол хостинга или сервер недоступен")
         }
         addLog(target, if (problems == 0) "Проверка завершена: проблем не найдено." else "Проверка завершена: найдено проблем — $problems.")
         return problems
@@ -1491,6 +1491,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         plusLog.clear(); plusLinks.clear(); plusSteps.clear()
         plusError = null
         plusRunTarget = null
+        homeProtoInstalled = null
     }
 
     /** Убирает сервер с Главной (сам VPS и DNS не трогаются). */
@@ -2003,7 +2004,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 // 10. Проверка: службы, сертификат, выход в интернет, DNS, порт 443 с телефона
                 step(PlusStep.VERIFY)
                 val problems = try {
-                    runDiagnose(ssh, profile.fqdn, plusLog, profile.realitySni)
+                    runDiagnose(ssh, profile.fqdn, plusLog, profile.realitySni, profile.vlessPort)
                 } catch (e: SshException) {
                     addLog(plusLog, "ПРЕДУПРЕЖДЕНИЕ: проверку выполнить не удалось: ${e.message}")
                     1
@@ -2230,7 +2231,168 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             storeStable(synced.copy(status = services, checkAt = System.currentTimeMillis(), trafficGb = traffic ?: synced.trafficGb))
             addLog(plusLog, "")
             addLog(plusLog, "Проверяю сервер ${ssh.host} и имя ${synced.fqdn} …")
-            runDiagnose(ssh, synced.fqdn, plusLog, synced.realitySni)
+            runDiagnose(ssh, synced.fqdn, plusLog, synced.realitySni, synced.vlessPort)
+        }
+    }
+
+    // ---------- Блок «Протоколы» на Главной: что стоит на сервере выбранного профиля ----------
+    /** Протоколы на сервере (null — ещё не читали или выбран другой сервер). */
+    var homeProtoInstalled by mutableStateOf<Set<ServerMode>?>(null)
+        internal set
+    /** Отмеченные галочки: после «Применить» на сервере будут ровно они. */
+    var homeProtoChosen by mutableStateOf<Set<ServerMode>>(emptySet())
+        internal set
+    var homeProtoConfirm by mutableStateOf(false)
+
+    /** Будут установлены / будут удалены при «Применить». */
+    val homeProtoAdd: Set<ServerMode> get() = homeProtoChosen - (homeProtoInstalled ?: homeProtoChosen)
+    val homeProtoRemove: Set<ServerMode> get() = (homeProtoInstalled ?: emptySet()) - homeProtoChosen
+
+    /** Читает с сервера, какие протоколы стоят; заодно ключи протоколов, поставленных вкладкой «Сервер», становятся постоянными. */
+    fun homeProtoRead() {
+        val p = plusProfile ?: return
+        if (p.vps == null) return
+        val ssh = plusSsh() ?: return
+        plusError = null
+        launchTask(plusLog) {
+            plusSteps.clear()
+            addLog(plusLog, "Читаю протоколы с сервера ${p.fqdn} (${ssh.host})…")
+            val markers = java.util.Collections.synchronizedList(mutableListOf<String>())
+            runner.runScript(ssh, Scripts.exportProfile()) { if (Links.isMarker(it)) markers += it else postLog(plusLog, it) }
+            val (synced, notes) = ProfileImport.syncWithServer(p, markers.toList())
+            if (synced != p) storeStable(synced)
+            notes.forEach { addLog(plusLog, "• $it") }
+            val found = ProfileImport.installedModes(markers.toList())
+            homeProtoInstalled = found
+            homeProtoChosen = found
+            addLog(plusLog, if (found.isEmpty()) "На сервере нет протоколов, поставленных этим приложением."
+                else "✓ На сервере: " + ServerMode.entries.filter { it in found }.joinToString { it.title } + ".")
+        }
+    }
+
+    /** Галочка протокола. XHTTP работает только поверх VLESS: включает его, а снятый VLESS снимает и XHTTP. */
+    fun homeProtoToggle(m: ServerMode) {
+        var next = if (m in homeProtoChosen) homeProtoChosen - m else homeProtoChosen + m
+        if (m == ServerMode.XHTTP && ServerMode.XHTTP in next) next = next + ServerMode.VLESS
+        if (m == ServerMode.VLESS && ServerMode.VLESS !in next) next = next - ServerMode.XHTTP
+        homeProtoChosen = next
+    }
+
+    /** «Применить»: проверка выбора и диалог подтверждения (установка и удаление меняют ссылки у всех людей). */
+    fun homeProtoRequest() {
+        val p = plusProfile ?: return
+        val chosen = homeProtoChosen
+        plusError = when {
+            homeProtoInstalled == null -> "Сначала прочитайте протоколы с сервера."
+            chosen.isEmpty() -> "Оставьте хотя бы один протокол — иначе у сервера не останется ни одной ссылки."
+            ServerMode.VLESS in chosen && p.realitySelf && ServerMode.HY2 !in chosen ->
+                "VLESS маскируется под ${p.fqdn}: сайт и сертификат для этого даёт Hysteria2. Оставьте Hysteria2 или уберите и VLESS."
+            else -> null
+        }
+        if (plusError == null && (homeProtoAdd.isNotEmpty() || homeProtoRemove.isNotEmpty())) homeProtoConfirm = true
+    }
+
+    /** Порт нового Telegram-прокси: из вкладки «Сервер», но не 80 (Let's Encrypt) и не занятый VLESS или сайтом Hysteria2. */
+    private fun newTgPort(p: StableProfile): Int {
+        val want = tgPort.trim().toIntOrNull()?.takeIf { it in 1..65535 } ?: 993
+        return if (want == 80 || want == 443 || (p.vlessOn && want == p.vlessPort)) 993 else want
+    }
+
+    /** Порт нового AmneziaWG: из вкладки «Сервер», но не порт Hysteria2. */
+    private fun newAwgPort(p: StableProfile): Int =
+        awgPort.trim().toIntOrNull()?.takeIf { it in 1..65535 && it != p.hy2Port && it != 443 } ?: Awg.randomPort()
+
+    /**
+     * Ставит отмеченные и удаляет снятые протоколы на сервере выбранного профиля. Ключи новых протоколов создаются один раз
+     * и хранятся в профиле, поэтому их ссылки постоянные; подписка Happ перезаписывается с новым набором ссылок.
+     */
+    fun homeProtoApply() {
+        homeProtoConfirm = false
+        val p0 = plusProfile ?: return
+        val installed = homeProtoInstalled ?: return
+        val ssh = plusSsh() ?: return
+        val chosen = homeProtoChosen
+        val add = chosen - installed
+        val remove = installed - chosen
+        var p = p0.copy(
+            hy2On = ServerMode.HY2 in chosen, vlessOn = ServerMode.VLESS in chosen, xhttpOn = ServerMode.XHTTP in chosen,
+            awgOn = ServerMode.AWG in chosen, tgOn = ServerMode.TG in chosen,
+        )
+        if (p.xhttpOn) p = p.copy(xhttpPath = p.xhttpPathEff)
+        if (p.awgOn && p.awg == null) p = p.copy(awg = Awg.generate(p.fqdn, newAwgPort(p), plusTrailers))
+        if (p.tgOn && p.tg == null) p = p.copy(tg = TgParams.generate(newTgPort(p), tgDomain.trim().lowercase().ifEmpty { "www.microsoft.com" }))
+        // сайт с подписками отдаёт Hysteria2, а где именно (443 или 127.0.0.1:8443) — зависит от VLESS и Telegram
+        val changed = add + remove
+        val needHy2 = p.hy2On && (ServerMode.HY2 in add || ServerMode.VLESS in changed || ServerMode.TG in changed)
+        val needVless = p.vlessOn && (ServerMode.VLESS in add || ServerMode.XHTTP in add)
+        fun names(set: Set<ServerMode>) = ServerMode.entries.filter { it in set }.joinToString { it.title }
+        plusError = null
+        launchTask(plusLog) {
+            plusSteps.clear()
+            addLog(plusLog, "Протоколы ${p.fqdn} (${ssh.host}): " + listOfNotNull(
+                ("установить — " + names(add)).takeIf { add.isNotEmpty() },
+                ("удалить — " + names(remove)).takeIf { remove.isNotEmpty() },
+            ).joinToString("; ") + ".")
+            val log: (String) -> Unit = { if (!Links.isMarker(it)) postLog(plusLog, it) }
+            suspend fun step(title: String, script: String): Boolean {
+                addLog(plusLog, ""); addLog(plusLog, "▶ $title")
+                val code = runner.runScript(ssh, script, log)
+                if (code != 0) addLog(plusLog, "ПРЕДУПРЕЖДЕНИЕ: $title — завершено с кодом $code.")
+                return code == 0
+            }
+
+            // 1. удаление (XHTTP вместе с VLESS уходит и так)
+            if (ServerMode.XHTTP in remove && ServerMode.VLESS !in remove) step("Удаление VLESS XHTTP", Scripts.removeXhttp())
+            if (ServerMode.TG in remove) step("Удаление Telegram-прокси", Scripts.removeTelegram())
+            if (ServerMode.AWG in remove) step("Удаление AmneziaWG", Scripts.remove(Protocol.AWG))
+            if (ServerMode.VLESS in remove) step("Удаление VLESS", Scripts.remove(Protocol.VLESS))
+            if (ServerMode.HY2 in remove) step("Удаление Hysteria2", Scripts.remove(Protocol.HY2))
+
+            // 2. установка с ключами профиля
+            if (p.hy2On && p.subAvailable) runner.runScript(ssh, Scripts.writeSite(StableProfile.SITE_DIR, Subscription.siteFiles(p)), log)
+            if (needHy2) {
+                val cert = p.cert?.takeIf { it.daysLeft() > 10 }
+                if (step("Hysteria2 + Salamander (ключи профиля)", Scripts.install(p.hy2Params(cert))) && p.cert == null) {
+                    val markers = java.util.Collections.synchronizedList(mutableListOf<String>())
+                    runner.runScript(ssh, Scripts.exportCert(p.fqdn)) { if (Links.isMarker(it)) markers += it else postLog(plusLog, it) }
+                    certFromMarkers(markers.toList())?.let { p = p.copy(cert = it) }
+                }
+            }
+            if (needVless) step("VLESS + Reality" + (if (p.xhttpOn) " + XHTTP" else "") + " (ключи профиля)", Scripts.installVless(p.vlessParams()))
+            val awg = p.awgEffective()
+            if (ServerMode.AWG in add && awg != null) {
+                addLog(plusLog, ""); addLog(plusLog, "▶ AmneziaWG 3.1 (ключи профиля)")
+                try {
+                    awgInstall(ssh, awg, plusLog)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    addLog(plusLog, "ПРЕДУПРЕЖДЕНИЕ: AmneziaWG не установлен: ${e.message}")
+                }
+            }
+            val tg = p.tg
+            if (ServerMode.TG in add && tg != null) step("Telegram-прокси (порт ${tg.port}/TCP)", Scripts.installTelegram(tg.port, tg.front, tg.secret))
+
+            // 3. сверка с сервером: в ссылках и подписке остаются только протоколы, которые реально встали
+            val markers = java.util.Collections.synchronizedList(mutableListOf<String>())
+            runner.runScript(ssh, Scripts.exportProfile()) { if (Links.isMarker(it)) markers += it }
+            val now = ProfileImport.installedModes(markers.toList())
+            val failed = chosen - now
+            if (failed.isNotEmpty()) {
+                p = p.copy(
+                    hy2On = p.hy2On && ServerMode.HY2 in now, vlessOn = p.vlessOn && ServerMode.VLESS in now,
+                    xhttpOn = p.xhttpOn && ServerMode.XHTTP in now, awgOn = p.awgOn && ServerMode.AWG in now, tgOn = p.tgOn && ServerMode.TG in now,
+                )
+                if (p.hy2On && p.subAvailable) runner.runScript(ssh, Scripts.writeSite(StableProfile.SITE_DIR, Subscription.siteFiles(p)), log)
+            }
+            storeStable(p)
+            homeProtoInstalled = now
+            homeProtoChosen = now
+            plusLinks.clear(); plusLinks.addAll(p.links())
+            addLog(plusLog, "")
+            addLog(plusLog, if (failed.isEmpty()) "✓ Готово. Ссылки и подписка Happ обновлены; ссылки прежних протоколов не изменились."
+                else "Готово, но не установилось: ${names(failed)} — см. журнал выше. Остальные ссылки и подписка обновлены.")
+            if (ServerMode.HY2 in remove) addLog(plusLog, "Hysteria2 удалена — подписка Happ на этом сервере больше не открывается (её отдавала Hysteria2).")
         }
     }
 

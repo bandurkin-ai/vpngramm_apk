@@ -281,6 +281,19 @@ ${firewall()}
         bad() { echo "ПРОБЛЕМА: ${'$'}*"; }
         info() { echo "ИНФО: ${'$'}*"; }
         listening() { ss -H "-ln${'$'}1" "sport = :${'$'}2" 2>/dev/null | grep -q .; }
+        # настоящие порты протоколов — из их конфигураций (по умолчанию 443)
+        HP=${'$'}(sed -n 's/^listen: *[^:]*:\([0-9][0-9]*\).*/\1/p' /etc/hysteria/config.yaml 2>/dev/null | head -1); HP=${'$'}{HP:-443}
+        XP=${'$'}(sed -n 's/^PORT=//p' /usr/local/etc/xray/hy2setup.env 2>/dev/null | head -1)
+        [ -z "${'$'}XP" ] && XP=${'$'}(grep -o '"port": *[0-9]*' /usr/local/etc/xray/config.json 2>/dev/null | head -1 | grep -o '[0-9]*${'$'}')
+        XP=${'$'}{XP:-443}
+        TP=${'$'}(sed -n 's/^bind-to *= *".*:\([0-9][0-9]*\)".*/\1/p' /etc/mtg.toml 2>/dev/null | head -1)
+        AP=${'$'}(sed -n 's/^ListenPort *= *//p' /etc/amnezia/amneziawg/awg0.conf 2>/dev/null | head -1)
+        FWP=""
+        systemctl cat hysteria-server.service >/dev/null 2>&1 && FWP="${'$'}FWP ${'$'}HP/udp 80/tcp"
+        systemctl cat xray.service >/dev/null 2>&1 && FWP="${'$'}FWP ${'$'}XP/tcp"
+        [ -n "${'$'}TP" ] && FWP="${'$'}FWP ${'$'}TP/tcp"
+        [ -n "${'$'}AP" ] && FWP="${'$'}FWP ${'$'}AP/udp"
+        FWP=${'$'}(echo ${'$'}FWP | tr ' ' '\n' | awk '!seen[${'$'}0]++' | tr '\n' ' ' | sed 's/ ${'$'}//')
 
         step "Службы"
         for U in hysteria-server xray mtg awg-quick@awg0; do
@@ -292,7 +305,7 @@ ${firewall()}
             else bad "служба ${'$'}U не работает (${'$'}ST)"; fi
         done
         if systemctl cat hysteria-server.service >/dev/null 2>&1; then
-            listening u 443 && ok "Hysteria2 слушает 443/UDP" || bad "никто не слушает 443/UDP — Hysteria2 не принимает подключения"
+            listening u "${'$'}HP" && ok "Hysteria2 слушает ${'$'}HP/UDP" || bad "никто не слушает ${'$'}HP/UDP — Hysteria2 не принимает подключения"
             ERR=${'$'}(journalctl -u hysteria-server --since "-15 min" --no-pager 2>/dev/null | grep -E "FATAL|ERROR" | tail -3)
             if [ -n "${'$'}ERR" ]; then
                 echo "${'$'}ERR" | grep -q "obtaining certificate\|acme" && bad "Hysteria2 не получила сертификат Let's Encrypt"
@@ -300,11 +313,10 @@ ${firewall()}
             fi
         fi
         if systemctl cat xray.service >/dev/null 2>&1; then
-            listening t 443 && ok "VLESS (Xray) слушает 443/TCP" || bad "никто не слушает 443/TCP — VLESS не принимает подключения"
+            listening t "${'$'}XP" && ok "VLESS (Xray) слушает ${'$'}XP/TCP" || bad "никто не слушает ${'$'}XP/TCP — VLESS не принимает подключения"
             /usr/local/bin/xray run -test -c /usr/local/etc/xray/config.json >/dev/null 2>&1 && ok "конфигурация Xray верна" || bad "конфигурация Xray с ошибкой"
         fi
         if [ -f /etc/amnezia/amneziawg/awg0.conf ]; then
-            AP=${'$'}(sed -n 's/^ListenPort *= *//p' /etc/amnezia/amneziawg/awg0.conf | head -1)
             lsmod | grep -q '^amneziawg' && ok "модуль ядра AmneziaWG загружен" || bad "модуль ядра AmneziaWG не загружен (ядро ${'$'}(uname -r))"
             ip link show awg0 >/dev/null 2>&1 && ok "интерфейс awg0 поднят, порт ${'$'}AP/UDP" || bad "интерфейс awg0 не поднят"
             HS=${'$'}(awg show awg0 latest-handshakes 2>/dev/null | awk '{print ${'$'}2}' | sort -n | tail -1)
@@ -387,15 +399,15 @@ ${firewall()}
         if [ "${'$'}(timedatectl show -p NTPSynchronized --value 2>/dev/null)" = "yes" ]; then ok "время синхронизировано"
         else info "время не синхронизировано по NTP: ${'$'}(date -u '+%F %T') UTC"; fi
         if command -v ufw >/dev/null 2>&1 && ufw status | grep -q "Status: active"; then
-            for P in 443/udp 443/tcp 80/tcp; do ufw status | grep -q "^${'$'}P " && ok "ufw: ${'$'}P открыт" || bad "ufw включён, но ${'$'}P не открыт"; done
+            for P in ${'$'}FWP; do ufw status | grep -q "^${'$'}P " && ok "ufw: ${'$'}P открыт" || bad "ufw включён, но ${'$'}P не открыт"; done
         elif command -v iptables >/dev/null 2>&1 && iptables -S INPUT 2>/dev/null | grep -qE '^-P INPUT (DROP|REJECT)'; then
-            for P in 443/udp 443/tcp 80/tcp; do
+            for P in ${'$'}FWP; do
                 iptables -C INPUT -p "${'$'}{P#*/}" --dport "${'$'}{P%/*}" -j ACCEPT 2>/dev/null && ok "iptables: ${'$'}P открыт" || bad "iptables запрещает входящие, ${'$'}P не открыт"
             done
         else
             ok "локальный файрвол не ограничивает входящие"
         fi
-        info "если всё OK, а интернета нет — проверьте файрвол в панели хостинга: должны быть открыты 443/UDP, 443/TCP и 80/TCP"
+        info "если всё OK, а интернета нет — проверьте файрвол в панели хостинга: должны быть открыты ${'$'}{FWP:-443/udp 443/tcp 80/tcp}"
     """.trimIndent()
 
     const val LIVE_STARTED = "##LIVE_STARTED"

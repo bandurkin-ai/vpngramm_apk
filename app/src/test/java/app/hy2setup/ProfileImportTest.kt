@@ -189,4 +189,17 @@ class ProfileImportTest {
         assertFalse(old.copy(xhttpOn = true, vlessOn = false).xhttpActive)
         assertTrue(old.copy(xhttpOn = true).vlessParams().xhttpPath.isNotEmpty())
     }
+
+    @Test
+    fun installedProtocolsFromServerMarkers() {
+        assertEquals(setOf(ServerMode.HY2, ServerMode.VLESS, ServerMode.AWG, ServerMode.TG), ProfileImport.installedModes(markers()))
+        assertEquals(
+            setOf(ServerMode.HY2, ServerMode.VLESS, ServerMode.XHTTP, ServerMode.AWG, ServerMode.TG),
+            ProfileImport.installedModes(markers() + "${Scripts.LINK_MARKER_XHTTP}/abc123"),
+        )
+        // XHTTP без VLESS не бывает; пустой путь — XHTTP нет
+        assertEquals(setOf(ServerMode.HY2), ProfileImport.installedModes(markers().filter { it.startsWith(Scripts.LINK_MARKER_HY2) } + "${Scripts.LINK_MARKER_XHTTP}/x"))
+        assertEquals(setOf(ServerMode.HY2, ServerMode.VLESS, ServerMode.AWG, ServerMode.TG), ProfileImport.installedModes(markers() + Scripts.LINK_MARKER_XHTTP))
+        assertEquals(emptySet<ServerMode>(), ProfileImport.installedModes(listOf("echo")))
+    }
 }

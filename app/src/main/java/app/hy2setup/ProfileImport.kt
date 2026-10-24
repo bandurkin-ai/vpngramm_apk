@@ -184,6 +184,18 @@ object ProfileImport {
         return p to notes
     }
 
+    /** Какие протоколы стоят на сервере — по маркерам [Scripts.exportProfile] (только поставленные этим приложением). */
+    fun installedModes(lines: List<String>): Set<ServerMode> {
+        fun has(prefix: String) = lines.any { it.startsWith(prefix) }
+        val xhttp = lines.any { it.startsWith(Scripts.LINK_MARKER_XHTTP) && it.removePrefix(Scripts.LINK_MARKER_XHTTP).trim().startsWith("/") }
+        return buildSet {
+            if (has(Scripts.LINK_MARKER_HY2)) add(ServerMode.HY2)
+            if (has(Scripts.LINK_MARKER_VLESS)) { add(ServerMode.VLESS); if (xhttp) add(ServerMode.XHTTP) }
+            if (has(Scripts.LINK_MARKER_AWG)) add(ServerMode.AWG)
+            if (has(Scripts.TGFULL_MARKER) || has(Scripts.LINK_MARKER_TG)) add(ServerMode.TG)
+        }
+    }
+
     /** Копия: массив серверов (2.0) или один профиль (до 2.0). */
     fun fromBackup(plain: String): List<StableProfile> {
         val t = plain.trim()

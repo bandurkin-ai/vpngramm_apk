@@ -196,4 +196,16 @@ class ScriptsTest {
         assertTrue(s.contains("bash -c \"${'$'}{XI}\" @ install && XOK=1"))
         assertTrue(s.contains("for TRY in 1 2 3"))
     }
+
+    /** «Проверить»: порты берутся из конфигураций протоколов, а не всегда 443. */
+    @Test
+    fun diagnoseUsesRealPorts() {
+        val d = Scripts.diagnose("vpn.example.com")
+        assertTrue(!d.contains("listening u 443") && !d.contains("listening t 443"))
+        assertTrue(d.contains("listening u \"${'$'}HP\"") && d.contains("listening t \"${'$'}XP\""))
+        assertTrue(d.contains("/etc/hysteria/config.yaml") && d.contains("hy2setup.env") && d.contains("/etc/mtg.toml"))
+        assertTrue(d.contains("for P in ${'$'}FWP"))
+        File("build/scripts").mkdirs()
+        File("build/scripts/diagnose_ports.sh").writeText(d)
+    }
 }

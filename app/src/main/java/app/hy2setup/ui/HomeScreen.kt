@@ -130,6 +130,7 @@ fun HomeScreen(vm: MainViewModel) {
             FirstRunWizard(vm, onAddExisting = { addSheet = true })
         } else {
             ServerSwitcher(vm, profile, onNew = { vm.plusNew = true; orderSheet = true }, onAdd = { addSheet = true })
+            ServerProtocolsCard(vm, profile)
             if (vm.backupStale) BackupBanner { saver.launch("vpngramm-backup.vpngramm") }
             ProfileHero(vm, profile, onLinks = { linksUser = null; linksSheet = true })
             PeopleCard(vm, profile, onLinks = { u -> linksUser = u; linksSheet = true })
