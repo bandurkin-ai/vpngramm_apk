@@ -94,7 +94,7 @@ private fun VpsPart(vm: MainViewModel) {
         }
     }
 
-    SectionCard("Новый VPS", AppIcons.Add, collapsible = true, startExpanded = false) {
+    SectionCard("Новый VPS", AppIcons.Add, subtitle = "Купить VPS в OneProvider вручную", startExpanded = false) {
         VpsOrderForm(vm)
         if (vm.opCatalogLoaded) {
             AppField("Имя хоста (например, vpn1)", vm.opHostname, { vm.opHostname = it }, keyboard = KeyboardType.Uri, enabled = !vm.running)
@@ -293,7 +293,7 @@ private fun RecordRow(r: DnsRecord, checked: Boolean, locked: Boolean, enabled: 
 
 @Composable
 private fun AddRecordCard(vm: MainViewModel) {
-    SectionCard("Добавить запись", AppIcons.Add, collapsible = true, startExpanded = false) {
+    SectionCard("Добавить запись", AppIcons.Add, subtitle = "A, AAAA, CNAME, MX, TXT", startExpanded = false) {
         Segmented(listOf("A", "AAAA", "CNAME", "MX", "TXT").map { it to it }, vm.newType, { vm.newType = it }, enabled = !vm.running)
         AppField(
             "Имя (поддомен)", vm.newHost, { vm.newHost = it }, keyboard = KeyboardType.Uri, enabled = !vm.running,

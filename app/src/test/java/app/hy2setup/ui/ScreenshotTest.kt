@@ -66,13 +66,11 @@ class ScreenshotTest {
         val model = vm(2).apply {
             serverMode = app.hy2setup.ServerMode.VLESS
             toggleServerMode(app.hy2setup.ServerMode.XHTTP); toggleServerMode(app.hy2setup.ServerMode.TG)
-            updateServerExpert(true)
         }
         org.junit.Assert.assertEquals(
             listOf(app.hy2setup.ServerMode.VLESS, app.hy2setup.ServerMode.XHTTP, app.hy2setup.ServerMode.TG), model.serverModeList,
         )
         captureRoboImage("build/screens/2-server-multi-light.png") { Hy2Theme(dark = false, dynamic = false) { AppRoot(model) } }
-        model.updateServerExpert(false)
     }
 
     /** Вкладка VPN: на сервере три протокола, выбран Hysteria2. */
@@ -122,6 +120,16 @@ class ScreenshotTest {
                 }
             }
         }
+    }
+
+    /** Длинный журнал на вкладке «Сервер»: окно результата невысокое, внутри — пролистывание. */
+    @Test
+    fun serverLongLog() {
+        val model = vm(2).apply {
+            log.clear()
+            log += (1..12).flatMap { listOf("▶ Шаг $it: установка компонента $it", "OK: компонент $it готов") } + "Готово."
+        }
+        captureRoboImage("build/screens/2-server-longlog-light.png") { Hy2Theme(dark = false, dynamic = false) { AppRoot(model) } }
     }
 
     /** «Создать новый сервер»: выбор протоколов и портов (бывший комбайн). */
@@ -213,7 +221,7 @@ class ScreenshotTest {
     @Test fun protocolsDropdown() {
         val model = vm(2).apply { serverMode = app.hy2setup.ServerMode.VLESS; toggleServerMode(app.hy2setup.ServerMode.XHTTP) }
         compose.setContent { Hy2Theme(dark = false, dynamic = false) { AppRoot(model) } }
-        compose.onNodeWithText("Протоколы").performClick()
+        compose.onNodeWithText("Что ставить").performClick()
         compose.waitForIdle()
         com.github.takahirom.roborazzi.captureScreenRoboImage("build/screens/2-server-protocols-light.png")
         // список не закрывается при выборе: отметили ещё и Hysteria2

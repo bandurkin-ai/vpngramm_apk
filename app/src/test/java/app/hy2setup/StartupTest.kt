@@ -26,7 +26,7 @@ class StartupTest {
 
     @Test fun withPrefsFrom2() {
         val ctx = ApplicationProvider.getApplicationContext<android.app.Application>()
-        ctx.getSharedPreferences("app", 0).edit().putInt("monitorHours", 3).putBoolean("serverExpert", true).commit()
+        ctx.getSharedPreferences("app", 0).edit().putInt("monitorHours", 3).commit()
         launch()
     }
 }

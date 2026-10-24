@@ -61,7 +61,7 @@ fun FirstRunWizard(vm: MainViewModel, onAddExisting: () -> Unit, startStep: Int 
         2 -> vm.plannedFqdn.isNotEmpty() && vm.subdomain.isNotBlank() && (vm.plusHy2 || vm.plusVless || vm.plusAwg || vm.plusTg)
         else -> true
     }
-    SectionCard(STEPS[step], when (step) { 0 -> AppIcons.Cloud; 1 -> AppIcons.Dns; 2 -> AppIcons.Globe; else -> AppIcons.Rocket }) {
+    SectionCard(STEPS[step], collapsible = false, icon = when (step) { 0 -> AppIcons.Cloud; 1 -> AppIcons.Dns; 2 -> AppIcons.Globe; else -> AppIcons.Rocket }) {
         when (step) {
             0 -> {
                 Text("Здесь покупаются серверы. Нужны ключи API из кабинета OneProvider.", style = MaterialTheme.typography.bodyMedium)

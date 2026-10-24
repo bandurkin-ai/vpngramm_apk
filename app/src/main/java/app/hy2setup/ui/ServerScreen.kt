@@ -23,7 +23,10 @@ import androidx.compose.ui.unit.dp
 import app.hy2setup.MainViewModel
 import app.hy2setup.ServerMode
 
-/** Сервер: ручная установка Hysteria2, VLESS, AmneziaWG и Telegram-прокси на свой VPS — одного или нескольких сразу. */
+/**
+ * Сервер: ручная установка Hysteria2, VLESS, AmneziaWG и Telegram-прокси на свой VPS — одного или нескольких сразу.
+ * Сверху вниз: доступ по SSH → действия → результат → протоколы → имя и DNS → параметры → безопасность.
+ */
 @Composable
 fun ServerScreen(vm: MainViewModel) {
     val modes = vm.serverModeList
@@ -74,49 +77,47 @@ fun ServerScreen(vm: MainViewModel) {
             )
         },
     ) {
-        Segmented(
-            listOf(false to "Быстро", true to "Эксперт"), vm.serverExpert, { vm.updateServerExpert(it) },
-            enabled = !vm.running, modifier = Modifier.fillMaxWidth(),
-        )
-        MultiPicker(
-            "Протоколы",
-            ServerMode.entries.map { it to PROTOCOL_NAMES.getValue(it) }, vm.serverModes,
-            onToggle = { vm.toggleServerMode(it) }, enabled = !vm.running,
-        )
-        Hint(
-            if (modes.size > 1) "Выбрано: $names — «Установить» поставит всё по очереди на один сервер."
-            else when (modes.first()) {
-                ServerMode.HY2 -> "Hysteria2 + Salamander: быстрый протокол поверх UDP (QUIC)."
-                ServerMode.VLESS -> "VLESS + Reality (Xray): выглядит как обычный HTTPS поверх TCP."
-                ServerMode.XHTTP -> "VLESS + Reality + XHTTP: тот же Xray и порт, что у VLESS, но трафик идёт как обычные HTTP-запросы. Ставится вместе с VLESS."
-                ServerMode.AWG -> "AmneziaWG 3.1: WireGuard с маскировкой, для приложения AmneziaVPN. Работает поверх UDP."
-                ServerMode.TG -> "MTProto-прокси для Telegram (mtg) в режиме FakeTLS."
-            } + " В списке «Протоколы» можно отметить несколько.",
-        )
+        // 1. доступ к серверу
+        SshAccessCard(vm)
 
-        // быстрые действия с уже установленным сервером
+        // 2. быстрые действия с уже установленным сервером
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
             ActionTile(AppIcons.Info, "Статус", !vm.running, Modifier.weight(1f)) { vm.status() }
             ActionTile(AppIcons.Qr, "Ссылки", !vm.running, Modifier.weight(1f)) { vm.fetchLinks() }
             if (modes.any { it != ServerMode.TG }) ActionTile(AppIcons.Shield, "Проверить", !vm.running, Modifier.weight(1f), vm::diagnose)
         }
 
+        // 3. результат: невысокое окно с пролистыванием
         ErrorText(vm.errorMessage)
-        ResultPanel(vm.log, vm.running, vm.resultLinks)
+        ResultPanel(vm.log, vm.running, vm.resultLinks, compact = true)
 
-        SshAccessCard(vm)
-        if (!vm.serverExpert) {
-            Hint("Быстрый режим: нужны только адрес и пароль (или ключ) выше — порты, маскировка и прочее берутся по умолчанию. " +
-                "Свой домен, порты и защиту сервера — в режиме «Эксперт».")
-        } else {
-            if (modes.any { it != ServerMode.TG }) DnsNameCard(vm)
-            if (vlessAny) VlessParams(vm)
-            if (ServerMode.HY2 in modes && !(vlessAny && vm.vlessSelf)) Hy2Params(vm)
-            if (ServerMode.AWG in modes) AwgParamsCard(vm)
-            if (ServerMode.TG in modes) TelegramParams(vm)
+        // 4. что ставить
+        SectionCard("Протоколы", AppIcons.Bolt, subtitle = names) {
+            MultiPicker(
+                "Что ставить",
+                ServerMode.entries.map { it to PROTOCOL_NAMES.getValue(it) }, vm.serverModes,
+                onToggle = { vm.toggleServerMode(it) }, enabled = !vm.running,
+            )
+            Hint(
+                if (modes.size > 1) "Выбрано: $names — «Установить» поставит всё по очереди на один сервер."
+                else when (modes.first()) {
+                    ServerMode.HY2 -> "Hysteria2 + Salamander: быстрый протокол поверх UDP (QUIC)."
+                    ServerMode.VLESS -> "VLESS + Reality (Xray): выглядит как обычный HTTPS поверх TCP."
+                    ServerMode.XHTTP -> "VLESS + Reality + XHTTP: тот же Xray и порт, что у VLESS, но трафик идёт как обычные HTTP-запросы. Ставится вместе с VLESS."
+                    ServerMode.AWG -> "AmneziaWG 3.1: WireGuard с маскировкой, для приложения AmneziaVPN. Работает поверх UDP."
+                    ServerMode.TG -> "MTProto-прокси для Telegram (mtg) в режиме FakeTLS."
+                } + " В списке можно отметить несколько.",
+            )
         }
-        if (vm.serverExpert) SectionCard(
-            "Безопасность", AppIcons.Lock, collapsible = true, startExpanded = false,
+
+        // 5. имя сервера, 6. параметры протоколов, 7. безопасность
+        if (modes.any { it != ServerMode.TG }) DnsNameCard(vm)
+        if (ServerMode.HY2 in modes && !(vlessAny && vm.vlessSelf)) Hy2Params(vm)
+        if (vlessAny) VlessParams(vm)
+        if (ServerMode.AWG in modes) AwgParamsCard(vm)
+        if (ServerMode.TG in modes) TelegramParams(vm)
+        SectionCard(
+            "Безопасность", AppIcons.Lock, startExpanded = false,
             subtitle = "Защитить после установки: " + if (vm.hardenBeforeInstall) "вкл" else "выкл",
         ) {
             SwitchRow(
@@ -170,7 +171,6 @@ private fun DnsNameCard(vm: MainViewModel) {
             vm.domain.isNotBlank() -> vm.domain.trim()
             else -> "Без своего имени"
         },
-        collapsible = true, startExpanded = true,
     ) {
         SwitchRow(
             "Создать A-запись в name.com", vm.useDns, { vm.useDns = it }, enabled = !vm.running,
@@ -204,7 +204,10 @@ private fun DnsNameCard(vm: MainViewModel) {
 
 @Composable
 private fun VlessParams(vm: MainViewModel) {
-    SectionCard("Параметры VLESS", AppIcons.Tune) {
+    SectionCard(
+        "Параметры VLESS", AppIcons.Tune, startExpanded = false,
+        subtitle = "Порт ${vm.vlessPort.trim()}/TCP · " + if (vm.vlessSelf) "маскировка под свой домен" else "маскировка под ${vm.realitySni.trim()}",
+    ) {
         AppField("Порт VLESS (TCP)", vm.vlessPort, { vm.vlessPort = it }, keyboard = KeyboardType.Number, enabled = !vm.running)
         SwitchRow(
             "Маскировка под свой домен", vm.vlessSelf, { vm.vlessSelf = it }, enabled = !vm.running,
@@ -231,7 +234,10 @@ private fun VlessParams(vm: MainViewModel) {
 
 @Composable
 private fun Hy2Params(vm: MainViewModel) {
-    SectionCard("Параметры Hysteria2", AppIcons.Tune) {
+    SectionCard(
+        "Параметры Hysteria2", AppIcons.Tune, startExpanded = false,
+        subtitle = "Порт ${vm.hyPort.trim()}/UDP · сайт ${vm.masquerade.trim().removePrefix("https://").trimEnd('/')}",
+    ) {
         AppField("Порт Hysteria2 (UDP)", vm.hyPort, { vm.hyPort = it }, keyboard = KeyboardType.Number, enabled = !vm.running)
         if (vm.useDns || vm.domain.isNotBlank()) {
             AppField("E-mail для Let's Encrypt (необязательно)", vm.email, { vm.email = it }, keyboard = KeyboardType.Email, enabled = !vm.running)
@@ -244,7 +250,10 @@ private fun Hy2Params(vm: MainViewModel) {
 
 @Composable
 private fun TelegramParams(vm: MainViewModel) {
-    SectionCard("Параметры прокси", AppIcons.Send) {
+    SectionCard(
+        "Параметры Telegram-прокси", AppIcons.Send, startExpanded = false,
+        subtitle = "Порт ${vm.tgPort.trim()}/TCP · маскировка под ${vm.tgDomain.trim()}",
+    ) {
         AppField("Порт (TCP)", vm.tgPort, { vm.tgPort = it }, keyboard = KeyboardType.Number, enabled = !vm.running)
         AppField("Домен маскировки (FakeTLS)", vm.tgDomain, { vm.tgDomain = it }, keyboard = KeyboardType.Uri, enabled = !vm.running)
         MoreHint(
@@ -258,7 +267,7 @@ private fun TelegramParams(vm: MainViewModel) {
 @Composable
 private fun AwgParamsCard(vm: MainViewModel) {
     SectionCard(
-        "Параметры AmneziaWG", AppIcons.Tune, collapsible = true, startExpanded = false,
+        "Параметры AmneziaWG", AppIcons.Tune, startExpanded = false,
         subtitle = "Порт ${vm.awgPort}/UDP · RandomTrailers " + if (vm.awgTrailers) "вкл" else "выкл",
     ) {
         AppField(

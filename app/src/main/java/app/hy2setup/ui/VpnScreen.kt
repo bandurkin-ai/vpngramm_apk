@@ -22,7 +22,7 @@ fun VpnScreen(vm: MainViewModel) {
     ScreenFrame(title = "VPN", running = false) {
         val profile = vm.vpnProfile
         if (profile == null) {
-            SectionCard("Сервера ещё нет", AppIcons.Shield) {
+            SectionCard("Сервера ещё нет", AppIcons.Shield, collapsible = false) {
                 Hint("Встроенный VPN подключается к вашим серверам с Главной. Сначала создайте сервер или добавьте уже работающий.")
                 FilledTonalButton(onClick = { vm.selectedTab = TAB_HOME }) {
                     Icon(AppIcons.Home, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("На Главную")
@@ -36,7 +36,7 @@ fun VpnScreen(vm: MainViewModel) {
 
         VpnPanel(vm, profile, proto)
 
-        SectionCard("Подключение", AppIcons.Tune) {
+        SectionCard("Подключение", AppIcons.Tune, subtitle = "${proto.title} · ${profile.fqdn}" + if (vm.vpnBypassRu) " · РФ напрямую" else "") {
             if (vm.stableProfiles.size > 1) {
                 Picker("Сервер", profile.fqdn, vm.stableProfiles.map { it.fqdn to it.fqdn }, enabled = !busy) { vm.selectVpnServer(it) }
             }

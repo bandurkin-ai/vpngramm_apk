@@ -106,14 +106,14 @@ fun share(ctx: Context, text: String, title: String) {
 
 // ---------------------------------------------------------------- карточки и поля
 
-/** Карточка-раздел с иконкой и заголовком; [collapsible] — можно свернуть, чтобы экран был короче. */
+/** Карточка-раздел с иконкой и заголовком; сворачивается по нажатию на заголовок, чтобы экран был короче. */
 @Composable
 fun SectionCard(
     title: String,
     icon: ImageVector? = null,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
-    collapsible: Boolean = false,
+    collapsible: Boolean = true,
     startExpanded: Boolean = true,
     content: @Composable () -> Unit,
 ) {
@@ -363,9 +363,12 @@ fun StatusChip(state: LogSummary.State, text: String) {
 
 /** Итог операции простыми словами + кнопка журнала + ссылки. Заменяет блоки «Расшифровка»/«Журнал»/«Ссылка». */
 @Composable
-fun ResultPanel(log: List<String>, running: Boolean, links: List<ShareLink>, title: String = "Результат") {
+fun ResultPanel(log: List<String>, running: Boolean, links: List<ShareLink>, title: String = "Результат", compact: Boolean = false) {
     if (log.isEmpty() && links.isEmpty()) return
     var showLog by remember { mutableStateOf(false) }
+    // compact: итоги и шаги — в невысоком окне (вдвое ниже обычного) с пролистыванием; видны последние шаги
+    val scroll = rememberScrollState()
+    if (compact) LaunchedEffect(log.size, scroll.maxValue) { scroll.scrollTo(scroll.maxValue) }
     var openLink by remember { mutableStateOf<ShareLink?>(null) }
     val copy = rememberCopier()
     if (log.isNotEmpty()) {
@@ -383,18 +386,23 @@ fun ResultPanel(log: List<String>, running: Boolean, links: List<ShareLink>, tit
                     Spacer(Modifier.width(10.dp))
                     Text(summary.headline, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                 }
-                summary.points.take(3).forEach { Text("• $it", style = MaterialTheme.typography.bodyMedium) }
-                // краткий журнал: шаги и итоги без технического вывода
-                LogSummary.events(log, running).forEach { e ->
-                    Row(verticalAlignment = Alignment.Top) {
-                        Text(
-                            when (e.state) {
-                                LogSummary.State.OK -> "✓"; LogSummary.State.ERROR -> "✗"; LogSummary.State.WARN -> "!"
-                                LogSummary.State.RUNNING -> "…"; LogSummary.State.INFO -> "·"
-                            },
-                            style = MaterialTheme.typography.bodyMedium, modifier = Modifier.width(18.dp),
-                        )
-                        Text(e.text, style = MaterialTheme.typography.bodyMedium, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                Column(
+                    (if (compact) Modifier.heightIn(max = 128.dp).verticalScroll(scroll) else Modifier),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    summary.points.take(3).forEach { Text("• $it", style = MaterialTheme.typography.bodyMedium) }
+                    // краткий журнал: шаги и итоги без технического вывода
+                    LogSummary.events(log, running, max = if (compact) 40 else 8).forEach { e ->
+                        Row(verticalAlignment = Alignment.Top) {
+                            Text(
+                                when (e.state) {
+                                    LogSummary.State.OK -> "✓"; LogSummary.State.ERROR -> "✗"; LogSummary.State.WARN -> "!"
+                                    LogSummary.State.RUNNING -> "…"; LogSummary.State.INFO -> "·"
+                                },
+                                style = MaterialTheme.typography.bodyMedium, modifier = Modifier.width(18.dp),
+                            )
+                            Text(e.text, style = MaterialTheme.typography.bodyMedium, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                        }
                     }
                 }
                 // пока идёт работа — последняя строка: видно, что происходит прямо сейчас

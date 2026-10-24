@@ -2241,15 +2241,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         return vm.bandwidthGb.filter { it.isDigit() || it == '.' }.toDoubleOrNull()?.takeIf { it > 0 }
     }
 
-    /** Вкладка «Сервер»: режим «Эксперт» (все настройки) или «Быстро» (адрес, пароль, кнопка). */
-    var serverExpert by mutableStateOf(prefs.getBoolean("serverExpert", false))
-        private set
-
-    fun updateServerExpert(v: Boolean) {
-        serverExpert = v
-        prefs.edit().putBoolean("serverExpert", v).apply()
-    }
-
     // ---------- Встроенный VPN-клиент ----------
     /** Российские сайты (.ru/.рф/.su и российские IP) — напрямую, мимо VPN. Включается по желанию. */
     var vpnBypassRu by mutableStateOf(prefs.getBoolean("vpnBypassRu", false))
