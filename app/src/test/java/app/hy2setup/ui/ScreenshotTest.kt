@@ -122,6 +122,16 @@ class ScreenshotTest {
         }
     }
 
+    /** Главная: трафик за месяц с полосой — лимит сохранён в профиле, список VPS OneProvider не загружен. */
+    @Test
+    fun homeTrafficBar() {
+        val model = vm(0).apply {
+            plusProfile = plusProfile!!.copy(vps = ProfileVps("123", "203.0.113.10", "vpn", trafficLimitGb = 1000.0), trafficGb = 312.4)
+        }
+        org.junit.Assert.assertEquals(1000.0, model.trafficLimitGb(model.plusProfile!!))
+        captureRoboImage("build/screens/1-home-traffic-light.png") { Hy2Theme(dark = false, dynamic = false) { AppRoot(model) } }
+    }
+
     /** Заказ VPS с фильтром: тарифы дороже $10 видны, фильтр «до $20, от 2 ТБ» оставляет подходящие. */
     @Test
     @Config(qualifiers = "w411dp-h1100dp-xxhdpi")
