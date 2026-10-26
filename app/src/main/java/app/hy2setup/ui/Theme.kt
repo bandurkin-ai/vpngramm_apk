@@ -1,25 +1,18 @@
 package app.hy2setup.ui
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import app.hy2setup.R
 
 /*
  * Тема Material 3 (Material You): на Android 12+ цвета берутся из обоев, тёмная тема — по системе.
@@ -85,9 +78,6 @@ private val StatusDark = StatusColors(
     warningContainer = Color(0xFF5C4300), onWarningContainer = Color(0xFFFFDF9C),
 )
 
-/** Рукописный шрифт логотипа vpngramm (Grand Hotel, OFL). */
-val LogoFont = FontFamily(Font(R.font.grand_hotel))
-
 val LocalStatusColors = staticCompositionLocalOf { StatusLight }
 
 /** Крупные скругления — характерная черта Material 3 Expressive. */
@@ -105,14 +95,7 @@ fun Hy2Theme(
     dynamic: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val scheme: ColorScheme = when {
-        dynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val ctx = LocalContext.current
-            if (dark) dynamicDarkColorScheme(ctx) else dynamicLightColorScheme(ctx)
-        }
-        dark -> BrandDark
-        else -> BrandLight
-    }
+    val scheme: ColorScheme = (if (dynamic) dynamicColors(dark) else null) ?: if (dark) BrandDark else BrandLight
     CompositionLocalProvider(LocalStatusColors provides if (dark) StatusDark else StatusLight) {
         MaterialTheme(colorScheme = scheme, shapes = AppShapes, content = content)
     }

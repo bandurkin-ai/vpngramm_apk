@@ -3,6 +3,7 @@ package app.hy2setup
 import android.app.Application
 import android.content.Context
 import android.os.Build
+import app.hy2setup.platform.AndroidPlatform
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -25,6 +26,9 @@ class App : Application() {
         }
     }
 }
+
+/** Модель экрана для Android. */
+fun MainViewModel(app: Application) = MainViewModel(AndroidPlatform(app))
 
 object CrashReport {
     private fun file(ctx: Context) = File(ctx.filesDir, "crash.txt")

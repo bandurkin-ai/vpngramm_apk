@@ -2,16 +2,15 @@ package app.hy2setup
 
 import app.hy2setup.vpn.VpnConfig
 import app.hy2setup.vpn.VpnProtocol
-import android.app.Application
-import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
+import app.hy2setup.platform.BaseViewModel
+import app.hy2setup.platform.Doc
+import app.hy2setup.platform.Platform
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
@@ -28,6 +27,7 @@ import java.net.Socket
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
+import app.hy2setup.platform.Device
 
 /** Всё, что нужно для создания A-записи. */
 /** Что настраивается в разделе «Сервер». */
@@ -63,10 +63,10 @@ data class DnsPlan(
     val fqdn: String get() = if (subdomain.isEmpty()) zone else "$subdomain.$zone"
 }
 
-class MainViewModel(app: Application) : AndroidViewModel(app) {
+class MainViewModel(private val platform: Platform) : BaseViewModel() {
 
-    private val prefs = app.getSharedPreferences("settings", 0)
-    private val secrets = SecretStore(app)
+    private val prefs = platform.prefs
+    private val secrets = platform.secrets
 
     // ---------- Сервер (SSH). Пароль, ключ и токен хранятся зашифрованными (SecretStore) ----------
     var host by mutableStateOf(prefs.getString("host", "") ?: "")
@@ -197,6 +197,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
     var opSizeId by mutableStateOf(prefs.getString("opSize", "") ?: "")
+    /** Фильтр тарифов при заказе VPS: цена до и трафик от (0 — без ограничения). */
+    var opFilter by mutableStateOf(OpFilter(prefs.getInt("opMaxPrice", 0), prefs.getInt("opMinTraffic", 0)))
+        private set
     var opTemplateId by mutableStateOf(prefs.getString("opTpl", "") ?: "")
     var opHostname by mutableStateOf("")
     val opKeySel = mutableStateListOf<String>()
@@ -294,7 +297,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     var newTtl by mutableStateOf("300")
     var newPriority by mutableStateOf("10")
 
-    private val runner = SshRunner(File(app.filesDir, "known_hosts")) { message ->
+    private val runner = SshRunner(File(platform.dataDir, "known_hosts")) { message ->
         val answer = CompletableDeferred<Boolean>()
         hostKeyAnswer = answer
         hostKeyPrompt = message
@@ -307,11 +310,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         hostKeyAnswer = null
     }
 
-    fun loadKeyFrom(uri: Uri) {
+    fun loadKeyFrom(doc: Doc) {
         try {
-            getApplication<Application>().contentResolver.openInputStream(uri)?.use {
-                privateKey = it.readBytes().toString(Charsets.UTF_8)
-            }
+            privateKey = doc.read().toString(Charsets.UTF_8)
         } catch (e: Exception) {
             errorMessage = "Не удалось прочитать файл ключа: ${e.message}"
         }
@@ -748,7 +749,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val direct = FreezeTest.download(sni, sni)
         return when {
             direct.bytes >= FreezeTest.ENOUGH && !via.complete -> {
-                addLog(target, "ПРОБЛЕМА: соединение телефона с сервером замерзает после ${via.kb} КБ (${via.error}), " +
+                addLog(target, "ПРОБЛЕМА: соединение ${Device.GEN} с сервером замерзает после ${via.kb} КБ (${via.error}), " +
                     "а напрямую с $sni скачалось ${direct.kb} КБ. Так провайдер (ТСПУ) режет трафик к этому хостингу: " +
                     "VPN подключается, но данные не идут")
                 true
@@ -776,7 +777,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             postLog(target, line)
         }
         addLog(target, "")
-        addLog(target, "==> Проверка с телефона")
+        addLog(target, "==> Проверка с ${Device.GEN}")
         if (fqdn.isNotEmpty()) {
             val a = DnsCheck.resolveA(fqdn)
             val ip = resolveIpv4(ssh.host)
@@ -793,11 +794,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
         val host = fqdn.ifEmpty { ssh.host }
         if (tcpOpen(host, tcpPort)) {
-            addLog(target, "OK: с телефона открывается $host:$tcpPort/TCP")
+            addLog(target, "OK: с ${Device.GEN} открывается $host:$tcpPort/TCP")
             if (freezeCheck(resolveIpv4(host) ?: host, target, realityName, tcpPort)) problems++
         } else {
             problems++
-            addLog(target, "ПРОБЛЕМА: с телефона не открывается $host:$tcpPort/TCP — закрыт файрвол хостинга или сервер недоступен")
+            addLog(target, "ПРОБЛЕМА: с ${Device.GEN} не открывается $host:$tcpPort/TCP — закрыт файрвол хостинга или сервер недоступен")
         }
         addLog(target, if (problems == 0) "Проверка завершена: проблем не найдено." else "Проверка завершена: найдено проблем — $problems.")
         return problems
@@ -913,7 +914,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun fillServerIp() {
         val h = host.trim()
         if (h.isEmpty()) { failDns("На вкладке «Сервер» не указан адрес сервера."); return }
-        viewModelScope.launch {
+        scope.launch {
             val ip = resolveIpv4(h)
             if (ip == null) failDns("Не удалось определить IPv4 для «$h».") else { newType = "A"; newAnswer = ip; dnsError = null }
         }
@@ -1023,9 +1024,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Локация недавно отказала «нет мест» (пометка на сутки). */
     fun opIsBad(id: String): Boolean = opBad[id]?.let { System.currentTimeMillis() - it < BAD_LOCATION_MS } ?: false
 
-    /** Локации, где есть тарифы, доступные к заказу, с IPv4 и не дороже $10/мес; помеченные — в конце. */
+    /** Локации, где есть тарифы, доступные к заказу, с IPv4 и подходящие под фильтр; помеченные — в конце. */
     val opLocationsOrderable: List<OpLocation>
-        get() = OneProviderClient.orderableLocations(opLocations, opSizes).sortedBy { opIsBad(it.id) }
+        get() = OneProviderClient.orderableLocations(opLocations, opSizes, opFilter).sortedBy { opIsBad(it.id) }
 
     /** Регионы с подходящими локациями: название → сколько в нём локаций без пометки «недоступна». */
     val opRegions: List<Pair<String, Int>>
@@ -1077,9 +1078,32 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         prefs.edit().putString("opBadLocs", o.toString()).apply()
     }
 
-    /** Тарифы выбранной локации: доступны к заказу, IPv4 включён, не дороже $10/мес. */
+    /** Тарифы выбранной локации: доступны к заказу, IPv4 включён, подходят под фильтр. */
     val opSizesForLocation: List<OpSize>
-        get() = OneProviderClient.orderableSizes(opSizes, opLocationsOrderable.firstOrNull { it.id == opLocationId })
+        get() = OneProviderClient.orderableSizes(opSizes, opLocationsOrderable.firstOrNull { it.id == opLocationId }, opFilter)
+
+    /** Сколько тарифов выбранной локации скрыл фильтр. */
+    val opSizesHiddenByFilter: Int
+        get() = opLocations.firstOrNull { it.id == opLocationId }
+            ?.let { loc -> OneProviderClient.orderableSizes(opSizes, loc).size - opSizesForLocation.size } ?: 0
+
+    /** Меняет фильтр тарифов; выбор локации и тарифа переходит на подходящие (по возможности в том же регионе). */
+    fun opSetFilter(f: OpFilter) {
+        opFilter = f
+        prefs.edit().putInt("opMaxPrice", f.maxPrice).putInt("opMinTraffic", f.minTrafficGb).apply()
+        opFixSelection()
+    }
+
+    /** Выбранные локация, регион и тариф — из подходящих; непомеченные локации — в первую очередь. */
+    private fun opFixSelection() {
+        if (opLocationsOrderable.none { it.id == opLocationId }) {
+            val inRegion = opLocationsInRegion
+            opLocationId = (inRegion.firstOrNull { !opIsBad(it.id) } ?: opLocationsOrderable.firstOrNull { !opIsBad(it.id) }
+                ?: opLocationsOrderable.firstOrNull())?.id.orEmpty()
+        }
+        opRegion = opLocationsOrderable.firstOrNull { it.id == opLocationId }?.group ?: opRegions.firstOrNull()?.first.orEmpty()
+        if (opSizesForLocation.none { it.id == opSizeId }) opSizeId = opSizesForLocation.firstOrNull()?.id.orEmpty()
+    }
 
     val opSelectedSize: OpSize? get() = opSizesForLocation.firstOrNull { it.id == opSizeId }
     val opSelectedLocation: OpLocation? get() = opLocationsOrderable.firstOrNull { it.id == opLocationId }
@@ -1115,23 +1139,19 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             opKeys.clear(); opKeys.addAll(keys)
             opKeySel.retainAll { k -> keys.any { it.uuid == k } }
             opKeysLoaded = true
-            if (opLocationsOrderable.none { it.id == opLocationId }) {
-                opLocationId = opLocationsOrderable.firstOrNull { !opIsBad(it.id) }?.id ?: opLocationsOrderable.firstOrNull()?.id.orEmpty()
-            }
-            opRegion = opLocationsOrderable.firstOrNull { it.id == opLocationId }?.group ?: opRegions.firstOrNull()?.first.orEmpty()
-            if (opSizesForLocation.none { it.id == opSizeId }) opSizeId = opSizesForLocation.firstOrNull()?.id.orEmpty()
+            opFixSelection()
             if (tpls.none { it.id == opTemplateId }) opTemplateId = OneProviderClient.preferredTemplate(tpls)?.id.orEmpty()
             opCatalogLoaded = true
             loadBalance()
             val okLocs = opLocationsOrderable
-            val okSizes = sizes.count { sz -> okLocs.any { OneProviderClient.isOrderable(sz, it) } }
+            val okSizes = sizes.count { sz -> okLocs.any { OneProviderClient.isOrderable(sz, it, opFilter) } }
             addLog(opLog, "Подходящих локаций: ${okLocs.size} из ${locs.size} в ${opRegions.size} регионах, тарифов: $okSizes из ${sizes.size} " +
-                "(доступны к заказу, с IPv4, до $${OneProviderClient.MAX_MONTHLY_PRICE.toInt()}/мес). ОС: ${tpls.size}, SSH-ключей: ${keys.size}")
+                "(доступны к заказу, IPv4 включён; фильтр: ${opFilter.title}). ОС: ${tpls.size}, SSH-ключей: ${keys.size}")
             val closed = locs.count { !it.available }
             val noSizes = locs.count { it.available && it.sizeIds.isEmpty() }
             val noIpv4 = locs.count { it.available && it.sizeIds.isNotEmpty() && !it.hasIpv4 }
             addLog(opLog, "Отсеяно локаций: закрыты провайдером — $closed, без тарифов — $noSizes, без IPv4 — $noIpv4, " +
-                "без тарифа до $${OneProviderClient.MAX_MONTHLY_PRICE.toInt()} — ${locs.size - okLocs.size - closed - noSizes - noIpv4}. " +
+                "без подходящих тарифов — ${locs.size - okLocs.size - closed - noSizes - noIpv4}. " +
                 "Помечены «недоступна» за сутки: ${okLocs.count { opIsBad(it.id) }}.")
             addLog(opLog, "Формат ответа OneProvider — $format")
         }
@@ -1423,12 +1443,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 val gh = tcpProbe("github.com", 22, 8_000).first
                 phoneBlocksSsh = gh != Probe.OPEN
                 if (phoneBlocksSsh == true) {
-                    addLog(target, "✗ Сеть телефона не пропускает SSH: даже github.com:22 недоступен. Так бывает на мобильном интернете " +
+                    addLog(target, "✗ Сеть ${Device.GEN} не пропускает SSH: даже github.com:22 недоступен. Так бывает на мобильном интернете " +
                         "или когда включён VPN (Happ) с правилами, режущими порт 22. Переключитесь на Wi-Fi или выключите/включите VPN — ожидание продолжается.")
                 } else {
-                    addLog(target, "✓ SSH из сети телефона работает (github.com:22 доступен), а до $ip пакеты не доходят.")
-                    if (MonitorWorker.vpnActive(getApplication())) {
-                        addLog(target, "VPN на телефоне включён — возможно, его правила не пускают порт 22 к этому адресу. Попробуйте выключить VPN или сменить его сервер.")
+                    addLog(target, "✓ SSH из сети ${Device.GEN} работает (github.com:22 доступен), а до $ip пакеты не доходят.")
+                    if (platform.vpnActive()) {
+                        addLog(target, "VPN на ${Device.PREP} включён — возможно, его правила не пускают порт 22 к этому адресу. Попробуйте выключить VPN или сменить его сервер.")
                     } else {
                         addLog(target, "Похоже, провайдер режет SSH к этому серверу. Включите VPN (Happ) для vpngramm — через него работает так же, как на компьютере. Ожидание продолжается.")
                     }
@@ -1444,8 +1464,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             if (System.currentTimeMillis() - start > limitMs) {
                 throw IllegalStateException(
                     when {
-                        phoneBlocksSsh == true -> "Сеть телефона не пропускает SSH (порт 22) — VPS $ip, скорее всего, работает. Переключитесь на Wi-Fi или смените режим VPN и запустите ещё раз; созданный VPS можно использовать во вкладке «Сервер» или удалить в «Облаке»."
-                        timeouts > 0 -> "VPS $ip не открыл SSH (порт 22) за ${limitMs / 60_000} мин: пакеты с телефона не доходят. Скорее всего, провайдер режет SSH к этому адресу — " +
+                        phoneBlocksSsh == true -> "Сеть ${Device.GEN} не пропускает SSH (порт 22) — VPS $ip, скорее всего, работает. Переключитесь на Wi-Fi или смените режим VPN и запустите ещё раз; созданный VPS можно использовать во вкладке «Сервер» или удалить в «Облаке»."
+                        timeouts > 0 -> "VPS $ip не открыл SSH (порт 22) за ${limitMs / 60_000} мин: пакеты с ${Device.GEN} не доходят. Скорее всего, провайдер режет SSH к этому адресу — " +
                             "включите VPN (Happ) для vpngramm и запустите снова. Если и с компьютера через VPN не пускает — откройте консоль VNC в панели OneProvider."
                         else -> "VPS $ip не открыл SSH (порт 22) за ${limitMs / 60_000} мин."
                     },
@@ -1855,7 +1875,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         var current = PlusStep.CREATE
         var created: OpCreated? = null
 
-        plusJob = viewModelScope.launch {
+        plusJob = scope.launch {
             fun step(s: PlusStep) {
                 current = s
                 plusSteps[s] = StepStatus.RUNNING
@@ -2448,8 +2468,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val proto = vpnProto
         if (proto !in VpnConfig.available(p)) { vpnError = "На сервере ${p.fqdn} нет ни одного протокола для встроенного клиента."; return }
         val bypass = vpnBypassRu
-        viewModelScope.launch {
-            val ip = withContext(Dispatchers.IO) { app.hy2setup.vpn.VpnTunnelService.resolveIpv4(p.fqdn) } ?: p.vps?.ip
+        scope.launch {
+            val ip = resolveIpv4(p.fqdn) ?: p.vps?.ip
             if (ip == null) { vpnError = "Не удалось узнать IP-адрес ${p.fqdn}. Проверьте интернет."; return@launch }
             val config = try {
                 VpnConfig.forProtocol(proto, p, null, ip, VpnConfig.Options(bypassRu = bypass))
@@ -2457,14 +2477,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 vpnError = e.message; return@launch
             }
             try {
-                app.hy2setup.vpn.VpnTunnelService.start(getApplication(), config, p.fqdn, proto.title)
+                platform.vpnStart(config, p.fqdn, proto.title)
             } catch (e: Exception) {
                 vpnError = "Android не дал запустить VPN: ${e.message}"
             }
         }
     }
 
-    fun vpnDisconnect() = app.hy2setup.vpn.VpnTunnelService.stop(getApplication())
+    fun vpnDisconnect() = platform.vpnStop()
 
     // ---------- Работа в фоне и контроль ----------
     /** Текст уведомления о ходе работы: текущий шаг создания или переезда сервера, иначе последняя строка журнала. */
@@ -2478,11 +2498,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     /** Фоновый контроль серверов: раз в столько часов (0 — выключен). */
     var monitorHours by mutableStateOf(prefs.getInt("monitorHours", 0))
         private set
+    /** Фоновый контроль и встроенный VPN есть только в версии для Android. */
+    val monitorSupported: Boolean get() = platform.monitorSupported
+    val vpnSupported: Boolean get() = platform.vpnSupported
 
     fun setMonitor(hours: Int) {
         monitorHours = hours
         prefs.edit().putInt("monitorHours", hours).apply()
-        MonitorWorker.schedule(getApplication(), hours)
+        platform.scheduleMonitor(hours)
     }
 
     /** Последние фоновые проверки серверов: читаются при запуске и возврате в приложение, а не при каждой отрисовке. */
@@ -2490,7 +2513,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun refreshMonitor() {
         runCatching {
-            val fresh = stableProfiles.mapNotNull { p -> MonitorWorker.lastState(getApplication(), p.fqdn)?.let { p.fqdn to it } }.toMap()
+            val fresh = stableProfiles.mapNotNull { p -> platform.monitorLastState(p.fqdn)?.let { p.fqdn to it } }.toMap()
             monitorStates.clear(); monitorStates.putAll(fresh)
         }
     }
@@ -2521,7 +2544,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         if (balanceTried) return
         val client = opClient() ?: return
         balanceTried = true
-        viewModelScope.launch {
+        scope.launch {
             val (b, format) = runCatching { client.balance() }.getOrElse { null to (it.message ?: "") }
             opBalance = b
             if (b == null) opLog.add("Баланс OneProvider: API его не отдаёт ($format).")
@@ -2668,7 +2691,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 c.inputStream.bufferedReader().use { it.readText().trim() }.also { c.disconnect() }
             }.getOrDefault("")
         }
-        addLog(target, "Запускаю живую проверку на ${ssh.host}" + (if (phoneIp.isNotEmpty()) " (IP телефона: $phoneIp)" else "") + " …")
+        addLog(target, "Запускаю живую проверку на ${ssh.host}" + (if (phoneIp.isNotEmpty()) " (IP ${Device.GEN}: $phoneIp)" else "") + " …")
         var started = false
         runner.runScript(ssh, Scripts.liveCheck(LIVE_SECONDS, phoneIp)) { if (it.trim() == Scripts.LIVE_STARTED) started = true else postLog(target, it) }
         if (!started) throw IllegalStateException("Живую проверку запустить не удалось.")
@@ -2779,15 +2802,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /** Сохраняет копию всех серверов и настроек доступа. [pass] пустой — без шифрования. */
-    fun plusExport(uri: Uri, pass: String) {
+    fun plusExport(doc: Doc, pass: String) {
         val data = backupData()
         if (pass.isNotEmpty() && pass.length < 8) { plusError = "Пароль копии — не короче 8 символов (или оставьте поле пустым)."; return }
         plusError = null
         launchTask(plusLog, clear = false) {
             val text = withContext(Dispatchers.Default) { Backup.encode(data, pass) }
             withContext(Dispatchers.IO) {
-                getApplication<Application>().contentResolver.openOutputStream(uri, "wt")?.use { it.write(text.toByteArray()) }
-                    ?: throw IllegalStateException("Не удалось открыть файл для записи.")
+                doc.write(text.toByteArray())
             }
             markBackedUp(data.servers)
             addLog(plusLog, "Копия сохранена: серверов ${data.servers.size}" + (if (data.servers.isNotEmpty()) " (${data.servers.joinToString { it.fqdn }})" else "") +
@@ -2805,13 +2827,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     var pendingSettings by mutableStateOf<BackupSettings?>(null)
 
     /** Читает файл копии: открытую — сразу, зашифрованную — после ввода пароля. */
-    fun plusImport(uri: Uri) {
+    fun plusImport(doc: Doc) {
         plusError = null
         launchTask(plusLog, clear = false) {
-            val text = withContext(Dispatchers.IO) {
-                getApplication<Application>().contentResolver.openInputStream(uri)?.use { String(it.readBytes()) }
-                    ?: throw IllegalStateException("Не удалось открыть файл.")
-            }
+            val text = withContext(Dispatchers.IO) { String(doc.read()) }
             if (Backup.isEncrypted(text)) {
                 importText = text
                 importNeedsPassword = true
@@ -2866,7 +2885,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
         plusPendingImport = pendingImports.removeFirstOrNull()
-        if (added == 0 && plusPendingImport == null && pendingSettings == null) addLog(plusLog, "Всё из копии уже есть на телефоне и совпадает.")
+        if (added == 0 && plusPendingImport == null && pendingSettings == null) addLog(plusLog, "Всё из копии уже есть на ${Device.PREP} и совпадает.")
     }
 
     /** Поля доступа ещё не заполнены — настройки из копии можно поставить без вопросов. */
@@ -2995,7 +3014,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         ncToken = ""
         opApiKey = ""
         opClientKey = ""
-        log.add("Сохранённые пароли, SSH-ключ, токен name.com и ключи OneProvider удалены с телефона.")
+        log.add("Сохранённые пароли, SSH-ключ, токен name.com и ключи OneProvider удалены с ${Device.GEN}.")
         if (stableProfiles.isNotEmpty()) log.add("Серверы с постоянными ссылками на Главной сохранены (убрать их можно там же).")
     }
 
@@ -3012,7 +3031,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         dnsError = null
         opError = null
         tgError = null
-        viewModelScope.launch {
+        scope.launch {
             try {
                 block()
             } catch (e: SshException) {
@@ -3031,7 +3050,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Из потока ввода-вывода: добавить строку журнала в главном потоке. */
     private fun postLog(target: SnapshotStateList<String>, line: String) {
-        viewModelScope.launch { target.add(line) }
+        scope.launch { target.add(line) }
     }
 
     private fun addLog(target: SnapshotStateList<String>, line: String) {

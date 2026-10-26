@@ -13,13 +13,15 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.snapshotFlow
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import app.hy2setup.ui.AppRoot
 import app.hy2setup.ui.Hy2Theme
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-    private val vm: MainViewModel by viewModels()
+    private val vm: MainViewModel by viewModels { viewModelFactory { initializer { MainViewModel(application) } } }
     private val askNotifications = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     /** Сохраняем введённые данные, когда приложение сворачивают или закрывают. */

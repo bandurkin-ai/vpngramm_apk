@@ -1,7 +1,5 @@
 package app.hy2setup.ui
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -57,6 +55,7 @@ import androidx.compose.material3.HorizontalDivider
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import app.hy2setup.platform.Device
 
 /** Главная: постоянный профиль (ссылки не меняются при смене VPS) и всё для его обслуживания. */
 @Composable
@@ -64,7 +63,7 @@ fun HomeScreen(vm: MainViewModel) {
     val profile = vm.plusProfile
     var passFor by remember { mutableStateOf<String?>(null) }
     var pass by remember { mutableStateOf("") }
-    var pendingUri by remember { mutableStateOf<android.net.Uri?>(null) }
+    var pendingDoc by remember { mutableStateOf<app.hy2setup.platform.Doc?>(null) }
     var menu by remember { mutableStateOf(false) }
     var orderSheet by remember { mutableStateOf(false) }
     var addSheet by remember { mutableStateOf(false) }
@@ -72,12 +71,8 @@ fun HomeScreen(vm: MainViewModel) {
     var linksUser by remember { mutableStateOf<app.hy2setup.ProfileUser?>(null) }
     // из уведомления «сервер недоступен» — сразу шторка замены
     LaunchedEffect(vm.replaceRequest) { if (vm.replaceRequest) { vm.replaceRequest = false; vm.plusNew = false; orderSheet = true } }
-    val saver = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri ->
-        if (uri != null) { pendingUri = uri; pass = ""; passFor = "export" }
-    }
-    val opener = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) vm.plusImport(uri)
-    }
+    val saver = rememberSaveDoc { doc -> pendingDoc = doc; pass = ""; passFor = "export" }
+    val opener = rememberOpenDoc { vm.plusImport(it) }
     val haptic = LocalHapticFeedback.current
 
     ScreenFrame(
@@ -88,11 +83,11 @@ fun HomeScreen(vm: MainViewModel) {
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                 DropdownMenuItem(
                     text = { Text("Сохранить копию") }, leadingIcon = { Icon(AppIcons.Save, null) },
-                    onClick = { menu = false; saver.launch("vpngramm-backup.vpngramm") }, enabled = !vm.running,
+                    onClick = { menu = false; saver("vpngramm-backup.vpngramm") }, enabled = !vm.running,
                 )
                 DropdownMenuItem(
                     text = { Text("Восстановить из файла") }, leadingIcon = { Icon(AppIcons.Restore, null) },
-                    onClick = { menu = false; opener.launch(arrayOf("*/*")) }, enabled = !vm.running,
+                    onClick = { menu = false; opener() }, enabled = !vm.running,
                 )
                 if (profile != null && !profile.realitySelf) {
                     DropdownMenuItem(
@@ -131,7 +126,7 @@ fun HomeScreen(vm: MainViewModel) {
         } else {
             ServerSwitcher(vm, profile, onNew = { vm.plusNew = true; orderSheet = true }, onAdd = { addSheet = true })
             ServerProtocolsCard(vm, profile)
-            if (vm.backupStale) BackupBanner { saver.launch("vpngramm-backup.vpngramm") }
+            if (vm.backupStale) BackupBanner { saver("vpngramm-backup.vpngramm") }
             ProfileHero(vm, profile, onLinks = { linksUser = null; linksSheet = true })
             PeopleCard(vm, profile, onLinks = { u -> linksUser = u; linksSheet = true })
         }
@@ -167,9 +162,9 @@ fun HomeScreen(vm: MainViewModel) {
     LaunchedEffect(vm.plusActive) { if (vm.plusActive) orderSheet = false }
 
     HomeDialogs(vm, if (vm.plusNew) null else profile, passFor, pass, { pass = it }, onPassDone = { mode ->
-        val uri = pendingUri
+        val doc = pendingDoc
         passFor = null
-        if (uri != null && mode == "export") vm.plusExport(uri, pass)
+        if (doc != null && mode == "export") vm.plusExport(doc, pass)
     })
 }
 
@@ -626,7 +621,7 @@ private fun HomeDialogs(
                 else if (vm.vpsSharedWithOthers(p)) "• VPS ${v.ip} — НЕ удаляется: на нём работает другой сервер списка\n"
                 else "• VPS ${v.hostname.ifEmpty { v.id.ifEmpty { "" } }} (${v.ip}) в OneProvider — со всеми данными\n") +
                 "• A-запись ${p.fqdn} в name.com\n" +
-                "• строка ${p.fqdn} в списке и ключи ссылок на телефоне\n\n" +
+                "• строка ${p.fqdn} в списке и ключи ссылок на ${Device.PREP}\n\n" +
                 "Все ссылки этого сервера перестанут работать у всех клиентов.",
             "Удалить", danger = true, onConfirm = { vm.deleteServerFully(p) }, onDismiss = { vm.serverDeleteFull = null },
         )
@@ -673,7 +668,7 @@ private fun HomeDialogs(
         ConfirmDialog(
             "Заменить настройки доступа?",
             "В копии есть настройки вкладки «Сервер»" + (if (st.host.isNotEmpty()) " (${st.user}@${st.host})" else "") +
-                ", SSH-ключ и ключи OneProvider и name.com. На телефоне они уже заполнены и отличаются. Заменить их данными из копии?",
+                ", SSH-ключ и ключи OneProvider и name.com. На ${Device.PREP} они уже заполнены и отличаются. Заменить их данными из копии?",
             "Заменить", onConfirm = { vm.confirmSettings(true) }, onDismiss = { vm.confirmSettings(false) }, dismiss = "Оставить текущие",
         )
     }

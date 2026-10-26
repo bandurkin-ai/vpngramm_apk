@@ -14,3 +14,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "vpngramm"
 include(":app")
+include(":desktop")

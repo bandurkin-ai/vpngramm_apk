@@ -3,6 +3,7 @@ package app.hy2setup
 import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
+import app.hy2setup.platform.SecretStorage
 import java.security.KeyStore
 import java.util.Base64
 import javax.crypto.Cipher
@@ -15,7 +16,7 @@ import javax.crypto.spec.GCMParameterSpec
  * Значения шифруются AES-256-GCM ключом из Android Keystore (ключ не покидает защищённое хранилище телефона),
  * в настройки приложения попадает только шифротекст.
  */
-class SecretStore(context: Context) {
+class SecretStore(context: Context) : SecretStorage {
 
     private val prefs = context.getSharedPreferences("secrets", Context.MODE_PRIVATE)
 
@@ -33,7 +34,7 @@ class SecretStore(context: Context) {
         return gen.generateKey()
     }
 
-    fun put(name: String, value: String) {
+    override fun put(name: String, value: String) {
         if (value.isEmpty()) {
             prefs.edit().remove(name).apply()
             return
@@ -50,7 +51,7 @@ class SecretStore(context: Context) {
         }
     }
 
-    fun get(name: String): String {
+    override fun get(name: String): String {
         val stored = prefs.getString(name, null) ?: return ""
         return try {
             val (iv, ct) = stored.split(":").let { it[0] to it[1] }
@@ -63,7 +64,7 @@ class SecretStore(context: Context) {
         }
     }
 
-    fun clear() {
+    override fun clear() {
         prefs.edit().clear().apply()
     }
 

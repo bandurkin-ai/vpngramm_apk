@@ -1,7 +1,5 @@
 package app.hy2setup.ui
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,9 +31,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.hy2setup.MainViewModel
-import app.hy2setup.OneProviderClient
+import app.hy2setup.OpFilter
 import app.hy2setup.OpSshKey
 import app.hy2setup.ServerProfile
+import app.hy2setup.platform.Device
 
 /** Ключи OneProvider. */
 @Composable
@@ -43,7 +43,7 @@ fun OneProviderFields(vm: MainViewModel) {
     AppField("Client-Key", vm.opClientKey, { vm.opClientKey = it }, secret = true, keyboard = KeyboardType.Password, enabled = !vm.running)
     MoreHint(
         "Ключи — в кабинете panel.op-net.com, раздел API.",
-        "Нажмите «Click to Reveal». Ключи хранятся на телефоне в зашифрованном виде. Если в кабинете включён Whitelist, добавьте в него IP телефона.",
+        "Нажмите «Click to Reveal». Ключи хранятся на ${Device.PREP} в зашифрованном виде. Если в кабинете включён Whitelist, добавьте в него IP ${Device.GEN}.",
     )
 }
 
@@ -55,7 +55,7 @@ fun NameComFields(vm: MainViewModel, withZone: Boolean = true) {
     if (withZone) AppField("Домен, например example.com", vm.zone, { vm.zone = it }, keyboard = KeyboardType.Uri, enabled = !vm.running)
     MoreHint(
         "Токен: name.com → Account Settings → API Token Management.",
-        "Логин, домен и токен запоминаются; токен хранится на телефоне в зашифрованном виде.",
+        "Логин, домен и токен запоминаются; токен хранится на ${Device.PREP} в зашифрованном виде.",
     )
 }
 
@@ -109,7 +109,7 @@ fun ServerHostField(vm: MainViewModel) {
     toDelete?.let { p ->
         ConfirmDialog(
             "Удалить сервер из списка?",
-            "${p.user}@${p.host}:${p.port} и сохранённые для него пароль и ключ будут удалены с телефона. Сам сервер не затрагивается.",
+            "${p.user}@${p.host}:${p.port} и сохранённые для него пароль и ключ будут удалены с ${Device.GEN}. Сам сервер не затрагивается.",
             "Удалить", danger = true, onConfirm = { vm.deleteProfile(p); toDelete = null }, onDismiss = { toDelete = null },
         )
     }
@@ -118,7 +118,7 @@ fun ServerHostField(vm: MainViewModel) {
 /** Карточка доступа к серверу по SSH. */
 @Composable
 fun SshAccessCard(vm: MainViewModel) {
-    val keyPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> if (uri != null) vm.loadKeyFrom(uri) }
+    val keyPicker = rememberOpenDoc { vm.loadKeyFrom(it) }
     val target = vm.host.trim()
     SectionCard(
         "Доступ по SSH", AppIcons.Terminal,
@@ -135,30 +135,33 @@ fun SshAccessCard(vm: MainViewModel) {
             AppField("Пароль", vm.password, { vm.password = it }, secret = true, keyboard = KeyboardType.Password, enabled = !vm.running)
         } else {
             AppField("Приватный ключ (вставьте текст)", vm.privateKey, { vm.privateKey = it }, lines = 3, mono = true, enabled = !vm.running)
-            OutlinedButton(onClick = { keyPicker.launch(arrayOf("*/*")) }, enabled = !vm.running) { Text("Выбрать файл ключа…") }
+            OutlinedButton(onClick = { keyPicker() }, enabled = !vm.running) { Text("Выбрать файл ключа…") }
             AppField("Пароль от ключа (если есть)", vm.passphrase, { vm.passphrase = it }, secret = true, keyboard = KeyboardType.Password, enabled = !vm.running)
             if (vm.user.trim() != "root") {
                 AppField("Пароль для sudo", vm.password, { vm.password = it }, secret = true, keyboard = KeyboardType.Password, enabled = !vm.running)
             }
         }
         MoreHint(
-            "Пароль и ключ хранятся на телефоне зашифрованными.",
+            "Пароль и ключ хранятся на ${Device.PREP} зашифрованными.",
             "Поддерживаются ключи ed25519, RSA, ECDSA (OpenSSH, PEM, PuTTY .ppk). Пользователю не root нужен sudo и его пароль.",
         )
     }
 }
 
-/** Выбор локации, тарифа (доступные к заказу, с IPv4, до $10/мес), ОС и SSH-ключей кабинета. */
+/** Выбор локации, тарифа (доступные к заказу, IPv4 включён, фильтр по цене и трафику), ОС и SSH-ключей кабинета. */
 @Composable
 fun VpsOrderForm(vm: MainViewModel) {
     if (!vm.opCatalogLoaded) {
         OutlinedButton(onClick = vm::opLoadCatalog, enabled = !vm.running, modifier = Modifier.fillMaxWidth()) {
             Text("Загрузить локации, тарифы и ключи")
         }
-        Hint("Тарифы: только доступные к заказу, с IPv4 и не дороже $${OneProviderClient.MAX_MONTHLY_PRICE.toInt()}/мес.")
+        Hint("Тарифы: только доступные к заказу и с IPv4 в тарифе. После загрузки их можно отфильтровать по цене и трафику.")
         return
     }
-    if (vm.opLocationsOrderable.isEmpty()) ErrorText("Подходящих локаций нет.")
+    VpsFilter(vm)
+    if (vm.opLocationsOrderable.isEmpty()) {
+        ErrorText(if (vm.opFilter.active) "Под фильтр (${vm.opFilter.title}) ничего не подходит — поднимите цену или уменьшите трафик." else "Подходящих локаций нет.")
+    }
     // шаг 1: регион, шаг 2: город и страна внутри региона
     Picker(
         "Регион", vm.opRegion.ifEmpty { "Выберите…" },
@@ -177,7 +180,9 @@ fun VpsOrderForm(vm: MainViewModel) {
     }
     Text("Тариф", style = MaterialTheme.typography.titleSmall)
     val sizes = vm.opSizesForLocation
-    if (sizes.isEmpty()) Hint("В этой локации нет доступных тарифов.")
+    if (sizes.isEmpty() && vm.opLocationsOrderable.isNotEmpty()) Hint("В этой локации нет доступных тарифов.")
+    val hidden = vm.opSizesHiddenByFilter
+    if (hidden > 0) Hint("Фильтр скрыл тарифов в этой локации: $hidden.")
     sizes.forEach { sz ->
         ListItem(
             headlineContent = { Text(sz.summary) },
@@ -198,6 +203,29 @@ fun VpsOrderForm(vm: MainViewModel) {
     if (vm.opKeys.isEmpty()) Hint("В кабинете нет SSH-ключей — вход будет по паролю root, который выдаст провайдер.")
     vm.opKeys.forEach { k -> KeyRow(k, k.uuid in vm.opKeySel, !vm.running) { vm.opToggleKey(k.uuid) } }
     OutlinedButton(onClick = vm::opLoadCatalog, enabled = !vm.running) { Text("Обновить список") }
+}
+
+/** Фильтр тарифов: «Цена до» и «Трафик от»; регионы, локации и тарифы ниже показываются только подходящие. */
+@Composable
+private fun VpsFilter(vm: MainViewModel) {
+    val f = vm.opFilter
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Box(Modifier.weight(1f)) {
+            Picker(
+                "Цена до", if (f.maxPrice == 0) "любая" else "$${f.maxPrice}/мес",
+                OpFilter.PRICE_STEPS.map { "$it" to if (it == 0) "любая" else "$$it/мес" }, !vm.running,
+            ) { vm.opSetFilter(f.copy(maxPrice = it.toInt())) }
+        }
+        Box(Modifier.weight(1f)) {
+            Picker(
+                "Трафик от", if (f.minTrafficGb == 0) "любой" else OpFilter.trafficTitle(f.minTrafficGb),
+                OpFilter.TRAFFIC_STEPS.map { "$it" to if (it == 0) "любой" else OpFilter.trafficTitle(it) }, !vm.running,
+            ) { vm.opSetFilter(f.copy(minTrafficGb = it.toInt())) }
+        }
+    }
+    if (f.active) {
+        TextButton(onClick = { vm.opSetFilter(OpFilter()) }, enabled = !vm.running) { Text("Сбросить фильтр") }
+    }
 }
 
 @Composable

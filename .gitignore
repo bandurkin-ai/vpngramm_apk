@@ -7,4 +7,7 @@ out/
 engine/build/
 # движок собирается скриптом tools/build-engine.sh
 app/src/main/jniLibs/
+# Java для архива Windows (скачивается задачей :desktop:downloadJre)
+.cache/
+tools/windows-launcher/*.syso
 .kotlin/

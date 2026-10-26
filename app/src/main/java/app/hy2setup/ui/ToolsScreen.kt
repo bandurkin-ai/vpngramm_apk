@@ -16,20 +16,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import app.hy2setup.MainViewModel
+import app.hy2setup.platform.Device
 
 /** Инструменты: контроль серверов и служебные действия. Новый сервер создаётся на Главной. */
 @Composable
 fun ToolsScreen(vm: MainViewModel) {
     var ask by remember { mutableStateOf<String?>(null) }
-    val ctx = LocalContext.current
-    val version = remember {
-        runCatching { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName }.getOrNull() ?: "?"
-    }
+    val version = rememberAppVersion()
 
     ScreenFrame(title = "Инструменты", running = vm.running) {
-        SectionCard(
+        if (!vm.monitorSupported) {
+            SectionCard("Контроль серверов", AppIcons.Shield, subtitle = "Есть в версии для Android", startExpanded = false) {
+                Hint("Фоновая проверка серверов с уведомлениями работает в приложении для Android. Здесь проверить сервер можно кнопкой «Проверить» на Главной.")
+            }
+        } else SectionCard(
             "Контроль серверов", AppIcons.Shield,
             subtitle = if (vm.monitorHours == 0) "Выключен" else "Проверка раз в ${vm.monitorHours} ч",
         ) {
@@ -44,7 +45,7 @@ fun ToolsScreen(vm: MainViewModel) {
             )
         }
         ToolGroup {
-            ToolItem(AppIcons.Key, "Забыть пароли и токены", "Удалить с телефона сохранённые пароли, ключ SSH и токены", !vm.running) { ask = "secrets" }
+            ToolItem(AppIcons.Key, "Забыть пароли и токены", "Удалить с ${Device.GEN} сохранённые пароли, ключ SSH и токены", !vm.running) { ask = "secrets" }
             ToolItem(AppIcons.Shield, "Сбросить доверенные серверы", "Снова спрашивать отпечаток при подключении", !vm.running) { ask = "hosts" }
         }
         ToolGroup {
@@ -55,7 +56,7 @@ fun ToolsScreen(vm: MainViewModel) {
     when (ask) {
         "secrets" -> ConfirmDialog(
             "Забыть пароли и токены?",
-            "С телефона будут удалены сохранённые пароли, приватный ключ SSH, ключи OneProvider и токен name.com. " +
+            "С ${Device.GEN} будут удалены сохранённые пароли, приватный ключ SSH, ключи OneProvider и токен name.com. " +
                 "Серверы и профиль Главной не затрагиваются.",
             "Забыть", danger = true, onConfirm = { ask = null; vm.forgetSecrets() }, onDismiss = { ask = null },
         )

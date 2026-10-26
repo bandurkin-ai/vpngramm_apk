@@ -61,3 +61,29 @@
 ## Подпись релизной версии (по желанию)
 Для установки себе debug-APK достаточно. Для публикации в Google Play нужен подписанный релиз:
 **Build → Generate Signed App Bundle / APK → APK → Create new keystore…** Сохраните файл ключа и пароли в надёжном месте — без них приложение нельзя будет обновлять.
+
+---
+
+# Версия для Windows 11 (x64)
+
+Готовый архив `vpngramm-<версия>-windows-x64.zip`: распакуйте целиком и запустите `vpngramm.exe` (Java уже внутри, папка `runtime`).
+Данные программы — в `%APPDATA%\vpngramm`, пароли и ключи зашифрованы Windows DPAPI.
+
+## Как устроено
+- Модуль `desktop` собирает **тот же код**, что и Android-приложение (`app/src/main/java`), без Android-файлов
+  (их список — `androidOnly` в `desktop/build.gradle.kts`), плюс своя реализация платформенного слоя:
+  `desktop/src/main/kotlin` (настройки и секреты в файлах, выбор файлов, буфер обмена, окно).
+- Интерфейс — Compose Multiplatform 1.6.2 (последняя версия, целиком лежащая в Maven Central).
+- `vpngramm.exe` — маленький запускатор на Go (`tools/windows-launcher`), он стартует Java из папки `runtime`.
+
+## Собрать архив самому (Linux или macOS; нужны JDK 17+, Go 1.22+ и интернет)
+```
+./gradlew :desktop:windowsZip
+```
+Архив появится в `out/`. Java для Windows (Eclipse Temurin JRE 21) скачивается один раз в `.cache/jre` и проверяется по SHA-256.
+
+## Запустить на своём компьютере для проверки
+```
+./gradlew :desktop:run -Pskia=linux-x64      # Linux
+./gradlew :desktop:test -Pskia=linux-x64     # тесты и снимки экранов (desktop/build/screens)
+```

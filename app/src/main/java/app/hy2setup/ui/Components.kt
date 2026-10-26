@@ -1,9 +1,5 @@
 package app.hy2setup.ui
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
@@ -64,10 +60,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -80,7 +74,6 @@ import androidx.compose.ui.unit.sp
 import app.hy2setup.LogSummary
 import app.hy2setup.ShareLink
 import app.hy2setup.StepStatus
-import app.hy2setup.makeQr
 
 /** Показ короткого сообщения внизу экрана (snackbar) из любого места интерфейса. */
 val LocalSnack = compositionLocalOf<(String) -> Unit> { {} }
@@ -88,20 +81,14 @@ val LocalSnack = compositionLocalOf<(String) -> Unit> { {} }
 /** Копирует текст в буфер и показывает «Скопировано». */
 @Composable
 fun rememberCopier(): (label: String, text: String) -> Unit {
-    val ctx = LocalContext.current
+    val clip = rememberClipboard()
     val snack = LocalSnack.current
-    return remember(ctx, snack) {
+    return remember(clip, snack) {
         { label, text ->
-            (ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
-                .setPrimaryClip(ClipData.newPlainText(label, text))
+            clip(label, text)
             snack("$label: скопировано")
         }
     }
-}
-
-fun share(ctx: Context, text: String, title: String) {
-    val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
-    ctx.startActivity(Intent.createChooser(send, title))
 }
 
 // ---------------------------------------------------------------- карточки и поля
@@ -457,9 +444,9 @@ fun LinkRow(link: ShareLink, onOpen: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LinkSheet(link: ShareLink, onDismiss: () -> Unit) {
-    val ctx = LocalContext.current
+    val share = rememberShare()
     val copy = rememberCopier()
-    val qr = remember(link.uri) { makeQr(link.uri).asImageBitmap() }
+    val qr = remember(link.uri) { qrImage(link.uri) }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(
             Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).navigationBarsPadding(),
@@ -474,7 +461,7 @@ fun LinkSheet(link: ShareLink, onDismiss: () -> Unit) {
                 FilledTonalButton(onClick = { copy(link.title, link.uri) }, modifier = Modifier.weight(1f).height(52.dp)) {
                     Icon(AppIcons.Copy, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Копировать")
                 }
-                OutlinedButton(onClick = { share(ctx, link.uri, "Поделиться ссылкой") }, modifier = Modifier.weight(1f).height(52.dp)) {
+                OutlinedButton(onClick = { share(link.uri, "Поделиться ссылкой") }, modifier = Modifier.weight(1f).height(52.dp)) {
                     Icon(AppIcons.Share, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Поделиться")
                 }
             }

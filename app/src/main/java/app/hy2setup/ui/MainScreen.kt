@@ -50,6 +50,7 @@ import app.hy2setup.TAB_HOME
 import app.hy2setup.TAB_SERVER
 import app.hy2setup.TAB_VPN
 import kotlinx.coroutines.launch
+import app.hy2setup.platform.Device
 
 private data class Dest(val title: String, val icon: ImageVector)
 
@@ -168,7 +169,7 @@ private fun HostKeyDialog(vm: MainViewModel) {
 @Composable
 private fun CrashDialog(vm: MainViewModel) {
     val report = vm.crashReport ?: return
-    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val share = rememberShare()
     val copy = rememberCopier()
     androidx.compose.material3.AlertDialog(
         onDismissRequest = { vm.crashReport = null },
@@ -178,7 +179,7 @@ private fun CrashDialog(vm: MainViewModel) {
             androidx.compose.foundation.layout.Column(
                 Modifier.heightIn(max = 420.dp).verticalScroll(androidx.compose.foundation.rememberScrollState()),
             ) {
-                androidx.compose.material3.Text("Пришлите этот отчёт — по нему видно, где ошибка. В нём только место ошибки и модель телефона, без ключей и паролей.")
+                androidx.compose.material3.Text("Пришлите этот отчёт — по нему видно, где ошибка. В нём только место ошибки и модель ${Device.GEN}, без ключей и паролей.")
                 androidx.compose.material3.Text(
                     report.take(1500), style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
                     fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
@@ -186,6 +187,6 @@ private fun CrashDialog(vm: MainViewModel) {
             }
         },
         confirmButton = { androidx.compose.material3.TextButton({ copy("Отчёт", report); vm.crashReport = null }) { androidx.compose.material3.Text("Скопировать") } },
-        dismissButton = { androidx.compose.material3.TextButton({ share(ctx, report, "Отчёт о падении vpngramm"); vm.crashReport = null }) { androidx.compose.material3.Text("Поделиться") } },
+        dismissButton = { androidx.compose.material3.TextButton({ share(report, "Отчёт о падении vpngramm"); vm.crashReport = null }) { androidx.compose.material3.Text("Поделиться") } },
     )
 }

@@ -38,7 +38,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.hy2setup.Awg
@@ -225,7 +224,7 @@ internal fun LinksSheet(vm: MainViewModel, p: StableProfile, startUser: ProfileU
 internal fun LinksContent(vm: MainViewModel, p: StableProfile, startUser: ProfileUser?) {
     var userId by remember { mutableStateOf(startUser?.id) }
     var open by remember { mutableStateOf<ShareLink?>(null) }
-    val ctx = LocalContext.current
+    val share = rememberShare()
     val copy = rememberCopier()
     val user = p.users.firstOrNull { it.id == userId }
     val links = p.linksFor(user)
@@ -237,7 +236,7 @@ internal fun LinksContent(vm: MainViewModel, p: StableProfile, startUser: Profil
         }
     }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilledTonalButton(onClick = { share(ctx, links.joinToString("\n\n") { "${it.title}:\n${it.uri}" }, "Поделиться ссылками") }) {
+        FilledTonalButton(onClick = { share(links.joinToString("\n\n") { "${it.title}:\n${it.uri}" }, "Поделиться ссылками") }) {
             Icon(AppIcons.Share, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Поделиться всеми")
         }
         OutlinedButton(onClick = { copy("Ссылки", links.joinToString("\n") { it.uri }) }) { Text("Скопировать всё") }
