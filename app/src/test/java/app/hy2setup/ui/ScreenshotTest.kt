@@ -126,7 +126,7 @@ class ScreenshotTest {
     @Test
     fun homeTrafficBar() {
         val model = vm(0).apply {
-            plusProfile = plusProfile!!.copy(vps = ProfileVps("123", "203.0.113.10", "vpn", trafficLimitGb = 1000.0), trafficGb = 312.4)
+            plusProfile = plusProfile!!.copy(vps = ProfileVps("123", "203.0.113.10", "vpn", trafficLimitGb = 1000.0), trafficGb = 312.4, checkAt = System.currentTimeMillis(), status = mapOf("VLESS" to true, "Hysteria2" to true))
         }
         org.junit.Assert.assertEquals(1000.0, model.trafficLimitGb(model.plusProfile!!))
         captureRoboImage("build/screens/1-home-traffic-light.png") { Hy2Theme(dark = false, dynamic = false) { AppRoot(model) } }
