@@ -1028,6 +1028,61 @@ class MainViewModel(private val platform: Platform) : BaseViewModel() {
     val opLocationsOrderable: List<OpLocation>
         get() = OneProviderClient.orderableLocations(opLocations, opSizes, opFilter).sortedBy { opIsBad(it.id) }
 
+    // ---------- Пинг до локаций OneProvider ----------
+    /** Пинг по id локации: замер (до тестового адреса или вашего VPS в локации) или оценка по расстоянию. */
+    val opPing = mutableStateMapOf<String, PingResult>()
+    var opPinging by mutableStateOf(false)
+        private set
+    /** Почему у части локаций нет даже оценки (не удалось узнать ваше местоположение). */
+    var opPingNote by mutableStateOf<String?>(null)
+        private set
+    private var myGeo: Pair<Double, Double>? = null
+
+    /** Адрес для замера пинга локации: тестовый адрес от OneProvider или IP вашего VPS в этой локации. */
+    private fun pingTarget(loc: OpLocation): String? = loc.testHost.ifEmpty { null }
+        ?: opVms.firstOrNull { vm -> IPV4.matches(vm.ip) && (vm.location == loc.id || (loc.city.isNotEmpty() && vm.location.contains(loc.city, ignoreCase = true))) }?.ip
+
+    /** Меряет пинг до подходящих локаций (в фоне, не блокируя интерфейс). */
+    fun opMeasurePing() {
+        if (opPinging) return
+        opPinging = true
+        scope.launch {
+            try {
+                if (!opLoaded && opApiKey.isNotBlank() && opClientKey.isNotBlank()) {
+                    runCatching { OneProviderClient(opApiKey.trim(), opClientKey.trim()).listVms() }.getOrNull()?.let { setOpVms(it) }
+                }
+                if (myGeo == null) myGeo = Ping.myLocation()
+                val geo = myGeo
+                val locs = opLocationsOrderable
+                opPingNote = if (geo == null) "Не удалось определить ваше местоположение — оценки пинга нет, только замеры." else null
+                val gate = kotlinx.coroutines.sync.Semaphore(8)
+                kotlinx.coroutines.coroutineScope {
+                    locs.forEach { loc ->
+                        launch {
+                            gate.acquire()
+                            try {
+                                val real = pingTarget(loc)?.let { Ping.tcpRttMs(it) }
+                                val est = if (real == null && geo != null) Ping.cityCoord(loc.city)?.let { Ping.estimateMs(geo, it) } else null
+                                when {
+                                    real != null -> opPing[loc.id] = PingResult(real, estimated = false)
+                                    est != null -> opPing[loc.id] = PingResult(est, estimated = true)
+                                }
+                            } finally {
+                                gate.release()
+                            }
+                        }
+                    }
+                }
+            } finally {
+                opPinging = false
+            }
+        }
+    }
+
+    /** Лучший пинг в регионе (для списка регионов). */
+    fun opRegionPing(region: String): PingResult? =
+        opLocationsOrderable.filter { it.group == region }.mapNotNull { opPing[it.id] }.minByOrNull { it.ms }
+
     /** Регионы с подходящими локациями: название → сколько в нём локаций без пометки «недоступна». */
     val opRegions: List<Pair<String, Int>>
         get() = opLocationsOrderable.groupBy { it.group }
@@ -1036,7 +1091,8 @@ class MainViewModel(private val platform: Platform) : BaseViewModel() {
 
     /** Подходящие локации выбранного региона (помеченные — в конце). */
     val opLocationsInRegion: List<OpLocation>
-        get() = opLocationsOrderable.filter { it.group == opRegion }.sortedWith(compareBy({ opIsBad(it.id) }, { it.place }))
+        get() = opLocationsOrderable.filter { it.group == opRegion }
+            .sortedWith(compareBy({ opIsBad(it.id) }, { opPing[it.id]?.ms ?: Int.MAX_VALUE }, { it.place }))
 
     fun opSelectRegion(region: String) {
         opRegion = region
@@ -1140,6 +1196,8 @@ class MainViewModel(private val platform: Platform) : BaseViewModel() {
             if (tpls.none { it.id == opTemplateId }) opTemplateId = OneProviderClient.preferredTemplate(tpls)?.id.orEmpty()
             opCatalogLoaded = true
             loadBalance()
+            opPing.clear()
+            opMeasurePing()
             val okLocs = opLocationsOrderable
             val okSizes = sizes.count { sz -> okLocs.any { OneProviderClient.isOrderable(sz, it, opFilter) } }
             addLog(opLog, "Подходящих локаций: ${okLocs.size} из ${locs.size} в ${opRegions.size} регионах, тарифов: $okSizes из ${sizes.size} " +

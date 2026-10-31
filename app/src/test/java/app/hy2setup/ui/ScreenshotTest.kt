@@ -132,6 +132,37 @@ class ScreenshotTest {
         captureRoboImage("build/screens/1-home-traffic-light.png") { Hy2Theme(dark = false, dynamic = false) { AppRoot(model) } }
     }
 
+    /** Выбор локации с пингом: замер (до VPS в локации) и оценки «≈»; локации региона — по возрастанию пинга. */
+    @Test
+    fun orderPing() {
+        val model = vm(3, withProfile = false)
+        model.opSizes += app.hy2setup.OpSize("44", "", "General", "1", "1024", "20", "1000", "1000", "4.00", "0.006", true)
+        model.opLocations += listOf(
+            app.hy2setup.OpLocation("1", "Europe", "Italy", "Florence", setOf("44")),
+            app.hy2setup.OpLocation("2", "Europe", "Netherlands", "Amsterdam", setOf("44")),
+            app.hy2setup.OpLocation("3", "North America", "USA", "Miami", setOf("44")),
+        )
+        model.opTemplates += app.hy2setup.OpTemplate("t", "Debian 12")
+        model.opTemplateId = "t"
+        model.opCatalogLoaded = true
+        model.opPing["1"] = app.hy2setup.PingResult(58, estimated = true)
+        model.opPing["2"] = app.hy2setup.PingResult(41, estimated = false)
+        model.opPing["3"] = app.hy2setup.PingResult(142, estimated = true)
+        model.opSelectRegion("Europe")
+        org.junit.Assert.assertEquals(listOf("2", "1"), model.opLocationsInRegion.map { it.id })
+        org.junit.Assert.assertEquals(41, model.opRegionPing("Europe")?.ms)
+        captureRoboImage("build/screens/3-cloud-order-ping-light.png") {
+            Hy2Theme(dark = false, dynamic = false) {
+                androidx.compose.material3.Surface {
+                    androidx.compose.foundation.layout.Column(
+                        androidx.compose.ui.Modifier.padding(16.dp),
+                        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
+                    ) { VpsOrderForm(model) }
+                }
+            }
+        }
+    }
+
     /** Заказ VPS с фильтром: тарифы дороже $10 видны, фильтр «до $20, от 2 ТБ» оставляет подходящие. */
     @Test
     @Config(qualifiers = "w411dp-h1100dp-xxhdpi")
