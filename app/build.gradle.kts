@@ -12,8 +12,8 @@ android {
         applicationId = "app.hy2setup"
         minSdk = 26
         targetSdk = 35
-        versionCode = 50
-        versionName = "3.7"
+        versionCode = 52
+        versionName = "4.0"
     }
 
     buildTypes {

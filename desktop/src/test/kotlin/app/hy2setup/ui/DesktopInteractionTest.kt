@@ -58,11 +58,13 @@ class DesktopInteractionTest {
         val vm = model(TAB_HOME)
         setContent { Hy2Theme(dark = false, dynamic = false) { AppRoot(vm) } }
         onNodeWithText("VPN").assertDoesNotExist()
-        for (tab in listOf("Главная", "Сервер", "Облако", "Инструменты")) {
+        for (tab in listOf("Главная", "VPS/DNS", "Инструменты")) {
             org.junit.Assert.assertTrue(tab, onAllNodesWithText(tab).fetchSemanticsNodes().isNotEmpty())
         }
         onNodeWithText("Инструменты").performClick()
         waitForIdle()
+        onNodeWithText("Доступ по SSH").assertExists()
+        onNodeWithText("Аппаратные ключи").assertDoesNotExist()
         onNodeWithText("Забыть пароли и токены").assertExists()
         save(onAllNodes(isRoot())[0].captureToImage(), "5-tools-no-monitor")
     }
