@@ -97,6 +97,10 @@ fun HomeScreen(vm: MainViewModel) {
                 }
                 if (profile != null) {
                     DropdownMenuItem(
+                        text = { Text("Доступ по SSH") }, leadingIcon = { Icon(AppIcons.Terminal, null) },
+                        onClick = { menu = false; vm.editAccess(profile.fqdn) }, enabled = !vm.running,
+                    )
+                    DropdownMenuItem(
                         text = { Text("Удалить сервер", color = MaterialTheme.colorScheme.error) },
                         leadingIcon = { Icon(AppIcons.Delete, null, tint = MaterialTheme.colorScheme.error) },
                         onClick = { menu = false; vm.serverToDelete = profile }, enabled = !vm.running,
@@ -149,6 +153,11 @@ fun HomeScreen(vm: MainViewModel) {
             }
         }
         ErrorText(vm.plusError)
+        if (vm.plusAccessProblem && profile != null && !vm.running) {
+            FilledTonalButton(onClick = { vm.editAccess(profile.fqdn) }, modifier = Modifier.fillMaxWidth()) {
+                Icon(AppIcons.Terminal, null); Spacer(Modifier.width(8.dp)); Text("Исправить доступ по SSH")
+            }
+        }
         ResultPanel(vm.plusLog, vm.plusActive, vm.plusLinks, title = "Журнал")
         if (vm.plusLinks.isNotEmpty()) {
             Hint("На мобильном интернете в России надёжнее VLESS (TCP): UDP, на котором работает Hysteria2, операторы часто режут.")

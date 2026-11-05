@@ -25,10 +25,12 @@ import app.hy2setup.platform.Device
 fun ToolsScreen(vm: MainViewModel) {
     var ask by remember { mutableStateOf<String?>(null) }
     val version = rememberAppVersion()
+    androidx.compose.runtime.LaunchedEffect(Unit) { vm.accessRefresh() }
 
     ScreenFrame(title = "Инструменты", running = vm.running) {
         Text("Доступ к серверам", style = MaterialTheme.typography.titleMedium)
         SshAccessCard(vm)
+        DefaultKeysCard(vm)
         if (vm.hwKeySupported) HwKeysCard(vm)
         SectionCard("Защитить сервер", AppIcons.Shield, startExpanded = false, subtitle = "Обновления и вход только по SSH-ключу") {
             Hint("Для сервера из «Доступа по SSH»: обновления, автообновления и вход только по SSH-ключу. Протоколы и ссылки не меняются.")
@@ -36,6 +38,7 @@ fun ToolsScreen(vm: MainViewModel) {
                 Text("Защитить сервер ${vm.host.trim()}".trim())
             }
         }
+        ErrorText(vm.errorMessage)
         if (vm.log.isNotEmpty() || vm.running) ResultPanel(vm.log, vm.running, emptyList(), title = "Журнал")
         Text("Сервис", style = MaterialTheme.typography.titleMedium)
         if (vm.monitorSupported) SectionCard(

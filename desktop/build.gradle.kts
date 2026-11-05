@@ -10,7 +10,7 @@ plugins {
  * плюс своя реализация платформенного слоя (desktop/src/main/kotlin).
  */
 
-val appVersion = "3.6.1"
+val appVersion = "4.2"
 
 /** Файлы, которые есть только в Android-версии (службы, Android Keystore, USB и NFC и т. п.). */
 val androidOnly = listOf(
@@ -36,7 +36,7 @@ sourceSets["test"].kotlin.srcDir("../app/src/test/java")
 sourceSets["test"].kotlin {
     exclude(
         "app/hy2setup/StableListTest.kt", "app/hy2setup/StartupTest.kt", "app/hy2setup/MonitorWorkerTest.kt",
-        "app/hy2setup/ui/ScreenshotTest.kt",
+        "app/hy2setup/ui/ScreenshotTest.kt", "app/hy2setup/AccessTest.kt",
     )
 }
 tasks.test {
@@ -53,6 +53,17 @@ val genVersion = tasks.register("genVersion") {
     doLast { out.get().file("vpngramm-version.txt").asFile.apply { parentFile.mkdirs(); writeText(appVersion) } }
 }
 sourceSets["main"].resources.srcDir(genVersion)
+// «Ключи для всех серверов»: начальный список из локального default-keys.pub (в репозиторий не выкладывается)
+val genDefaultKeys = tasks.register("genDefaultKeys") {
+    val src = rootProject.file("default-keys.pub")
+    val out = layout.buildDirectory.dir("generated/defaultKeys")
+    outputs.dir(out)
+    inputs.property("keys", providers.provider { if (src.exists()) src.readText() else "" })
+    doLast {
+        out.get().file("hy2setup/default-keys.txt").asFile.apply { parentFile.mkdirs(); writeText(if (src.exists()) src.readText() else "") }
+    }
+}
+sourceSets["main"].resources.srcDir(genDefaultKeys)
 // скрипты для сервера (live_collect.sh, ключ репозитория AmneziaWG) — общие с Android
 sourceSets["main"].resources.srcDir("../app/src/main/resources")
 

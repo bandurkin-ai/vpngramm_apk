@@ -19,6 +19,8 @@ data class BackupSettings(
     val servers: List<SavedServer> = emptyList(),
     /** Ключ Рутокена (открытый ключ и key handle, JSON); пусто — нет. Без самого токена бесполезен. */
     val hwKey: String = "",
+    /** «Ключи для всех серверов» — открытые ключи (JSON-массив строк authorized_keys); пусто — нет. */
+    val defaultKeys: String = "",
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
         put("host", host); put("sshPort", sshPort); put("user", user); put("useKey", useKey)
@@ -26,6 +28,7 @@ data class BackupSettings(
         put("zone", zone); put("subdomain", subdomain); put("ttl", ttl); put("email", email); put("masquerade", masquerade)
         put("ncUser", ncUser); put("ncToken", ncToken); put("opApiKey", opApiKey); put("opClientKey", opClientKey)
         if (hwKey.isNotEmpty()) put("hwKey", hwKey)
+        if (defaultKeys.isNotEmpty()) put("defaultKeys", defaultKeys)
         put("servers", JSONArray().apply {
             servers.forEach {
                 put(JSONObject().put("host", it.profile.host).put("port", it.profile.port).put("user", it.profile.user)
@@ -43,6 +46,7 @@ data class BackupSettings(
             ncUser = o.optString("ncUser"), ncToken = o.optString("ncToken"),
             opApiKey = o.optString("opApiKey"), opClientKey = o.optString("opClientKey"),
             hwKey = o.optString("hwKey"),
+            defaultKeys = o.optString("defaultKeys"),
             servers = o.optJSONArray("servers")?.let { a ->
                 (0 until a.length()).mapNotNull { i ->
                     val s = a.optJSONObject(i) ?: return@mapNotNull null

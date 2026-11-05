@@ -95,6 +95,59 @@ class ScreenshotTest {
         captureRoboImage("build/screens/1-home-traffic-light.png") { Hy2Theme(dark = false, dynamic = false) { AppRoot(model) } }
     }
 
+    /** «Инструменты → Ключи для всех серверов»: два ключа токена (тестовые). */
+    @Test
+    @Config(qualifiers = "w411dp-h1600dp-xxhdpi")
+    fun defaultKeysCard() {
+        val model = vm(2)
+        // начальный список сборки (если есть локальный default-keys.pub) заменяем тестовыми ключами
+        model.defaultKeys.toList().forEach { model.removeDefaultKey(it.blob) }
+        org.junit.Assert.assertTrue(model.addDefaultKeys("sk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAICCk8FhAsU6IeB/jEusJXp65VKtjeiTegEYM72oNsR1VAAAACnNzaDpteW5hbWU= token-main\nsk-ssh-ed25519@openssh.com AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIPvXyZsLqQHOBp1eGq776pyrG2NfxCuVe75DpCFpWdePAAAACHNzaDpza18y token-backup"))
+        org.junit.Assert.assertEquals(listOf("token-main", "token-backup"), model.defaultKeys.map { it.comment })
+        captureRoboImage("build/screens/3-tools-defaultkeys-light.png") {
+            Hy2Theme(dark = false, dynamic = false) {
+                androidx.compose.material3.Surface {
+                    androidx.compose.foundation.layout.Column(
+                        androidx.compose.ui.Modifier.padding(16.dp),
+                        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
+                    ) { DefaultKeysCard(model, startExpanded = true) }
+                }
+            }
+        }
+        // удалённый ключ после перезапуска не возвращается
+        model.removeDefaultKey(model.defaultKeys.first().blob)
+        val again = MainViewModel(ApplicationProvider.getApplicationContext<android.app.Application>())
+        org.junit.Assert.assertEquals(listOf("token-backup"), again.defaultKeys.map { it.comment })
+    }
+
+    /** «Инструменты → Доступ по SSH»: выбран сервер Главной, IP исправлен, но ещё не применён. */
+    @Test
+    @Config(qualifiers = "w411dp-h1400dp-xxhdpi")
+    fun toolsAccessEdit() {
+        val model = vm(2)
+        model.accessSelect("vpn.example.org")
+        model.host = "198.51.100.7"
+        org.junit.Assert.assertTrue(model.accessDirty)
+        captureRoboImage("build/screens/3-tools-access-light.png") {
+            Hy2Theme(dark = false, dynamic = false) {
+                androidx.compose.material3.Surface {
+                    androidx.compose.foundation.layout.Column(
+                        androidx.compose.ui.Modifier.padding(16.dp),
+                        verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
+                    ) { SshAccessCard(model, startExpanded = true) }
+                }
+            }
+        }
+    }
+
+    /** Главная: вход на сервер не удался — кнопка «Исправить доступ по SSH». */
+    @Test
+    @Config(qualifiers = "w411dp-h1500dp-xxhdpi")
+    fun homeAccessProblem() {
+        val model = vm(0).apply { plusAccessProblem = true; plusLog += "ОШИБКА: Не удалось подключиться к 203.0.113.10:22" }
+        captureRoboImage("build/screens/1-home-access-light.png") { Hy2Theme(dark = false, dynamic = false) { AppRoot(model) } }
+    }
+
     /** «Инструменты → Аппаратные ключи»: YubiKey (ed25519, резидентный) и Рутокен (ecdsa, нерезидентный). */
     @Test
     @Config(qualifiers = "w411dp-h1600dp-xxhdpi")

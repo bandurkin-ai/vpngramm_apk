@@ -76,6 +76,6 @@ class DesktopInteractionTest {
         onNodeWithText("Удалить с компьютера", substring = true).assertExists()
         // блока «Контроль серверов» в Windows-версии нет
         onNodeWithText("Контроль серверов").assertDoesNotExist()
-        onNodeWithText("vpngramm v3.6.1", substring = true).assertExists()
+        onNodeWithText("vpngramm v4.2", substring = true).assertExists()
     }
 }

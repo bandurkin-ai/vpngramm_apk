@@ -1080,29 +1080,40 @@ ${firewall()}
     /** Проверка входа: печатает маркер. */
     fun ping(): String = HEADER + "\n" + "echo \"$PING_MARKER\""
 
+    /** Добавляет один открытый ключ (строку authorized_keys) — см. [addAuthorizedKeys]. */
+    fun addAuthorizedKey(line: String): String = addAuthorizedKeys(listOf(line))
+
     /**
-     * Добавляет открытый ключ (строку authorized_keys) пользователю, под которым вошли. Для ключей аппаратных токенов
-     * (sk-ecdsa) сначала проверяет, что OpenSSH на сервере 8.2 или новее — старые такие ключи не понимают.
+     * Добавляет открытые ключи (строки authorized_keys) пользователю, под которым вошли; уже добавленные не повторяются.
+     * Для ключей аппаратных токенов (sk-…) сначала проверяет, что OpenSSH на сервере 8.2 или новее — старые их не понимают.
      */
-    fun addAuthorizedKey(line: String): String {
-        val safe = line.replace("'", "")
-        val blob = safe.split(" ").getOrElse(1) { "" }
+    fun addAuthorizedKeys(lines: List<String>): String {
+        val keys = lines.mapNotNull { DefaultKeys.parse(it) }.distinctBy { it.blob }
+        val check = if (keys.none { it.hardware }) "" else """
+            if [ -n "${'$'}V" ] && { [ "${'$'}MAJ" -lt 8 ] || { [ "${'$'}MAJ" -eq 8 ] && [ "${'$'}MIN" -lt 2 ]; }; }; then
+                echo "ОШИБКА: на сервере OpenSSH ${'$'}V, а ключи аппаратных токенов (sk-…) понимает OpenSSH 8.2 и новее — обновите систему сервера"; exit 1
+            fi
+        """.trimIndent()
+        val add = keys.joinToString("\n") { k ->
+            val name = k.comment.ifEmpty { k.fingerprint }
+            """
+            if grep -qF '${k.blob}' "${'$'}AK"; then
+                echo "Ключ $name уже есть на сервере."
+            else
+                echo '${k.line}' >> "${'$'}AK"
+                echo "✓ Ключ $name добавлен в authorized_keys."
+            fi
+            """.trimIndent()
+        }
         return HEADER + "\n" + """
             V=${'$'}( { /usr/sbin/sshd -V 2>&1; ssh -V 2>&1; } | grep -o 'OpenSSH_[0-9]*\.[0-9]*' | head -1 | sed 's/OpenSSH_//')
             MAJ=${'$'}{V%%.*}; MIN=${'$'}{V#*.}
-            if [ -n "${'$'}V" ] && { [ "${'$'}MAJ" -lt 8 ] || { [ "${'$'}MAJ" -eq 8 ] && [ "${'$'}MIN" -lt 2 ]; }; }; then
-                echo "ОШИБКА: на сервере OpenSSH ${'$'}V, а ключи Рутокена (sk-ecdsa) понимает OpenSSH 8.2 и новее — обновите систему сервера"; exit 1
-            fi
+            """.trimIndent() + "\n" + check + "\n" + """
             H=${'$'}(getent passwd "${'$'}(id -un)" | cut -d: -f6); H=${'$'}{H:-${'$'}HOME}
+            AK="${'$'}H/.ssh/authorized_keys"
             mkdir -p "${'$'}H/.ssh" && chmod 700 "${'$'}H/.ssh"
-            touch "${'$'}H/.ssh/authorized_keys" && chmod 600 "${'$'}H/.ssh/authorized_keys"
-            if grep -qF '$blob' "${'$'}H/.ssh/authorized_keys"; then
-                echo "Ключ Рутокена уже есть на сервере (OpenSSH ${'$'}V)."
-            else
-                echo '$safe' >> "${'$'}H/.ssh/authorized_keys"
-                echo "✓ Ключ Рутокена добавлен в authorized_keys (OpenSSH ${'$'}V)."
-            fi
-        """.trimIndent()
+            touch "${'$'}AK" && chmod 600 "${'$'}AK"
+            """.trimIndent() + "\n" + add + "\n"
     }
 
     /**
