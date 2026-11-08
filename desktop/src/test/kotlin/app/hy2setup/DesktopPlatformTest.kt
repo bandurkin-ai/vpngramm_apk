@@ -60,7 +60,6 @@ class DesktopPlatformTest {
         assertEquals("203.0.113.10", again.host)
         assertEquals("пароль-root", again.password)
         assertEquals("token-xyz", again.ncToken)
-        assertFalse(again.monitorSupported)
         assertFalse(again.hwKeySupported)
         assertFalse(File(dir, "secrets.properties").readText().contains("пароль-root"))
     }

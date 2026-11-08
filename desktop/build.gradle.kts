@@ -10,11 +10,11 @@ plugins {
  * плюс своя реализация платформенного слоя (desktop/src/main/kotlin).
  */
 
-val appVersion = "4.2"
+val appVersion = "4.6"
 
 /** Файлы, которые есть только в Android-версии (службы, Android Keystore, USB и NFC и т. п.). */
 val androidOnly = listOf(
-    "app/hy2setup/MainActivity.kt", "app/hy2setup/App.kt", "app/hy2setup/JobService.kt", "app/hy2setup/MonitorWorker.kt",
+    "app/hy2setup/MainActivity.kt", "app/hy2setup/App.kt", "app/hy2setup/JobService.kt",
     "app/hy2setup/Notifications.kt", "app/hy2setup/SecretStore.kt",
     "app/hy2setup/ui/PlatformUiAndroid.kt",
     "app/hy2setup/platform/AndroidPlatform.kt", "app/hy2setup/platform/BaseViewModelAndroid.kt", "app/hy2setup/platform/DeviceAndroid.kt",
@@ -35,7 +35,7 @@ sourceSets["main"].kotlin { exclude(androidOnly) }
 sourceSets["test"].kotlin.srcDir("../app/src/test/java")
 sourceSets["test"].kotlin {
     exclude(
-        "app/hy2setup/StableListTest.kt", "app/hy2setup/StartupTest.kt", "app/hy2setup/MonitorWorkerTest.kt",
+        "app/hy2setup/StableListTest.kt", "app/hy2setup/StartupTest.kt",
         "app/hy2setup/ui/ScreenshotTest.kt", "app/hy2setup/AccessTest.kt",
     )
 }

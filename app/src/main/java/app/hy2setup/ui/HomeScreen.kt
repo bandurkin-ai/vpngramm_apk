@@ -70,7 +70,6 @@ fun HomeScreen(vm: MainViewModel) {
     var linksSheet by remember { mutableStateOf(false) }
     var linksUser by remember { mutableStateOf<app.hy2setup.ProfileUser?>(null) }
     // из уведомления «сервер недоступен» — сразу шторка замены
-    LaunchedEffect(vm.replaceRequest) { if (vm.replaceRequest) { vm.replaceRequest = false; vm.plusNew = false; orderSheet = true } }
     val saver = rememberSaveDoc { doc -> pendingDoc = doc; pass = ""; passFor = "export" }
     val opener = rememberOpenDoc { vm.plusImport(it) }
     val haptic = LocalHapticFeedback.current
@@ -205,7 +204,7 @@ internal fun ServerSwitcher(vm: MainViewModel, profile: StableProfile, onNew: ()
                 DropdownMenuItem(
                     text = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            StatusDot(overallOk(p, vm.monitorState(p.fqdn)))
+                            StatusDot(overallOk(p))
                             Spacer(Modifier.width(10.dp))
                             Column {
                                 Text(p.fqdn)
@@ -213,7 +212,7 @@ internal fun ServerSwitcher(vm: MainViewModel, profile: StableProfile, onNew: ()
                                     listOfNotNull(
                                         p.vps?.ip ?: "VPS ещё не создан",
                                         p.movedAt.takeIf { it > 0 }?.let { "перенесён " + SimpleDateFormat("dd.MM", Locale("ru")).format(Date(it)) },
-                                        maxOf(p.checkAt, vm.monitorState(p.fqdn)?.first ?: 0).takeIf { it > 0 }?.let { "проверен " + ago(it) },
+                                        p.checkAt.takeIf { it > 0 }?.let { "проверен " + ago(it) },
                                     ).joinToString(" · "),
                                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -417,7 +416,7 @@ private fun NewServerSheet(vm: MainViewModel, profile: StableProfile?, onDismiss
             }
             SwitchRow(
                 "Безопасность", vm.plusSecure, { vm.plusSecure = it }, enabled = !vm.running,
-                subtitle = if (vm.plusSecure) "В конце: вход только по ключу, обновления" else "Вход по паролю root останется",
+                subtitle = if (vm.plusSecure) "В конце: вход только по ключу, обновления, файрвол, fail2ban" else "Вход по паролю root останется",
             )
             ErrorText(vm.plusError)
             val existing = mode == "existing" && profile != null

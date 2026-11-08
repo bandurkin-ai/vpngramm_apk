@@ -63,7 +63,7 @@ fun NameComFields(vm: MainViewModel, withZone: Boolean = true) {
 
 /** Карточка «Аккаунты»: всё, что нужно для работы с OneProvider и name.com. */
 @Composable
-fun AccountsCard(vm: MainViewModel, startExpanded: Boolean, withZone: Boolean = true) {
+fun AccountsCard(vm: MainViewModel, startExpanded: Boolean = false, withZone: Boolean = true) {
     val filled = vm.opApiKey.isNotBlank() && vm.opClientKey.isNotBlank() && vm.ncUser.isNotBlank() && vm.ncToken.isNotBlank()
     SectionCard(
         "Аккаунты", AppIcons.Key,
@@ -132,7 +132,7 @@ fun SshAccessCard(vm: MainViewModel, startExpanded: Boolean? = null) {
         subtitle = (home?.fqdn?.let { "$it · " } ?: "") +
             (if (target.isEmpty()) "адрес не указан" else "${vm.user.trim()}@$target · " + if (vm.useKey) "ключ" else "пароль") +
             if (vm.accessDirty) " · не применено" else "",
-        collapsible = true, startExpanded = startExpanded ?: (target.isEmpty() || vm.accessDirty),
+        collapsible = true, startExpanded = startExpanded ?: false,
     ) {
         Box(Modifier.fillMaxWidth()) {
             OutlinedButton(onClick = { pick = true }, enabled = !vm.running, modifier = Modifier.fillMaxWidth()) {
@@ -188,7 +188,7 @@ fun SshAccessCard(vm: MainViewModel, startExpanded: Boolean? = null) {
             else "Пароль и ключ хранятся на ${Device.PREP} зашифрованными.",
             "Выберите сервер Главной, чтобы исправить его IP, порт, пользователя, пароль или ключ: после «Применить» Главная входит на сервер уже с новыми данными. " +
                 "IP меняется только в приложении — A-запись домена правится во вкладке «VPS/DNS». " +
-                "«Другой сервер» — любой адрес; после первого входа он попадает в список сохранённых. " +
+                "«Другой сервер» — любой адрес; после первого входа он попадает в список сохранённых. Чтобы поставить VPN на чужой сервер, не добавляя его к своим, — блок «Произвольный VPS». " +
                 "Поддерживаются ключи ed25519, RSA, ECDSA (OpenSSH, PEM, PuTTY .ppk). Пользователю не root нужен sudo и его пароль.",
         )
     }
