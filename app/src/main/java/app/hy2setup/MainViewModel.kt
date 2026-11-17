@@ -648,6 +648,12 @@ class MainViewModel(private val platform: Platform) : BaseViewModel() {
      * Проверка системы сервера при входе: дистрибутив, версия, ядро, служба init, менеджер пакетов. Установка идёт
      * дальше только на поддерживаемых системах (Debian 11+, Ubuntu 22.04+, Alpine); скрипты подстраиваются сами.
      */
+    /** Язык интерфейса: сохранённый выбор, а при первом запуске — [default] (по языку устройства). */
+    fun loadLanguage(default: app.hy2setup.i18n.Lang) = app.hy2setup.i18n.I18n.load(prefs, default)
+
+    /** Переключение языка интерфейса в «Инструментах»: действует сразу и запоминается. */
+    fun setLanguage(l: app.hy2setup.i18n.Lang) = app.hy2setup.i18n.I18n.set(l, prefs)
+
     /** Система сервера, на который идёт текущая установка (определена при входе). */
     private var serverOs: LinuxInfo? = null
 

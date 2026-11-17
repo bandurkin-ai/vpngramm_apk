@@ -27,9 +27,9 @@ object Notifications {
 
     fun job(ctx: Context, text: String) = NotificationCompat.Builder(ctx, CH_JOBS)
         .setSmallIcon(R.drawable.ic_stat_vpn)
-        .setContentTitle("vpngramm работает")
-        .setContentText(text)
-        .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+        .setContentTitle(app.hy2setup.i18n.I18n.tr("vpngramm работает"))
+        .setContentText(app.hy2setup.i18n.I18n.tr(text))
+        .setStyle(NotificationCompat.BigTextStyle().bigText(app.hy2setup.i18n.I18n.tr(text)))
         .setOngoing(true)
         .setOnlyAlertOnce(true)
         .setContentIntent(openApp(ctx))

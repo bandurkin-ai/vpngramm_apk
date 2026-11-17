@@ -31,7 +31,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
+import app.hy2setup.i18n.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -63,7 +63,7 @@ private val DESTS = listOf(
 fun AppRoot(vm: MainViewModel) {
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val snack: (String) -> Unit = remember { { msg -> scope.launch { snackbar.currentSnackbarData?.dismiss(); snackbar.showSnackbar(msg) } } }
+    val snack: (String) -> Unit = remember { { msg -> scope.launch { snackbar.currentSnackbarData?.dismiss(); snackbar.showSnackbar(app.hy2setup.i18n.I18n.tr(msg)) } } }
     CompositionLocalProvider(LocalSnack provides snack) {
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -169,19 +169,19 @@ private fun CrashDialog(vm: MainViewModel) {
     androidx.compose.material3.AlertDialog(
         onDismissRequest = { vm.crashReport = null },
         icon = { androidx.compose.material3.Icon(AppIcons.Warning, null) },
-        title = { androidx.compose.material3.Text("Приложение упало в прошлый раз") },
+        title = { app.hy2setup.i18n.Text("Приложение упало в прошлый раз") },
         text = {
             androidx.compose.foundation.layout.Column(
                 Modifier.heightIn(max = 420.dp).verticalScroll(androidx.compose.foundation.rememberScrollState()),
             ) {
-                androidx.compose.material3.Text("Пришлите этот отчёт — по нему видно, где ошибка. В нём только место ошибки и модель ${Device.GEN}, без ключей и паролей.")
-                androidx.compose.material3.Text(
+                app.hy2setup.i18n.Text("Пришлите этот отчёт — по нему видно, где ошибка. В нём только место ошибки и модель ${Device.GEN}, без ключей и паролей.")
+                app.hy2setup.i18n.Text(
                     report.take(1500), style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
                     fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
                 )
             }
         },
-        confirmButton = { androidx.compose.material3.TextButton({ copy("Отчёт", report); vm.crashReport = null }) { androidx.compose.material3.Text("Скопировать") } },
-        dismissButton = { androidx.compose.material3.TextButton({ share(report, "Отчёт о падении vpngramm"); vm.crashReport = null }) { androidx.compose.material3.Text("Поделиться") } },
+        confirmButton = { androidx.compose.material3.TextButton({ copy("Отчёт", report); vm.crashReport = null }) { app.hy2setup.i18n.Text("Скопировать") } },
+        dismissButton = { androidx.compose.material3.TextButton({ share(report, "Отчёт о падении vpngramm"); vm.crashReport = null }) { app.hy2setup.i18n.Text("Поделиться") } },
     )
 }

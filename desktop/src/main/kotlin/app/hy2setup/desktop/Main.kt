@@ -1,7 +1,7 @@
 package app.hy2setup.desktop
 
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
+import app.hy2setup.i18n.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +33,7 @@ fun main() {
     var vm: MainViewModel? = null
     SwingUtilities.invokeAndWait { vm = MainViewModel(platform).also { it.crashReport = crash } }
     val model = vm!!
+    model.loadLanguage(app.hy2setup.i18n.Lang.forLocale(java.util.Locale.getDefault()))
     // выход из Windows или завершение процесса: введённое всё равно сохраняется
     Runtime.getRuntime().addShutdownHook(Thread { runCatching { model.persist() } })
 
@@ -53,7 +54,7 @@ fun main() {
                     override fun windowLostFocus(e: WindowEvent?) = model.persist()
                 })
             }
-            Hy2Theme { AppRoot(model) }
+            Hy2Theme { app.hy2setup.i18n.I18nRoot { AppRoot(model) } }
             if (askClose) {
                 AlertDialog(
                     onDismissRequest = { askClose = false },

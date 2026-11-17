@@ -45,7 +45,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
+import app.hy2setup.i18n.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -137,7 +137,7 @@ fun SectionCard(
                 if (collapsible) {
                     Icon(
                         if (expanded) AppIcons.ExpandLess else AppIcons.ExpandMore,
-                        contentDescription = if (expanded) "Свернуть" else "Развернуть",
+                        contentDescription = app.hy2setup.i18n.I18n.tr(if (expanded) "Свернуть" else "Развернуть"),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }

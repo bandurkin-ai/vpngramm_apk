@@ -1,0 +1,1457 @@
+Неверный пароль или файл повреждён.	Wrong password or the file is corrupted.
+Это не файл резервной копии vpngramm.	This is not a vpngramm backup file.
+Создание VPS в OneProvider	Creating a VPS at OneProvider
+Ожидание загрузки VPS	Waiting for the VPS to boot
+A-запись в name.com → новый IP	A record at name.com → new IP
+Hysteria2 + Salamander (ключи профиля)	Hysteria2 + Salamander (profile keys)
+VLESS + Reality (ключи профиля)	VLESS + Reality (profile keys)
+AmneziaWG 3.1 (ключи профиля)	AmneziaWG 3.1 (profile keys)
+Telegram-прокси (прежний секрет)	Telegram proxy (previous secret)
+Копия сертификата Let's Encrypt	Let's Encrypt certificate copy
+Безопасность: обновления, вход только по ключу	Security: updates, key-only login
+Проверка сервера и DNS	Server and DNS check
+Ссылки и QR-коды (прежние)	Links and QR codes (previous)
+Старый VPS	Old VPS
+ed25519 · токен	ed25519 · token
+ecdsa · токен	ecdsa · token
+Не задан приватный SSH-ключ.	No private SSH key set.
+==> Проверка входа по SSH-ключу	==> Checking SSH key login
+✓ Вход по ключу работает.	✓ Key login works.
+Сервер не принял SSH-ключ — сервер не изменялся, вход по паролю остался. Проверьте, что ключ в «Доступе к серверам» (Инструменты) — это приватная часть ключа, добавленного на сервер (в кабинете OneProvider).	The server did not accept the SSH key — the server was not changed, password login remains. Check that the key in "Server access" (Tools) is the private part of the key added to the server (in the OneProvider dashboard).
+Сервер недоступен по SSH — защита не выполнялась.	The server is unreachable over SSH — protection was not applied.
+Подготовка сервера завершилась с ошибкой (код {}). Вход по паролю не менялся.	Server preparation failed (code {}). Password login was not changed.
+Не удалось отключить вход по паролю (изменения откатились, доступ прежний).	Could not disable password login (changes were rolled back, access unchanged).
+После изменения настроек SSH повторная проверка входа по ключу не прошла. Проверьте доступ через консоль VNC в панели провайдера.	After changing the SSH settings, the repeated key login check failed. Check access through the VNC console in your provider's panel.
+✓ Повторная проверка: вход по ключу работает.	✓ Repeated check: key login works.
+ПРЕДУПРЕЖДЕНИЕ: сервер всё ещё принимает вход по паролю.	WARNING: the server still accepts password login.
+✓ Вход по паролю больше не принимается.	✓ Password login is no longer accepted.
+Не удалось проверить отказ во входе по паролю: сервер не ответил.	Could not verify that password login is refused: the server did not respond.
+==> Файрвол и fail2ban	==> Firewall and fail2ban
+ПРЕДУПРЕЖДЕНИЕ: fail2ban не включён — защита от перебора паролей не работает, остальное в силе.	WARNING: fail2ban is not enabled — brute-force protection is off, everything else is in effect.
+ПРЕДУПРЕЖДЕНИЕ: fail2ban не включён: {}	WARNING: fail2ban is not enabled: {}
+ПРЕДУПРЕЖДЕНИЕ: файрвол не включён: {}	WARNING: the firewall is not enabled: {}
+ПРЕДУПРЕЖДЕНИЕ: файрвол не включён (правила не применились). Вход по ключу работает, VPN не затронут.	WARNING: the firewall is not enabled (rules were not applied). Key login works, the VPN is not affected.
+ПРЕДУПРЕЖДЕНИЕ: не удалось подтвердить файрвол ({}) — правила снимутся через 3 минуты; повторите «Защитить сервер».	WARNING: could not confirm the firewall ({}) — the rules will be removed in 3 minutes; repeat "Secure server".
+ПРЕДУПРЕЖДЕНИЕ: после включения файрвола войти не удалось — через 3 минуты после включения правила снимутся сами, и доступ вернётся. Проверьте порт SSH и повторите «Защитить сервер».	WARNING: after enabling the firewall, login failed — the rules will be removed on their own 3 minutes after enabling, and access will return. Check the SSH port and repeat "Secure server".
+Обновление	Update
+Обновление системы завершилось с ошибкой (код {}). Вход по паролю не менялся.	System update failed (code {}). Password login was not changed.
+Сервер перезагружается…	The server is rebooting…
+Сервер не поднялся после перезагрузки за 10 минут.	The server did not come back after the reboot within 10 minutes.
+После перезагрузки не удалось войти по ключу.	Could not log in with the key after the reboot.
+✓ Сервер снова доступен после перезагрузки.	✓ The server is available again after the reboot.
+Работа с сервером…	Working with the server…
+{}: не удалось запустить — сервер не отвечает по SSH.	{}: could not start — the server does not respond over SSH.
+{}: идёт дольше {} минут — повторите позже.	{}: taking longer than {} minutes — try again later.
+Связь с сервером прервалась — работа продолжается на сервере, переподключаюсь…	Connection to the server was lost — work continues on the server, reconnecting…
+Связь с сервером не восстанавливается. {}, вероятно, продолжается на сервере — повторите через 10–15 минут.	The connection to the server cannot be restored. {} is probably still running on the server — try again in 10–15 minutes.
+Связь восстановлена.	Connection restored.
+{}: служба на сервере остановилась без результата (например, сервер перезагрузился) — повторите.	{}: the service on the server stopped without a result (for example, the server rebooted) — try again.
+Telegram-прокси (MTProto)	Telegram proxy (MTProto)
+{}, ядро {}, служба: {}, пакеты: {}	{}, kernel {}, init: {}, packages: {}
+Система «{}» слишком старая. Поддерживаются Debian 11 и новее, Ubuntu 22.04 и новее, Alpine Linux.	The system "{}" is too old. Debian 11 and newer, Ubuntu 22.04 and newer, and Alpine Linux are supported.
+На сервере нет ни systemd, ни OpenRC — службы протоколов поставить не получится. Нужны Debian, Ubuntu или Alpine.	The server has neither systemd nor OpenRC — protocol services cannot be installed. Debian, Ubuntu or Alpine is required.
+На сервере не найден менеджер пакетов (apt или apk). Нужны Debian, Ubuntu или Alpine.	No package manager (apt or apk) found on the server. Debian, Ubuntu or Alpine is required.
+ПРЕДУПРЕЖДЕНИЕ: {} не из списка проверенных (Debian 11+, Ubuntu 22.04+, Alpine) — установка может не получиться.	WARNING: {} is not on the list of tested systems (Debian 11+, Ubuntu 22.04+, Alpine) — the installation may fail.
+Alpine: службы OpenRC; Hysteria2, Xray и mtg ставятся готовыми программами с GitHub, AmneziaWG — программная реализация amneziawg-go (нужен TUN).	Alpine: OpenRC services; Hysteria2, Xray and mtg are installed as ready-made programs from GitHub, AmneziaWG as the amneziawg-go software implementation (TUN required).
+Debian 11 (ядро {}): AmneziaWG соберётся для этого ядра без обновления; Hysteria2, Xray и mtg работают как обычно.	Debian 11 (kernel {}): AmneziaWG will be built for this kernel without updating it; Hysteria2, Xray and mtg work as usual.
+ — для AmneziaWG приложение поставит новое ядро и перезагрузит сервер.	 — for AmneziaWG the app will install a new kernel and reboot the server.
+ — AmneziaWG 3.1 на нём проверялся мало.	 — AmneziaWG 3.1 has been tested little on it.
+Сервер не принял логин или пароль. Проверьте пользователя (обычно root) и пароль.	The server did not accept the login or password. Check the user (usually root) and the password.
+Сервер не принял SSH-ключ: его публичной части нет на сервере или выбран не тот ключ.	The server did not accept the SSH key: its public part is not on the server, or the wrong key was chosen.
+Приватный ключ защищён паролем — проверьте поле «Пароль от ключа».	The private key is protected by a password — check the "Key password" field.
+В поле «Приватный ключ» вставлено что-то не то — нужен секретный ключ целиком.	Something wrong is pasted in the "Private key" field — the whole secret key is required.
+Отпечаток сервера изменился (сервер переустановлен?). Нажмите «Сбросить доверенные серверы».	The server fingerprint has changed (was the server reinstalled?). Tap "Reset trusted servers".
+Нет связи с сервером: проверьте адрес и порт SSH, включён ли VPS и есть ли интернет.	No connection to the server: check the SSH address and port, whether the VPS is on, and whether there is internet.
+У пользователя нет прав администратора. Войдите под root или пользователем с sudo.	The user has no administrator rights. Log in as root or as a user with sudo.
+Нужный порт уже занят другой программой — укажите другой порт.	The required port is already used by another program — choose a different port.
+Программа установлена, но служба не стартовала. Причина — в строках журнала сразу после ошибки.	The program is installed, but the service did not start. The reason is in the log lines right after the error.
+Система была занята установкой обновлений. Подождите пару минут и повторите.	The system was busy installing updates. Wait a couple of minutes and try again.
+Программа не выдала ключи — возможно, загрузка с GitHub оборвалась. Повторите установку.	The program did not produce keys — the download from GitHub may have been interrupted. Repeat the installation.
+Сервер не смог скачать программу (GitHub или сайт Hysteria). Проверьте интернет на сервере и повторите.	The server could not download the program (GitHub or the Hysteria site). Check the server's internet and try again.
+Настройки VLESS не прошли проверку Xray — подробности в журнале ниже ошибки.	The VLESS settings did not pass the Xray check — details are in the log below the error.
+Эта система не поддерживается. Подойдут Debian 11 и новее, Ubuntu 22.04 и новее или Alpine Linux.	This system is not supported. Debian 11 and newer, Ubuntu 22.04 and newer, or Alpine Linux will work.
+На сервере выключен TUN/TAP — включите его в панели хостинга (нужен для AmneziaWG на Alpine) и повторите.	TUN/TAP is disabled on the server — enable it in the hosting panel (needed for AmneziaWG on Alpine) and try again.
+Протокол установлен и работает, но защита (вход только по ключу) не включилась.	The protocol is installed and running, but protection (key-only login) was not enabled.
+Настройки SSH не применились и были откачены — вход остался прежним.	The SSH settings were not applied and were rolled back — login remains as before.
+DNS ещё не обновился. Это не страшно: сертификат выпустится сам, когда имя заработает.	DNS has not updated yet. This is not a problem: the certificate will be issued on its own once the name works.
+Если у хостинга есть свой файрвол в панели управления — откройте там этот порт.	If your hosting has its own firewall in the control panel — open this port there.
+После обновлений сервер перезагружался — это нормально.	The server rebooted after the updates — this is normal.
+Теперь на сервер можно войти только по SSH-ключу. Сохраните приватный ключ.	The server can now be accessed only with an SSH key. Save the private key.
+Автообновления включены: сервер сам будет ставить исправления безопасности.	Automatic updates are on: the server will install security fixes by itself.
+Hysteria2 не получила сертификат, поэтому не пропускает трафик. Откройте 80/TCP в файрволе хостинга и проверьте, что имя указывает на сервер; служба сама повторит попытку.	Hysteria2 did not get a certificate, so it passes no traffic. Open 80/TCP in the hosting firewall and check that the name points to the server; the service will retry by itself.
+Hysteria2 не работает на сервере — ссылка hysteria2:// подключится, но трафика не будет.	Hysteria2 is not running on the server — the hysteria2:// link will connect, but there will be no traffic.
+VLESS (Xray) не работает на сервере — ссылка vless:// подключится, но трафика не будет.	VLESS (Xray) is not running on the server — the vless:// link will connect, but there will be no traffic.
+У самого сервера нет интернета (или DNS) — клиенты подключаются, но дальше трафик не идёт. Обратитесь к хостеру.	The server itself has no internet (or DNS) — clients connect, but traffic goes no further. Contact your hosting provider.
+У имени есть IPv6-запись: телефоны с IPv6 подключаются по ней не к этому серверу. Удалите AAAA во вкладке «VPS/DNS».	The name has an IPv6 record: phones with IPv6 connect through it to a different server. Delete the AAAA record in the "VPS/DNS" tab.
+Имя сервера указывает не на этот сервер (или DNS ещё не обновился) — подождите или проверьте A-запись.	The server name does not point to this server (or DNS has not updated yet) — wait or check the A record.
+С {} порт 443 недоступен: откройте 443/TCP и 443/UDP в файрволе панели хостинга.	From {} port 443 is unreachable: open 443/TCP and 443/UDP in the hosting panel firewall.
+Локальный файрвол сервера закрывает нужный порт — запустите установку ещё раз, она его откроет.	The server's local firewall blocks the required port — run the installation again, it will open it.
+Сервер не может открыть сайт маскировки Reality — выберите другой сайт (например, www.microsoft.com).	The server cannot open the Reality masking site — choose another site (for example, www.microsoft.com).
+Сервер в порядке. Если интернета всё равно нет — проверьте файрвол в панели хостинга (443/UDP, 443/TCP, 80/TCP).	The server is fine. If there is still no internet — check the firewall in the hosting panel (443/UDP, 443/TCP, 80/TCP).
+До сервера не доходят подключения Hysteria2. Скорее всего, оператор блокирует UDP — включите в Happ ссылку VLESS (она по TCP) или подключитесь через Wi-Fi.	Hysteria2 connections do not reach the server. Most likely the operator blocks UDP — turn on the VLESS link in Happ (it uses TCP) or connect over Wi-Fi.
+Подключений VLESS не было: если вы включали ссылку VLESS, трафик блокируется по пути к серверу — попробуйте другую сеть или новый сервер.	There were no VLESS connections: if you turned on the VLESS link, traffic is blocked on the way to the server — try another network or a new server.
+Подключения от клиента доходят до сервера — значит, связь между телефоном и сервером есть.	Connections from the client reach the server — so the phone and the server can communicate.
+VLESS режет провайдер: Reality притворяется чужим сайтом, а адрес сервера ему не принадлежит. Нажмите «Перевести VLESS на свой домен» на Главной и импортируйте новую ссылку VLESS.	The provider is cutting VLESS: Reality pretends to be another site, and the server address does not belong to it. Tap "Move VLESS to your own domain" on the Home screen and import the new VLESS link.
+VLESS: телефон до сервера не дошёл. Проверьте, что в Happ включена именно новая ссылка VLESS и VPN включён; если да — соединение блокируется по пути (попробуйте другую сеть).	VLESS: the phone did not reach the server. Check that the new VLESS link is enabled in Happ and the VPN is on; if so, the connection is blocked on the way (try another network).
+VLESS: телефон доходит до сервера, но ссылка в Happ не совпадает с сервером. Удалите в Happ все старые ссылки VLESS и импортируйте заново (кнопка «Копировать» или QR).	VLESS: the phone reaches the server, but the link in Happ does not match the server. Delete all old VLESS links in Happ and import again (the "Copy" button or QR).
+Hysteria2: пакеты доходят, но ссылка в Happ не совпадает с сервером — импортируйте ссылку Hysteria2 заново.	Hysteria2: packets arrive, but the link in Happ does not match the server — import the Hysteria2 link again.
+Hysteria2: UDP от телефона до сервера не доходит — сеть или оператор блокирует UDP. Используйте VLESS.	Hysteria2: UDP from the phone does not reach the server — the network or operator blocks UDP. Use VLESS.
+Подключение до сервера работает, но сайты через него не запрашивались — проверьте маршрутизацию в Happ.	The connection to the server works, but no sites were requested through it — check the routing in Happ.
+Сервер получает и пропускает трафик от телефона. Если в Happ всё равно нет интернета — проблема в настройках Happ.	The server receives and passes traffic from the phone. If there is still no internet in Happ, the problem is in the Happ settings.
+Главная причина: провайдер (ТСПУ) «замораживает» соединения с этим хостингом после ~16 КБ. Happ подключается, но сайты не грузятся — и VLESS, и Hysteria2. Настройками сервера это не исправить: создайте VPS в другой локации или у другого хостинга («Заменить сервер» на Главной перенесёт ссылки без изменений).	Main cause: the provider (TSPU) "freezes" connections to this hosting after ~16 KB. Happ connects but sites do not load — both VLESS and Hysteria2. This cannot be fixed with server settings: create a VPS in another location or at another hosting ("Replace server" on the Home screen will carry the links over unchanged).
+Связь с сервером оборвалась посреди передачи. Если это повторяется на больших операциях — похоже на «заморозку» соединений провайдером (ТСПУ); запустите «Проверить сервер», он это проверит.	The connection to the server broke in the middle of a transfer. If this repeats on large operations, it looks like the provider "freezing" connections (TSPU); run "Check server", it will test this.
+Служба работает.	The service is running.
+Служба не работает — попробуйте «Рестарт».	The service is not running — try "Restart".
+Этот протокол на сервере не установлен.	This protocol is not installed on the server.
+Операция прервана вами.	The operation was interrupted by you.
+Журнал пуст	The log is empty
+Готово!	Done!
+ПРЕДУПРЕЖДЕНИЕ	WARNING
+Сервер защищён	Server secured
+Вход по паролю отключён	Password login disabled
+Проверка завершена: проблем не найдено.	Check complete: no problems found.
+Проверка завершена: найдено проблем — {}.	Check complete: problems found — {}.
+Выполняется	Running
+Подробности — в последних строках журнала. Его можно скопировать кнопкой ниже.	Details are in the last log lines. You can copy it with the button below.
+Не получилось	Failed
+ на этапе «{}»	 at step "{}"
+Сервер настроен, но проверка нашла проблемы — см. ниже	The server is set up, but the check found problems — see below
+Протокол работает, но защита не включилась	The protocol works, but protection was not enabled
+Готово: протокол работает, сервер защищён	Done: the protocol works, the server is secured
+Готово: всё прошло успешно	Done: everything went well
+Проверка: проблем не найдено	Check: no problems found
+Завершено	Completed
+Вставьте токен (Рутокен MFA или YubiKey) в разъём USB-C и коснитесь его, когда он замигает.	Insert the token (Rutoken MFA or YubiKey) into the USB-C port and touch it when it blinks.
+Коснитесь токена{}.	Touch the token{}.
+Токен просит PIN — он нужен только сейчас, при создании или загрузке резидентного ключа. Вход на серверы будет без PIN.	The token asks for a PIN — it is needed only now, when creating or loading a resident key. Logging in to servers will be without a PIN.
+Создаю 	Creating 
+резидентный	resident
+нерезидентный	non-resident
+ ключ SSH на токене…	 SSH key on the token…
+✓ Ключ создан: {} ({}). Закрытая часть не покидает токен.	✓ Key created: {} ({}). The private part never leaves the token.
+Теперь «Добавить ключ на сервер», затем «Проверить вход».	Now "Add key to server", then "Check login".
+Читаю резидентные ключи с токена…	Reading resident keys from the token…
+На токене нет резидентных ключей SSH.	There are no resident SSH keys on the token.
+✓ На токене ключей: {}, добавлено в приложение: {}.	✓ Keys on the token: {}, added to the app: {}.
+Сначала проверьте вход по аппаратному ключу на сервере.	First check hardware key login on the server.
+Сначала создайте ключ на токене.	First create a key on the token.
+Добавляю ключ ({}) на {}…	Adding key ({}) to {}…
+Ключ добавить не удалось (код {}).	Could not add the key (code {}).
+На Главной нет серверов.	There are no servers on the Home screen.
+{} ({}): ✗ нет пароля и ключа — задайте их в «Доступе по SSH».	{} ({}): ✗ no password or key — set them in "SSH access".
+Вхожу на {} по ключу {} — коснитесь токена…	Logging in to {} with key {} — touch the token…
+Сервер не ответил после входа.	The server did not respond after login.
+✓ Вход по ключу {} на {} работает. Включите «Входить по аппаратному ключу», чтобы им пользовались все входы.	✓ Key {} login to {} works. Turn on "Log in with hardware key" so that all logins use it.
+Не удалось прочитать файл ключа: {}	Could not read the key file: {}
+Список доверенных серверов очищен.	The list of trusted servers has been cleared.
+БЕЗОПАСНОСТЬ: вход по SSH-ключу, обновления, автообновления, отключение входа по паролю	SECURITY: SSH key login, updates, automatic updates, disabling password login
+Сервер защищён: вход только по ключу.	Server secured: key-only login.
+ОШИБКА БЕЗОПАСНОСТИ: {}	SECURITY ERROR: {}
+Установка выполнена, но защита не включена. Ссылка рабочая; защиту можно включить позже: 	The installation is complete, but protection is not enabled. The link works; protection can be enabled later: 
+«Инструменты» → «Произвольный VPS» → «Защитить».	"Tools" → "Custom VPS" → "Secure".
+«Инструменты» → «Доступ к серверам» → «Защитить сервер».	"Tools" → "Server access" → "Secure server".
+Защита сервера: нужен SSH-ключ — выберите «SSH-ключ» в блоке «Сервер» («Произвольный VPS») и вставьте его.	Server protection: an SSH key is required — choose "SSH key" in the "Server" block ("Custom VPS") and paste it.
+Режим безопасности: вставьте приватный SSH-ключ (тот, что добавлен на сервер / в кабинете OneProvider) — переключатель «SSH-ключ» в блоке доступа.	Security mode: paste the private SSH key (the one added to the server / in the OneProvider dashboard) — the "SSH key" switch in the access block.
+Режим безопасности: приватный ключ не читается или неверен пароль от ключа.	Security mode: the private key cannot be read or the key password is wrong.
+Telegram-прокси и VLESS не могут работать на одном порту TCP ({}) — смените порт одного из них.	The Telegram proxy and VLESS cannot use the same TCP port ({}) — change the port of one of them.
+Защита пропущена: для неё нужен SSH-ключ (блок «Сервер» → «SSH-ключ»). VPN ставится, вход по паролю остаётся.	Protection skipped: it needs an SSH key (the "Server" block → "SSH key"). The VPN is installed, password login remains.
+Проверяю систему сервера…	Checking the server system…
+ШАГ {} из {}. DNS на name.com	STEP {} of {}. DNS at name.com
+Hysteria2 ставится вместе с VLESS (маскировка под свой домен) — отдельно её ставить не нужно.	Hysteria2 is installed together with VLESS (masking as your own domain) — no need to install it separately.
+ШАГ {} из {}. {}	STEP {} of {}. {}
+ОШИБКА: {}	ERROR: {}
+Готово! Ссылки ниже.	Done! Links below.
+Готово! Ссылка ниже.	Done! The link is below.
+Не установилось: {}. Остальное готово — ссылки ниже.	Not installed: {}. The rest is ready — links below.
+Установка не удалась.	Installation failed.
+A-запись {} осталась в name.com. Её можно удалить во вкладке «VPS/DNS».	The A record {} was left in name.com. You can delete it in the "VPS/DNS" tab.
+Не удалось определить систему сервера (код {}) — проверьте, что вход выполняется от root.	Could not determine the server system (code {}) — check that you log in as root.
+Система сервера: {}	Server system: {}
+Порт AmneziaWG должен быть числом 1–65535.	The AmneziaWG port must be a number from 1 to 65535.
+Порт 443/UDP занят Hysteria2 — выберите для AmneziaWG другой порт.	Port 443/UDP is used by Hysteria2 — choose a different port for AmneziaWG.
+Домен указан неверно.	The domain is invalid.
+AmneziaWG установлен. Ссылку откройте в AmneziaVPN или отсканируйте QR.	AmneziaWG is installed. Open the link in AmneziaVPN or scan the QR code.
+Установка AmneziaWG	AmneziaWG installation
+Установка AmneziaWG завершилась с ошибкой (код {}).	AmneziaWG installation failed (code {}).
+Перезагружаю сервер, чтобы заработало новое ядро…	Rebooting the server so the new kernel takes effect…
+После перезагрузки ядро не сменилось — AmneziaWG не установлен.	The kernel did not change after the reboot — AmneziaWG is not installed.
+Порт Hysteria2 должен быть числом 1–65535.	The Hysteria2 port must be a number from 1 to 65535.
+E-mail и SNI могут содержать только латиницу, цифры и символы . _ @ + -	E-mail and SNI may contain only Latin letters, digits and the characters . _ @ + -
+Сайт-маскировка должен начинаться с https:// и не содержать пробелов и кавычек.	The masking site must start with https:// and contain no spaces or quotes.
+Домен может содержать только латиницу, цифры и символы . _ - 	The domain may contain only Latin letters, digits and the characters . _ - 
+Укажите SNI (например, www.bing.com) или домен.	Enter an SNI (for example, www.bing.com) or a domain.
+Установка Hysteria2 завершилась с ошибкой (код {}).	Hysteria2 installation failed (code {}).
+Порт VLESS должен быть числом 1–65535.	The VLESS port must be a number from 1 to 65535.
+Сайт для маскировки Reality — имя хоста, например www.microsoft.com.	The Reality masking site is a host name, for example www.microsoft.com.
+Установка VLESS завершилась с ошибкой (код {}).	VLESS installation failed (code {}).
+Для маскировки под свой сервер впишите домен, который уже указывает на IP этого сервера (A-запись), — или выключите маскировку в «Параметрах VLESS».	To mask as your own server, enter a domain that already points to this server's IP (A record) — or turn off masking in "VLESS options".
+Для маскировки под свой домен укажите домен: включите name.com или впишите домен, который уже указывает на этот сервер.	To mask as your own domain, specify a domain: turn on name.com or enter a domain that already points to this server.
+E-mail может содержать только латиницу, цифры и символы . _ @ + -	E-mail may contain only Latin letters, digits and the characters . _ @ + -
+ОШИБКА: имя {} 	ERROR: the name {} 
+не найдено в DNS	is not found in DNS
+указывает на {}	points to {}
+, а сервер — {}. Сделайте у регистратора A-запись {} → {} и повторите установку (новая запись расходится от нескольких минут до часа).	, but the server is {}. Create an A record {} → {} at your registrar and repeat the installation (a new record takes from several minutes to an hour to propagate).
+✓ {} указывает на этот сервер ({}).	✓ {} points to this server ({}).
+Hysteria2: сертификат Let's Encrypt на {} и сайт для маскировки VLESS	Hysteria2: Let's Encrypt certificate for {} and the masking site for VLESS
+Установка Hysteria2 завершилась с ошибкой (код {}) — без неё VLESS не на что маскироваться, VLESS не ставится.	Hysteria2 installation failed (code {}) — without it VLESS has nothing to mask as, so VLESS is not installed.
+VLESS + Reality с маскировкой под {}	VLESS + Reality masking as {}
+VLESS (маскировка под {}) и Hysteria2 установлены. Если сертификат Let's Encrypt ещё выпускается, VLESS заработает через минуту-другую после него.	VLESS (masking as {}) and Hysteria2 are installed. If the Let's Encrypt certificate is still being issued, VLESS will start working a minute or two after it.
+Установка VLESS завершилась с ошибкой (код {}). Hysteria2 установлена — её ссылка ниже.	VLESS installation failed (code {}). Hysteria2 is installed — its link is below.
+Для A-записи нужен IPv4-адрес сервера. Введите IPv4 (например, 203.0.113.10) в поле «Адрес» («Инструменты» → «Доступ к серверам»).	An A record needs the server's IPv4 address. Enter an IPv4 (for example, 203.0.113.10) in the "Address" field ("Tools" → "Server access").
+Проверяю доступ к name.com…	Checking access to name.com…
+Читаю записи зоны {}…	Reading the records of zone {}…
+Для {} уже есть запись CNAME, она несовместима с A. Удалите её во вкладке «VPS/DNS».	{} already has a CNAME record, it is incompatible with A. Delete it in the "VPS/DNS" tab.
+Удалена IPv6-запись {} → {}: клиенты подключались бы по ней не к этому серверу.	IPv6 record deleted {} → {}: clients would connect through it to a different server.
+A-запись {} → {} уже существует, создавать заново не нужно.	The A record {} → {} already exists, no need to create it again.
+Для {} уже есть A-запись ({}). Включите «Перезаписать существующую A-запись» или удалите её во вкладке «VPS/DNS».	{} already has an A record ({}). Turn on "Overwrite the existing A record" or delete it in the "VPS/DNS" tab.
+Удалена старая запись: {} → {}	Old record deleted: {} → {}
+Создана запись: {} → {} (A, TTL {})	Record created: {} → {} (A, TTL {})
+ПРЕДУПРЕЖДЕНИЕ: запись {}.{} не обновлена ({}). Исправьте её во вкладке «VPS/DNS».	WARNING: the record {}.{} was not updated ({}). Fix it in the "VPS/DNS" tab.
+Проверяю сервер {}	Checking server {}
+ и имя {}	 and name {}
+Скачиваю страницу {} через сервер (проверка «заморозки после 16 КБ»)…	Downloading page {} through the server (the "freeze after 16 KB" check)…
+OK: через сервер скачано {} КБ — соединение не замерзает	OK: {} KB downloaded through the server — the connection does not freeze
+ПРОБЛЕМА: соединение {} с сервером замерзает после {} КБ ({}), а напрямую с {} скачалось {} КБ. Так провайдер (ТСПУ) режет трафик к этому хостингу: VPN подключается, но данные не идут	PROBLEM: the {} connection to the server freezes after {} KB ({}), while {} KB was downloaded directly from {}. This is how the provider (TSPU) throttles traffic to this hosting: the VPN connects but data does not flow
+ИНФО: через сервер получен короткий ответ ({} КБ) — проверку заморозки выполнить не удалось (возможно, на сервере нет VLESS)	INFO: a short response ({} KB) came through the server — the freeze check could not be done (there may be no VLESS on the server)
+ИНФО: проверку заморозки выполнить не удалось: и напрямую {} не скачался ({})	INFO: the freeze check could not be done: {} could not be downloaded directly either ({})
+==> Проверка с {}	==> Check from {}
+ПРОБЛЕМА: публичные DNS не знают имя {}	PROBLEM: public DNS does not know the name {}
+ПРОБЛЕМА: публичные DNS: {} → {}, а сервер — {}	PROBLEM: public DNS: {} → {}, but the server is {}
+OK: публичные DNS: {} → {}	OK: public DNS: {} → {}
+ПРОБЛЕМА: у {} есть IPv6-запись (AAAA) {} — удалите её во вкладке «VPS/DNS»	PROBLEM: {} has an IPv6 record (AAAA) {} — delete it in the "VPS/DNS" tab
+OK: с {} открывается {}:{}/TCP	OK: from {} {}:{}/TCP opens
+ПРОБЛЕМА: с {} не открывается {}:{}/TCP — закрыт файрвол хостинга или сервер недоступен	PROBLEM: from {} {}:{}/TCP does not open — the hosting firewall is closed or the server is unreachable
+Подключаюсь к {}:{} и читаю настройки…	Connecting to {}:{} and reading the settings…
+Завершено с кодом {}.	Finished with code {}.
+Ссылки получить не удалось.	Could not get the links.
+Ссылок получено: {}. Они ниже.	Links received: {}. They are below.
+Подключаюсь к {}:{} …	Connecting to {}:{} …
+Загружаю записи зоны {}…	Loading the records of zone {}…
+Найдено записей: {}	Records found: {}
+✓ Удалено: {} {} {}	✓ Deleted: {} {} {}
+Итого: удалено {}, с ошибкой {}.	Total: deleted {}, failed {}.
+В «Доступе к серверам» (Инструменты) не указан адрес сервера.	The server address is not set in "Server access" (Tools).
+Не удалось определить IPv4 для «{}».	Could not determine the IPv4 for "{}".
+Имя: латиница, цифры, точка, дефис, подчёркивание; можно «*» для wildcard. Пусто или @ — сам домен.	Name: Latin letters, digits, dot, hyphen, underscore; "*" is allowed for a wildcard. Empty or @ — the domain itself.
+Для записи A нужен IPv4-адрес, например 203.0.113.10.	An A record needs an IPv4 address, for example 203.0.113.10.
+Для записи AAAA нужен IPv6-адрес, например 2001:db8::1.	An AAAA record needs an IPv6 address, for example 2001:db8::1.
+Укажите целевое имя хоста, например mail.example.com.	Enter the target host name, for example mail.example.com.
+CNAME нельзя создать для самого домена — укажите поддомен.	A CNAME cannot be created for the domain itself — specify a subdomain.
+Введите текст записи TXT одной строкой.	Enter the TXT record text on one line.
+TTL должен быть числом от 300 до 86400 секунд.	TTL must be a number from 300 to 86400 seconds.
+Приоритет MX — число от 0 до 65535.	The MX priority is a number from 0 to 65535.
+Создаю запись: {} {} {} (TTL {})…	Creating record: {} {} {} (TTL {})…
+✓ Запись создана.	✓ Record created.
+Другой сервер	Another server
+Укажите IP-адрес сервера (например, 203.0.113.10).	Enter the server's IP address (for example, 203.0.113.10).
+Укажите IP-адрес или домен сервера.	Enter the server's IP address or domain.
+SSH-порт должен быть числом 1–65535.	The SSH port must be a number from 1 to 65535.
+Укажите пользователя (обычно root).	Enter the user (usually root).
+Вставьте приватный SSH-ключ или выберите файл ключа.	Paste the private SSH key or choose a key file.
+Приватный ключ не читается или неверен пароль от ключа.	The private key cannot be read or the key password is wrong.
+Введите пароль.	Enter the password.
+✓ Доступ {}сохранён: {}@{}:{} · 	✓ Access {}saved: {}@{}:{} · 
+SSH-ключ	SSH key
+пароль	password
+IP сервера {} изменён на {}. A-запись домена не менялась — если она указывает на старый адрес, исправьте её во вкладке «VPS/DNS».	The server IP {} was changed to {}. The domain's A record was not changed — if it points to the old address, fix it in the "VPS/DNS" tab.
+Подключаюсь к {}@{}:{}…	Connecting to {}@{}:{}…
+✓ Вход на {} работает.	✓ Login to {} works.
+ Нажмите «Применить», чтобы сохранить данные.	 Tap "Apply" to save the data.
+Это не открытый ключ SSH. Нужна строка вида «ssh-ed25519 AAAA… комментарий» или «sk-ssh-ed25519@openssh.com AAAA…».	This is not an SSH public key. A line like "ssh-ed25519 AAAA… comment" or "sk-ssh-ed25519@openssh.com AAAA…" is needed.
+Эти ключи уже есть в списке.	These keys are already in the list.
+✓ В «Ключи для всех серверов» добавлено: {}.	✓ Added to "Keys for all servers": {}.
+Строк, которые не являются ключом, пропущено: {}.	Lines skipped that are not a key: {}.
+Не удалось прочитать файл: {}	Could not read the file: {}
+Ключ {} убран из списка. На серверах, где он уже стоит, он остаётся.	Key {} was removed from the list. On servers where it is already installed, it stays.
+Список ключей пуст.	The key list is empty.
+Добавляю ключи ({}) на {}…	Adding keys ({}) to {}…
+Ключи не добавлены (код {}).	Keys were not added (code {}).
+✗ нет пароля и ключа — задайте их в «Доступе по SSH».	✗ no password or key — set them in "SSH access".
+✓ Ключи стоят на всех серверах Главной ({}).	✓ The keys are installed on all Home servers ({}).
+Ключи поставлены на {} из {} серверов — для остальных см. сообщения выше.	Keys installed on {} of {} servers — see the messages above for the others.
+Ключи для всех серверов ({}): {}	Keys for all servers ({}): {}
+ПРЕДУПРЕЖДЕНИЕ: ключи не добавлены (код {}). Их можно добавить позже: «Инструменты» → «Ключи для всех серверов».	WARNING: keys were not added (code {}). They can be added later: "Tools" → "Keys for all servers".
+ПРЕДУПРЕЖДЕНИЕ: ключи не добавлены: {}. Их можно добавить позже: «Инструменты» → «Ключи для всех серверов».	WARNING: keys were not added: {}. They can be added later: "Tools" → "Keys for all servers".
+Укажите имя пользователя.	Enter the user name.
+Вставьте приватный ключ или выберите файл.	Paste the private key or choose a file.
+Пользователь «{}» не root: введите пароль для sudo (под полем ключа).	User "{}" is not root: enter the sudo password (under the key field).
+Введите Api-Key и Client-Key из кабинета OneProvider (раздел API).	Enter the Api-Key and Client-Key from the OneProvider dashboard (API section).
+Не удалось определить ваше местоположение — оценки пинга нет, только замеры.	Could not determine your location — there is no ping estimate, only measurements.
+Локация {} сейчас недоступна у OneProvider и помечена на сутки (ответ: {}). 	Location {} is currently unavailable at OneProvider and is marked for a day (response: {}). 
+Выбрана другая локация региона {}: {} — запустите ещё раз.	Another location in region {} was chosen: {} — run again.
+В регионе {} других доступных локаций нет — выберите другой регион.	There are no other available locations in region {} — choose another region.
+Загружаю список VPS…	Loading the VPS list…
+VPS в аккаунте: {}	VPS in the account: {}
+Загружаю локации, тарифы, ОС и SSH-ключи…	Loading locations, plans, OS and SSH keys…
+Подходящих локаций: {} из {} в {} регионах, тарифов: {} из {} (доступны к заказу, IPv4 включён; фильтр: {}). ОС: {}, SSH-ключей: {}	Suitable locations: {} of {} in {} regions, plans: {} of {} (available to order, IPv4 included; filter: {}). OS: {}, SSH keys: {}
+Отсеяно локаций: закрыты провайдером — {}, без тарифов — {}, без IPv4 — {}, без подходящих тарифов — {}. Помечены «недоступна» за сутки: {}.	Locations filtered out: closed by the provider — {}, without plans — {}, without IPv4 — {}, without suitable plans — {}. Marked "unavailable" for a day: {}.
+Формат ответа OneProvider — {}	OneProvider response format — {}
+Загружаю SSH-ключи кабинета…	Loading the dashboard SSH keys…
+SSH-ключей в кабинете: {}	SSH keys in the dashboard: {}
+В «Доступе к серверам» (Инструменты) не задан приватный ключ.	No private key is set in "Server access" (Tools).
+Приватный ключ в «Доступе к серверам» (Инструменты) не читается или неверен пароль от ключа.	The private key in "Server access" (Tools) cannot be read or the key password is wrong.
+Введите название ключа.	Enter the key name.
+Нужен публичный ключ OpenSSH в одну строку: «ssh-ed25519 AAAA… комментарий» (или ssh-rsa / ecdsa-sha2-…). Приватный ключ сюда вставлять нельзя.	A single-line OpenSSH public key is needed: "ssh-ed25519 AAAA… comment" (or ssh-rsa / ecdsa-sha2-…). A private key must not be pasted here.
+Такой ключ уже есть в кабинете.	This key is already in the dashboard.
+Добавляю SSH-ключ «{}» в кабинет…	Adding the SSH key "{}" to the dashboard…
+Ключ добавлен и отмечен для новых VPS. Ключей в кабинете: {}	The key was added and marked for new VPS. Keys in the dashboard: {}
+Удаляю SSH-ключ «{}» из кабинета…	Deleting the SSH key "{}" from the dashboard…
+Ключ удалён из кабинета (на уже созданных VPS он остаётся). Ключей: {}	The key was deleted from the dashboard (it stays on already created VPS). Keys: {}
+Выберите локацию.	Choose a location.
+Выберите тариф (размер памяти и трафик).	Choose a plan (memory size and traffic).
+Выберите операционную систему.	Choose an operating system.
+Имя хоста: латиница, цифры, точка и дефис, например vpn1 или vpn1.example.com.	Host name: Latin letters, digits, dot and hyphen, for example vpn1 or vpn1.example.com.
+Создаю VPS «{}»: {}, {}, {}…	Creating VPS "{}": {}, {}, {}…
+✓ VPS создан: ID {}, IP {}	✓ VPS created: ID {}, IP {}
+Загрузка ОС обычно занимает 1–3 минуты, после этого можно ставить протокол.	The OS usually takes 1–3 minutes to load, after which you can install a protocol.
+✓ Удалён: {} ({})	✓ Deleted: {} ({})
+! {}: перерасход трафика {} ГБ, доплата {} — нужно подтверждение.	! {}: traffic overage {} GB, extra charge {} — confirmation needed.
+✓ Удалён (с оплатой перерасхода): {}	✓ Deleted (with the overage paid): {}
+Удаление отменено — VPS с перерасходом трафика оставлены.	Deletion cancelled — VPS with traffic overage were kept.
+Включите хотя бы один протокол.	Turn on at least one protocol.
+Сайт-маскировка должен начинаться с https://.	The masking site must start with https://.
+Без Hysteria2 VLESS маскируется под чужой сайт — укажите его, например www.microsoft.com.	Without Hysteria2, VLESS masks as someone else's site — specify it, for example www.microsoft.com.
+AmneziaWG и Hysteria2 не могут слушать один UDP-порт {} — смените порт AmneziaWG.	AmneziaWG and Hysteria2 cannot listen on the same UDP port {} — change the AmneziaWG port.
+Порт Telegram-прокси должен быть числом 1–65535.	The Telegram proxy port must be a number from 1 to 65535.
+Домен маскировки Telegram — имя хоста, например www.microsoft.com.	The Telegram masking domain is a host name, for example www.microsoft.com.
+VLESS и Telegram-прокси не могут слушать один TCP-порт {} — смените порт Telegram.	VLESS and the Telegram proxy cannot listen on the same TCP port {} — change the Telegram port.
+Порт 80/TCP нужен для сертификата Let's Encrypt — выберите для Telegram другой.	Port 80/TCP is needed for the Let's Encrypt certificate — choose another one for Telegram.
+Порт 8443 занят сайтом Hysteria2 для маскировки VLESS — выберите для Telegram другой (например, 993).	Port 8443 is used by the Hysteria2 site for VLESS masking — choose another one for Telegram (for example, 993).
+Безопасность: отметьте SSH-ключ из кабинета — по нему приложение войдёт на новый VPS.	Security: select an SSH key from the dashboard — the app will use it to log in to the new VPS.
+Безопасность: вставьте приватную часть этого ключа в «Доступе к серверам» (Инструменты) (поле «Приватный ключ»).	Security: paste the private part of this key in "Server access" (Tools) (the "Private key" field).
+Безопасность: приватный ключ в «Доступе к серверам» (Инструменты) не читается или неверен пароль от ключа.	Security: the private key in "Server access" (Tools) cannot be read or the key password is wrong.
+Безопасность: приватный ключ в «Доступе к серверам» (Инструменты) не соответствует ни одному из отмеченных ключей кабинета.	Security: the private key in "Server access" (Tools) does not match any of the selected dashboard keys.
+Сервер отвечает, но SSH ещё не запущен — жду… ({} с)	The server responds, but SSH is not running yet — waiting… ({} s)
+Порт {} не отвечает (пакеты теряются) — жду… ({} с)	Port {} does not respond (packets are lost) — waiting… ({} s)
+Порт {}: {} — жду… ({} с)	Port {}: {} — waiting… ({} s)
+Проверяю, почему порт 22 не отвечает…	Checking why port 22 does not respond…
+✗ Сеть {} не пропускает SSH: даже github.com:22 недоступен. Так бывает на мобильном интернете или когда включён VPN (Happ) с правилами, режущими порт 22. Переключитесь на Wi-Fi или выключите/включите VPN — ожидание продолжается.	✗ The network {} does not pass SSH: even github.com:22 is unreachable. This happens on mobile internet or when a VPN (Happ) with rules that cut port 22 is on. Switch to Wi-Fi or turn the VPN off and on — waiting continues.
+✓ SSH из сети {} работает (github.com:22 доступен), а до {} пакеты не доходят.	✓ SSH from the network {} works (github.com:22 is reachable), but packets do not reach {}.
+VPN на {} включён — возможно, его правила не пускают порт 22 к этому адресу. Попробуйте выключить VPN или сменить его сервер.	A VPN is on at {} — its rules may not let port 22 through to this address. Try turning the VPN off or changing its server.
+Похоже, провайдер режет SSH к этому серверу. Включите VPN (Happ) для vpngramm — через него работает так же, как на компьютере. Ожидание продолжается.	It looks like the provider cuts SSH to this server. Turn on a VPN (Happ) for vpngramm — through it, it works as it does on a computer. Waiting continues.
+OneProvider: состояние VPS — «{}».	OneProvider: VPS status — "{}".
+Проверьте с компьютера: ssh root@{} (или «Test-NetConnection {} -Port 22» в PowerShell). Ping не показывает, открыт ли SSH.	Check from a computer: ssh root@{} (or "Test-NetConnection {} -Port 22" in PowerShell). Ping does not show whether SSH is open.
+Сеть {} не пропускает SSH (порт 22) — VPS {}, скорее всего, работает. Переключитесь на Wi-Fi или смените режим VPN и запустите ещё раз; созданный VPS останется во вкладке «VPS/DNS» — там его можно удалить.	The network {} does not pass SSH (port 22) — the VPS {} is most likely running. Switch to Wi-Fi or change the VPN mode and run again; the created VPS will stay in the "VPS/DNS" tab, where you can delete it.
+VPS {} не открыл SSH (порт 22) за {} мин: пакеты с {} не доходят. Скорее всего, провайдер режет SSH к этому адресу — включите VPN (Happ) для vpngramm и запустите снова. Если и с компьютера через VPN не пускает — откройте консоль VNC в панели OneProvider.	VPS {} did not open SSH (port 22) in {} min: packets from {} do not arrive. Most likely the provider cuts SSH to this address — turn on a VPN (Happ) for vpngramm and run again. If it does not let you in from a computer through a VPN either, open the VNC console in the OneProvider panel.
+VPS {} не открыл SSH (порт 22) за {} мин.	VPS {} did not open SSH (port 22) in {} min.
+Сервер {} убран с Главной. VPS и DNS не изменялись; перенести его с прежними ссылками можно только из сохранённой копии.	Server {} was removed from Home. The VPS and DNS were not changed; it can be moved with its previous links only from a saved copy.
+Нужны ключи OneProvider (карточка «Аккаунты»).	OneProvider keys are needed ("Accounts" card).
+Нужны логин и токен name.com (карточка «Аккаунты»).	The name.com login and token are needed ("Accounts" card).
+Удаляю сервер {}…	Deleting server {}…
+У сервера нет VPS — пропускаю.	The server has no VPS — skipping.
+VPS {} использует другой сервер Главной — его не удаляю.	VPS {} is used by another Home server — not deleting it.
+VPS {} не найден в аккаунте OneProvider — видимо, уже удалён.	VPS {} was not found in the OneProvider account — it seems it is already deleted.
+✓ VPS {} ({}) удалён в OneProvider.	✓ VPS {} ({}) deleted at OneProvider.
+! Перерасход трафика {} ГБ, доплата {} — нужно подтверждение. Ничего не удалено.	! Traffic overage {} GB, extra charge {} — confirmation needed. Nothing was deleted.
+✗ VPS не удалён: {}	✗ VPS not deleted: {}
+В name.com нет A-записи {} — пропускаю.	There is no A record {} in name.com — skipping.
+✓ Запись {} {} {} удалена в name.com.	✓ Record {} {} {} deleted in name.com.
+✓ Сервер {} удалён: VPS, DNS и строка в списке.	✓ Server {} deleted: VPS, DNS and the list entry.
+Сервер {} оставлен в списке — исправьте причину и удалите ещё раз.	Server {} was left in the list — fix the cause and delete it again.
+Введите Api-Key и Client-Key OneProvider.	Enter the OneProvider Api-Key and Client-Key.
+Загрузите локации, тарифы и ключи OneProvider.	Load the OneProvider locations, plans and keys.
+Выберите тариф.	Choose a plan.
+Укажите поддомен (например, vpn) — корень домена приложение не перезаписывает.	Specify a subdomain (for example, vpn) — the app does not overwrite the domain root.
+Сервер {} уже есть на Главной — выберите его в списке или укажите другой поддомен.	Server {} is already on Home — choose it in the list or specify another subdomain.
+Сначала создайте сервер на Главной — свободный сервер подходит только для переезда.	First create a server on Home — a free server is only for moving.
+Профиль уже работает на этом сервере.	The profile already runs on this server.
+VPS {} не найден в аккаунте OneProvider — возможно, он удалён. Уберите его из списка.	VPS {} was not found in the OneProvider account — it may have been deleted. Remove it from the list.
+Нет доступа к {}: нужен пароль root или приватный ключ в «Доступе к серверам» (Инструменты).	No access to {}: the root password or a private key in "Server access" (Tools) is needed.
+Сервер {} пускает только по ключу — вставьте приватный ключ в «Доступе к серверам» (Инструменты).	Server {} allows only key login — paste the private key in "Server access" (Tools).
+Безопасность: вставьте приватный ключ в «Доступе к серверам» (Инструменты) или выключите «Безопасность».	Security: paste the private key in "Server access" (Tools) or turn off "Security".
+Безопасность: приватный ключ не читается или неверен пароль от ключа.	Security: the private key cannot be read or the key password is wrong.
+✓ Вход по SSH-ключу работает.	✓ SSH key login works.
+Сервер не принял ключ — вхожу по паролю root.	The server did not accept the key — logging in with the root password.
+Для {} не сохранены ни пароль, ни SSH-ключ — введите их.	Neither a password nor an SSH key is saved for {} — enter them.
+Сервер {} не пустил по ключу, а пароль не сохранён.	Server {} did not let in by key, and no password is saved.
+Пользователь «{}» не root: введите пароль для sudo.	User "{}" is not root: enter the sudo password.
+Укажите IP-адрес сервера, например 203.0.113.10.	Enter the server's IP address, for example 203.0.113.10.
+Не удалось узнать IP-адрес {}.	Could not find the IP address of {}.
+На {} уже работает сервер Главной {} — свободным он быть не может.	Home server {} already runs on {} — it cannot be free.
+Свободный сервер: подключаюсь к {}@{}:{}…	Free server: connecting to {}@{}:{}…
+Сервер не дал прав root (код {}) — проверьте пользователя и пароль для sudo.	The server gave no root rights (code {}) — check the user and the sudo password.
+✓ Сервер {} добавлен в «Свободные серверы»	✓ Server {} added to "Free servers"
+. Переехать на него: «Заменить сервер» → «Свободный сервер».	. Move to it: "Replace server" → "Free server".
+На нём уже стоят: {} — при переезде они будут заменены протоколами вашего сервера.	It already has: {} — during the move they will be replaced with your server's protocols.
+ПРЕДУПРЕЖДЕНИЕ: система слишком старая — поддерживаются Debian 11+, Ubuntu 22.04+, Alpine; протоколы на него не установятся.	WARNING: the system is too old — Debian 11+, Ubuntu 22.04+ and Alpine are supported; protocols will not be installed on it.
+ПРЕДУПРЕЖДЕНИЕ: система не из списка проверенных (Debian 11+, Ubuntu 22.04+, Alpine) — часть протоколов может не установиться.	WARNING: the system is not on the list of tested ones (Debian 11+, Ubuntu 22.04+, Alpine) — some protocols may fail to install.
+ПРЕДУПРЕЖДЕНИЕ: на сервере нет ни systemd, ни OpenRC — протоколы на него не установятся.	WARNING: the server has neither systemd nor OpenRC — protocols will not be installed on it.
+Ядро: {}	Kernel: {}
+Свободный сервер не добавлен: {}	Free server was not added: {}
+Укажите домен сервера, например vpn2.example.org.	Enter the server domain, for example vpn2.example.org.
+{} уже есть на Главной.	{} is already on Home.
+Адрес сервера указан неверно.	The server address is invalid.
+Подключаюсь к {} и читаю настройки протоколов…	Connecting to {} and reading the protocol settings…
+На {} не найдено протоколов, которые можно перенести (Hysteria2, VLESS, AmneziaWG, Telegram).	No protocols that can be moved were found on {} (Hysteria2, VLESS, AmneziaWG, Telegram).
+✓ Сервер {} добавлен на Главную. Перенесено протоколов: {}.	✓ Server {} added to Home. Protocols moved: {}.
+ПРЕДУПРЕЖДЕНИЕ: {} сейчас указывает на {}, а не на {}. При переезде A-запись будет исправлена.	WARNING: {} currently points to {}, not to {}. The A record will be fixed during the move.
+VPS с адресом {} не найден в загруженном списке OneProvider — после переезда старый VPS удалите вручную во вкладке «VPS/DNS».	A VPS with the address {} was not found in the loaded OneProvider list — after the move, delete the old VPS manually in the "VPS/DNS" tab.
+Ссылки сервера — ниже. При переносе на другой VPS они не изменятся.	The server links are below. They will not change when moving to another VPS.
+Введите логин и API-токен name.com.	Enter the name.com login and API token.
+Переезд можно откатить: «Откатить переезд» ниже вернёт ссылки {} на прежний сервер {}.	The move can be rolled back: "Roll back the move" below will return the {} links to the previous server {}.
+Откат переезда {} скрыт. Прежний сервер {} не тронут.	The rollback of the move of {} is hidden. The previous server {} was not touched.
+Для отката нужны логин и API-токен name.com (карточка «Аккаунты»): A-запись возвращается на прежний адрес.	The rollback needs the name.com login and API token ("Accounts" card): the A record is returned to the previous address.
+Чтобы удалить новый VPS, нужны ключи OneProvider (карточка «Аккаунты»).	To delete the new VPS, OneProvider keys are needed ("Accounts" card).
+ОТКАТ ПЕРЕЕЗДА {}: возвращаю прежний сервер {}	ROLLING BACK THE MOVE OF {}: returning the previous server {}
+A-запись {} не менялась — DNS не трогаю.	The A record {} did not change — not touching DNS.
+✓ Профиль {} снова работает с сервером {}.	✓ Profile {} works with server {} again.
+✓ Новый VPS {} удалён в OneProvider.	✓ New VPS {} deleted at OneProvider.
+! Новый VPS не удалён: перерасход трафика {} ГБ, доплата {}. Удалите его во вкладке «VPS/DNS» — там будет вопрос об оплате.	! The new VPS was not deleted: traffic overage {} GB, extra charge {}. Delete it in the "VPS/DNS" tab — it will ask about payment.
+✗ Новый VPS не удалён: {}. Удалите его во вкладке «VPS/DNS».	✗ The new VPS was not deleted: {}. Delete it in the "VPS/DNS" tab.
+Новый VPS {} оставлен в «Свободных серверах» — на него можно переехать без покупки. Он оплачивается; удалить — во вкладке «VPS/DNS».	The new VPS {} was left in "Free servers" — you can move to it without buying. It is billed; delete it in the "VPS/DNS" tab.
+Новый VPS {} остался в аккаунте OneProvider — удалите его во вкладке «VPS/DNS», если он не нужен.	The new VPS {} remained in the OneProvider account — delete it in the "VPS/DNS" tab if you do not need it.
+Свободный сервер {} остался в списке; его протоколы могли быть частично заменены.	Free server {} remained in the list; its protocols may have been partially replaced.
+✓ Откат выполнен: ссылки {} снова ведут на {}	✓ Rolled back: the {} links lead to {} again
+ (DNS обновится в течение нескольких минут)	 (DNS will update within a few minutes)
+. Нажмите «Проверить», чтобы убедиться, что сервер отвечает.	. Tap "Check" to make sure the server responds.
+SSH пока не готов ({}). Повтор через 20 с (попытка {} из 6)…	SSH is not ready yet ({}). Retry in 20 s (attempt {} of 6)…
+Создан новый постоянный профиль {}. Сохраните его копию после установки.	A new permanent profile {} was created. Save a copy of it after the installation.
+Профиль {}: ссылки останутся прежними.	Profile {}: the links will stay the same.
+Hysteria2 выключена — VLESS маскируется под {} (в России такую маскировку режут чаще).	Hysteria2 is off — VLESS masks as {} (in Russia this kind of masking is cut more often).
+Режим RandomTrailers AmneziaWG {} — ссылку AmneziaWG нужно заново добавить в AmneziaVPN (остальные ссылки прежние).	AmneziaWG RandomTrailers mode {} — the AmneziaWG link must be added to AmneziaVPN again (the other links are unchanged).
+VPS создан: ID {}, {}, {}, {}/мес	VPS created: ID {}, {}, {}, {}/month
+Жду назначения IPv4…	Waiting for an IPv4 to be assigned…
+VPS не получил IPv4-адрес за 5 минут.	The VPS did not get an IPv4 address in 5 minutes.
+SSH доступен. Даю системе ещё 20 секунд на старт служб.	SSH is available. Giving the system another 20 seconds to start services.
+Провайдер не выдал пароль root, а приватный ключ в «Доступе к серверам» (Инструменты) не задан.	The provider did not give a root password, and no private key is set in "Server access" (Tools).
+Беру свободный сервер {} ({})	Taking free server {} ({})
+ — новый VPS не покупается.	 — a new VPS is not bought.
+Его протоколы ({}) будут заменены протоколами профиля: прежние ссылки на этот сервер перестанут работать.	Its protocols ({}) will be replaced with the profile's protocols: the previous links to this server will stop working.
+Безопасность: сервер уже защищён (вход только по ключу).	Security: the server is already secured (key-only login).
+Протоколы работают, но защита не включена. Её можно включить позже: «Инструменты» → «Доступ к серверам» → «Защитить сервер».	The protocols work, but protection is not enabled. It can be enabled later: "Tools" → "Server access" → "Secure server".
+Безопасность выключена — обновления и отключение пароля пропущены.	Security is off — updates and disabling the password were skipped.
+ПРЕДУПРЕЖДЕНИЕ: проверку выполнить не удалось: {}	WARNING: the check could not be performed: {}
+Готово! Сервер {} работает. Раздайте ссылки ниже — при смене VPS они не изменятся.	Done! Server {} is running. Share the links below — they will not change when the VPS changes.
+Готово! Сервер {} переехал на {}. Ссылки прежние — клиентам ничего менять не нужно.	Done! Server {} has moved to {}. The links are the same — clients do not need to change anything.
+Сервер {}, на котором {} работал до прерванного переезда, остался в «Свободных серверах». Если он не нужен, удалите его VPS во вкладке «VPS/DNS».	Server {}, where {} ran before the interrupted move, remained in "Free servers". If you do not need it, delete its VPS in the "VPS/DNS" tab.
+На сервере остался прежний AmneziaWG со своей ссылкой — удалить его можно в блоке «Протоколы» на Главной.	The previous AmneziaWG with its own link remained on the server — you can delete it in the "Protocols" block on Home.
+Прежний сервер {} добавлен вручную — приложение его не удаляет. Он остался в списке «Заменить сервер → Свободный сервер»: на него можно вернуться.	The previous server {} was added manually — the app does not delete it. It remained in the "Replace server → Free server" list: you can go back to it.
+Старый VPS {} ({}) больше не нужен — подтвердите удаление.	The old VPS {} ({}) is no longer needed — confirm deletion.
+Остановлено пользователем.	Stopped by the user.
+{} Продолжаю с остальными протоколами.	{} Continuing with the other protocols.
+ПРЕДУПРЕЖДЕНИЕ: сайт с подписками не записан: {}	WARNING: the site with subscriptions was not written: {}
+Ставлю сохранённый сертификат (ещё {} дн.) — Let's Encrypt не понадобится.	Installing the saved certificate ({} more days) — Let's Encrypt will not be needed.
+VLESS пропущен: он маскируется под {}, а сайт и сертификат для этого даёт Hysteria2, которая не работает.	VLESS skipped: it masks as {}, and the site and certificate for that come from Hysteria2, which is not working.
+AmneziaWG не установлен: {}.	AmneziaWG not installed: {}.
+Установка Telegram-прокси завершилась с ошибкой (код {}).	Telegram proxy installation failed (code {}).
+ПРЕДУПРЕЖДЕНИЕ: копию сертификата получить не удалось: {}	WARNING: could not get the certificate copy: {}
+Внимание: новый VPS {} уже создан и оплачивается. Чтобы доставить протоколы, нажмите «Обновить сервер» на Главной (ключи и ссылки прежние) или удалите VPS во вкладке «VPS/DNS».	Attention: the new VPS {} has been created and is billed. To deliver the protocols, tap "Update server" on Home (keys and links stay the same) or delete the VPS in the "VPS/DNS" tab.
+A-запись уже указывает на новый VPS. Старый VPS ({}) не удалён.	The A record already points to the new VPS. The old VPS ({}) was not deleted.
+У сервера не указан IP — укажите его в «Инструменты → Доступ по SSH» и нажмите «Применить».	The server has no IP — set it in "Tools → SSH access" and tap "Apply".
+Нужен пароль или SSH-ключ: «Инструменты → Доступ по SSH», выберите {} и нажмите «Применить».	A password or an SSH key is needed: "Tools → SSH access", choose {} and tap "Apply".
+Читаю с сервера {} установленные протоколы…	Reading the installed protocols from server {}…
+✓ Постоянные ссылки совпадают с сервером.	✓ The permanent links match the server.
+ работает	 works
+ — служба не запущена	 — the service is not running
+Трафик за месяц: {} ГБ	Traffic this month: {} GB
+ из {} ГБ	 of {} GB
+Подписка Happ ещё не включена на этом сервере — нажмите «Обновить сервер» в «Ссылках» (ключи и ссылки не меняются).	The Happ subscription is not yet enabled on this server — tap "Update server" in "Links" (keys and links do not change).
+Проверяю сервер {} и имя {} …	Checking server {} and name {} …
+Читаю протоколы с сервера {} ({})…	Reading protocols from server {} ({})…
+На сервере нет протоколов, поставленных этим приложением.	There are no protocols installed by this app on the server.
+✓ На сервере: 	✓ On the server: 
+Сначала прочитайте протоколы с сервера.	First read the protocols from the server.
+Оставьте хотя бы один протокол — иначе у сервера не останется ни одной ссылки.	Keep at least one protocol — otherwise the server will have no links at all.
+VLESS маскируется под {}: сайт и сертификат для этого даёт Hysteria2. Оставьте Hysteria2 или уберите и VLESS.	VLESS masks as {}: the site and certificate for that come from Hysteria2. Keep Hysteria2 or remove VLESS too.
+Протоколы {} ({}): 	Protocols {} ({}): 
+установить — 	install — 
+удалить — 	delete — 
+ПРЕДУПРЕЖДЕНИЕ: {} — завершено с кодом {}.	WARNING: {} — finished with code {}.
+Удаление VLESS XHTTP	Removing VLESS XHTTP
+Удаление Telegram-прокси	Removing the Telegram proxy
+Удаление AmneziaWG	Removing AmneziaWG
+Удаление VLESS	Removing VLESS
+Удаление Hysteria2	Removing Hysteria2
+ (ключи профиля)	 (profile keys)
+▶ AmneziaWG 3.1 (ключи профиля)	▶ AmneziaWG 3.1 (profile keys)
+ПРЕДУПРЕЖДЕНИЕ: AmneziaWG не установлен: {}	WARNING: AmneziaWG not installed: {}
+Telegram-прокси (порт {}/TCP)	Telegram proxy (port {}/TCP)
+✓ Готово. Ссылки и подписка Happ обновлены; ссылки прежних протоколов не изменились.	✓ Done. The links and the Happ subscription are updated; the links of the previous protocols did not change.
+Готово, но не установилось: {} — см. журнал выше. Остальные ссылки и подписка обновлены.	Done, but not installed: {} — see the log above. The other links and the subscription are updated.
+Hysteria2 удалена — подписка Happ на этом сервере больше не открывается (её отдавала Hysteria2).	Hysteria2 was removed — the Happ subscription on this server no longer opens (Hysteria2 served it).
+Лимит трафика у OneProvider узнать не удалось: {}	Could not get the traffic limit from OneProvider: {}
+VPS {} нет в аккаунте OneProvider — лимит трафика неизвестен.	VPS {} is not in the OneProvider account — the traffic limit is unknown.
+Баланс OneProvider: API его не отдаёт ({}).	OneProvider balance: the API does not provide it ({}).
+\n\nВнимание: у Hysteria2 при втором человеке включается режим «имя:пароль» — ваша ссылка Hysteria2 изменится один раз (VLESS и AmneziaWG — нет). Подписка Happ обновится сама.	\n\nAttention: with Hysteria2, when a second person is added the "name:password" mode is turned on — your Hysteria2 link will change once (VLESS and AmneziaWG will not). The Happ subscription will update by itself.
+Добавить «{}» на {}? У него будут свои ключи и своя подписка; протоколы на сервере будут переустановлены с новым списком людей (несколько минут).{}	Add "{}" to {}? They will have their own keys and subscription; the protocols on the server will be reinstalled with the new list of people (a few minutes).{}
+Включить «{}»? Его прежние ссылки снова заработают.	Turn on "{}"? Their previous links will work again.
+Отключить «{}»? Его ссылки перестанут работать (Telegram-прокси общий — его отключить нельзя). Включить можно обратно.	Turn off "{}"? Their links will stop working (the Telegram proxy is shared — it cannot be turned off). You can turn it back on.
+Удалить «{}» насовсем? Его ссылки перестанут работать, вернуть их нельзя.	Delete "{}" permanently? Their links will stop working and cannot be restored.
+Применяю список людей	Applying the list of people
+Обновляю сервер по профилю	Updating the server from the profile
+{}: {} ({}). Ключи и ссылки остаются прежними.	{}: {} ({}). The keys and links stay the same.
+✓ Готово: сервер обновлён.	✓ Done: the server is updated.
+Готово, но не всё установилось ({}) — см. журнал выше.	Done, but not everything was installed ({}) — see the log above.
+Перевожу VLESS на маскировку под {} на сервере {} …	Switching VLESS to masking as {} on server {} …
+Переустановка Hysteria2 завершилась с ошибкой (код {}). Профиль не изменён.	Reinstalling Hysteria2 failed (code {}). The profile was not changed.
+Переустановка VLESS завершилась с ошибкой (код {}). Профиль не изменён.	Reinstalling VLESS failed (code {}). The profile was not changed.
+Готово! VLESS теперь маскируется под {}. Новую ссылку VLESS (ниже) нужно один раз импортировать в Happ заново, старую удалите. Ссылка Hysteria2 не изменилась.	Done! VLESS now masks as {}. The new VLESS link (below) must be imported into Happ once again, delete the old one. The Hysteria2 link did not change.
+Для защиты нужен приватный SSH-ключ, который добавлен на сервер: выберите «SSH-ключ» в блоке «Сервер» и вставьте его.	Protection needs a private SSH key that was added to the server: choose "SSH key" in the "Server" block and paste it.
+Для защиты нужен приватный SSH-ключ, который добавлен на сервер (например, ключ из кабинета OneProvider): выберите «SSH-ключ» в «Доступе к серверам» и вставьте его.	Protection needs a private SSH key that was added to the server (for example, the key from the OneProvider dashboard): choose "SSH key" in "Server access" and paste it.
+БЕЗОПАСНОСТЬ {}: обновления, автообновления, вход только по SSH-ключу, файрвол, fail2ban. Протоколы и ссылки не меняются.	SECURITY {}: updates, automatic updates, key-only SSH login, firewall, fail2ban. The protocols and links do not change.
+Готово! Сервер защищён: вход только по ключу, автообновления, файрвол и fail2ban (подробности выше).	Done! The server is secured: key-only login, automatic updates, firewall and fail2ban (details above).
+Запускаю живую проверку на {}	Starting the live check on {}
+Живую проверку запустить не удалось.	Could not start the live check.
+СЕЙЧАС: сверните приложение, в Happ выключите и снова включите VLESS, откройте любой сайт; затем то же с Hysteria2. У вас {} секунд.	NOW: minimize the app, in Happ turn VLESS off and on again, open any site; then do the same with Hysteria2. You have {} seconds.
+… осталось примерно {} с	… about {} s left
+Читаю результат…	Reading the result…
+✓ Старый VPS {} удалён.	✓ Old VPS {} deleted.
+! Перерасход трафика {} ГБ, доплата {} — нужно подтверждение.	! Traffic overage {} GB, extra charge {} — confirmation needed.
+Старый VPS {} оставлен — удалить можно во вкладке «VPS/DNS». Он добавлен в список «Заменить сервер → Свободный сервер»: на него можно вернуться без покупки VPS.	The old VPS {} was kept — you can delete it in the "VPS/DNS" tab. It was added to the "Replace server → Free server" list: you can go back to it without buying a VPS.
+Пароль копии — не короче 8 символов (или оставьте поле пустым).	The backup password must be at least 8 characters (or leave the field empty).
+Копия сохранена: серверов {}	Backup saved: servers {}
+, настройки «Доступа к серверам» и ключи OneProvider и name.com. 	, the "Server access" settings and the OneProvider and name.com keys. 
+Файл НЕ зашифрован — храните его надёжно и никому не пересылайте.	The file is NOT encrypted — store it securely and do not send it to anyone.
+Файл зашифрован паролем — без пароля его не открыть.	The file is encrypted with a password — it cannot be opened without the password.
+Файл повреждён или это не копия vpngramm.	The file is corrupted or this is not a vpngramm backup.
+Из копии добавлено серверов: {}.	Servers added from the backup: {}.
+Из копии восстановлены настройки «Доступа к серверам» и ключи OneProvider и name.com.	The "Server access" settings and the OneProvider and name.com keys were restored from the backup.
+Всё из копии уже есть на {} и совпадает.	Everything from the backup is already on {} and matches.
+Настройки «Доступа к серверам» и ключи OneProvider и name.com заменены данными из копии.	The "Server access" settings and the OneProvider and name.com keys were replaced with data from the backup.
+Сервер {} заменён данными из копии. Ссылки — ниже.	Server {} was replaced with data from the backup. The links are below.
+Проверьте данные сервера в «Доступе к серверам» (Инструменты).	Check the server data in "Server access" (Tools).
+Сохранённые пароли, SSH-ключ, токен name.com и ключи OneProvider удалены с {}.	Saved passwords, the SSH key, the name.com token and the OneProvider keys were deleted from {}.
+Серверы с постоянными ссылками на Главной сохранены (убрать их можно там же).	The servers with permanent links on Home were kept (you can remove them there).
+Если неверны IP, порт, пользователь или пароль — исправьте их: «Инструменты → Доступ по SSH» → «Применить».	If the IP, port, user or password is wrong — fix it: "Tools → SSH access" → "Apply".
+Введите логин name.com (имя пользователя аккаунта).	Enter the name.com login (the account user name).
+Введите API-токен name.com.	Enter the name.com API token.
+Укажите домен (зону) в виде example.com.	Specify the domain (zone) like example.com.
+Поддомен: латиница, цифры, точка, дефис, подчёркивание (например, vpn).	Subdomain: Latin letters, digits, dot, hyphen, underscore (for example, vpn).
+Куплен новый VPS {}{} — он оплачивается.	A new VPS {}{} was bought — it is billed.
+Куплен новый VPS{} — он оплачивается.	A new VPS{} was bought — it is billed.
+Переезд шёл на свободный сервер {}.	The move was going to the free server {}.
+A-запись {} уже могла быть переведена на новый адрес — клиенты могут попадать на недоделанный сервер.	The A record {} may already have been switched to the new address — clients may reach an unfinished server.
+A-запись {} не менялась — клиенты по-прежнему подключаются к {}.	The A record {} did not change — clients still connect to {}.
+Нет связи с name.com: {}	No connection to name.com: {}
+Не удалось войти: проверьте логин name.com и API-токен.	Could not log in: check the name.com login and API token.
+На аккаунте включена двухфакторная защита. Включите доступ к API: name.com → Account Settings → Security.	Two-factor authentication is on for the account. Enable API access: name.com → Account Settings → Security.
+Доступ запрещён: проверьте логин и токен (для боевого сервера логин без «-test») и права токена.	Access denied: check the login and token (for a production server the login without "-test") and the token rights.
+Не найдено: такой домен отсутствует в вашем аккаунте name.com (или записи уже нет).	Not found: this domain is not in your name.com account (or the record is already gone).
+name.com отклонил запрос как некорректный.	name.com rejected the request as invalid.
+Превышен лимит запросов name.com, повторите через минуту.	The name.com request limit was exceeded, try again in a minute.
+Сервис name.com временно недоступен, повторите позже.	The name.com service is temporarily unavailable, try again later.
+Ошибка name.com (HTTP {}).	name.com error (HTTP {}).
+Работа с сервером	Working with the server
+vpngramm работает	vpngramm is working
+Локация {}	Location {}
+Другие	Others
+{} ГБ	{} GB
+{} МБ	{} MB
+{} vCPU · {} RAM · {} ГБ диск · трафик {} ГБ	{} vCPU · {} RAM · {} GB disk · traffic {} GB
+до ${}/мес	up to ${}/mo
+трафик от {}	traffic from {}
+без фильтра	no filter
+{} ТБ	{} TB
+Нет связи с api.oneprovider.com: {}	No connection to api.oneprovider.com: {}
+безлим	unlimited
+да/нет	yes/no
+строка	string
+нет	no
+OneProvider отклонил ключи: проверьте Api-Key и Client-Key.	OneProvider rejected the keys: check the Api-Key and Client-Key.
+Доступ к API ограничен списком IP (Whitelist). Добавьте IP {} или отключите ограничение в кабинете.	API access is restricted by an IP list (Whitelist). Add the IP {} or turn off the restriction in the dashboard.
+Ошибка OneProvider	OneProvider error
+Человек {}	Person {}
+{} мс	{} ms
+Hysteria2: пароль или obfs не найдены — протокол не перенесён.	Hysteria2: the password or obfs was not found — the protocol was not moved.
+Hysteria2: ссылка указывала на 	Hysteria2: the link pointed to 
+IP-адрес	the IP address
+, теперь будет на {} — её нужно один раз заново раздать (пароли прежние). Сертификат на {} выпустится при переезде.	, now it will point to {} — it must be shared again once (the passwords are the same). The certificate for {} will be issued during the move.
+VLESS: настройки неполные — протокол не перенесён.	VLESS: the settings are incomplete — the protocol was not moved.
+VLESS: не найден приватный ключ Reality — протокол не перенесён.	VLESS: the Reality private key was not found — the protocol was not moved.
+VLESS: адрес в ссылке был {}, теперь {} — ссылку нужно один раз заново раздать.	VLESS: the address in the link was {}, now {} — the link must be shared again once.
+AmneziaWG: настройки не прочитались — протокол не перенесён.	AmneziaWG: the settings could not be read — the protocol was not moved.
+AmneziaWG: адрес в ссылке был {}, теперь {} — ссылку нужно один раз заново добавить в AmneziaVPN.	AmneziaWG: the address in the link was {}, now {} — the link must be added to AmneziaVPN again once.
+AmneziaWG: на сервере ещё {} чел. — перенесены только ключи владельца; остальных добавьте в «Людях» заново.	AmneziaWG: {} more people on the server — only the owner's keys were moved; add the others again in "People".
+Telegram-прокси: секрет не в формате FakeTLS (ee…) — протокол не перенесён.	Telegram proxy: the secret is not in the FakeTLS format (ee…) — the protocol was not moved.
+Telegram-прокси: ссылка теперь указывает на {} (а не на IP) — её нужно один раз заново раздать.	Telegram proxy: the link now points to {} (not to the IP) — it must be shared again once.
+VLESS маскируется под {}, а Hysteria2 (она даёт для этого сайт и сертификат) не найдена — VLESS может не работать.	VLESS masks as {}, but Hysteria2 (which provides the site and certificate for that) was not found — VLESS may not work.
+Hysteria2: на сервере другие пароли или порт — ссылка обновлена по серверу.	Hysteria2: the server has other passwords or a different port — the link was updated from the server.
+Hysteria2: найдена на сервере — ссылка добавлена.	Hysteria2: found on the server — the link was added.
+Hysteria2: в профиле есть, а на сервере не найдена — ссылка сейчас не работает; при переносе она будет установлена.	Hysteria2: it is in the profile but not found on the server — the link does not work now; it will be installed during the move.
+VLESS: на сервере другие ключи — ссылка обновлена по серверу.	VLESS: the server has other keys — the link was updated from the server.
+VLESS: найден на сервере — ссылка добавлена.	VLESS: found on the server — the link was added.
+VLESS: в профиле есть, а на сервере не найден — ссылка сейчас не работает; при переносе он будет установлен.	VLESS: it is in the profile but not found on the server — the link does not work now; it will be installed during the move.
+VLESS: на сервере есть, но без приватного ключа Reality — добавить в постоянные ссылки нельзя.	VLESS: it is on the server but without the Reality private key — it cannot be added to the permanent links.
+VLESS XHTTP: на сервере другой путь — ссылка обновлена по серверу.	VLESS XHTTP: the server has a different path — the link was updated from the server.
+VLESS XHTTP: найден на сервере — ссылка добавлена.	VLESS XHTTP: found on the server — the link was added.
+VLESS XHTTP: в профиле есть, а на сервере не найден — ссылка сейчас не работает; «Обновить сервер» или перенос его поставят.	VLESS XHTTP: it is in the profile but not found on the server — the link does not work now; "Update server" or the move will install it.
+AmneziaWG: на сервере другие ключи — ссылка обновлена по серверу (добавьте её в AmneziaVPN заново).	AmneziaWG: the server has other keys — the link was updated from the server (add it to AmneziaVPN again).
+AmneziaWG: найден на сервере — ссылка добавлена (адрес в ней — {}).	AmneziaWG: found on the server — the link was added (the address in it is {}).
+AmneziaWG: в профиле есть, а на сервере не найден — ссылка сейчас не работает; при переносе он будет установлен.	AmneziaWG: it is in the profile but not found on the server — the link does not work now; it will be installed during the move.
+Telegram-прокси: на сервере другой секрет или порт — ссылка обновлена по серверу.	Telegram proxy: the server has a different secret or port — the link was updated from the server.
+Telegram-прокси: найден на сервере — ссылка добавлена.	Telegram proxy: found on the server — the link was added.
+Telegram-прокси: в профиле есть, а на сервере не найден — ссылка сейчас не работает; при переносе он будет установлен.	Telegram proxy: it is in the profile but not found on the server — the link does not work now; it will be installed during the move.
+Сервер {} принял соединение, но не ответил по SSH за {} с (попыток: {}). Возможно, он перегружен или SSH ограничивает частые подключения (fail2ban). Подождите минуту и повторите; проверьте порт SSH.	Server {} accepted the connection but did not respond over SSH in {} s (attempts: {}). It may be overloaded, or SSH limits frequent connections (fail2ban). Wait a minute and try again; check the SSH port.
+Не удаётся подключиться к {} (попыток: {}): {}. Проверьте адрес и порт SSH и что сервер включён.	Cannot connect to {} (attempts: {}): {}. Check the SSH address and port and that the server is on.
+SSH не ответил вовремя ({}). Повтор через {} с (попытка {} из {})…	SSH did not respond in time ({}). Retry in {} s (attempt {} of {})…
+Вход по Рутокену на этом устройстве недоступен.	Rutoken login is not available on this device.
+Не удалось загрузить приватный ключ: {}	Could not load the private key: {}
+Сервер не принял ключ Рутокена. Добавьте его на сервер кнопкой «Добавить ключ Рутокена на сервер» (нужен OpenSSH 8.2 или новее) и проверьте имя пользователя «{}».	The server did not accept the Rutoken key. Add it to the server with the "Add Rutoken key to server" button (OpenSSH 8.2 or newer is required) and check the user name "{}".
+Сервер не принял ключ. Проверьте, что публичный ключ (.pub) добавлен в файл ~/.ssh/authorized_keys пользователя «{}» на сервере и что имя пользователя указано верно.	The server did not accept the key. Check that the public key (.pub) is added to the ~/.ssh/authorized_keys file of the user "{}" on the server and that the user name is correct.
+Неверный логин или пароль.	Wrong login or password.
+Ключ сервера не принят или изменился. Если вы переустанавливали сервер — сбросьте доверенные серверы.	The server key was not accepted or has changed. If you reinstalled the server — reset the trusted servers.
+Вставлен публичный ключ (.pub). Нужен приватный ключ — файл без расширения .pub, начинается с «-----BEGIN».	A public key (.pub) was pasted. A private key is needed — a file without the .pub extension that starts with "-----BEGIN".
+Не удалось прочитать приватный ключ. Поддерживаются ключи OpenSSH («-----BEGIN OPENSSH PRIVATE KEY-----»), PEM (RSA/EC) и PuTTY .ppk. Проверьте, что ключ скопирован целиком.	Could not read the private key. OpenSSH ("-----BEGIN OPENSSH PRIVATE KEY-----"), PEM (RSA/EC) and PuTTY .ppk keys are supported. Check that the key was copied entirely.
+Ключ защищён паролем — введите пароль от ключа.	The key is protected by a password — enter the key password.
+Неверный пароль от ключа.	Wrong key password.
+Не удалось загрузить скрипт на сервер (SFTP: {}; команда: {})	Could not upload the script to the server (SFTP: {}; command: {})
+код {}	code {}
+ на 	 for 
+ за месяц	 per month
+Трафик{}: 	Traffic{}: 
+{} из {} ГБ ({}%)	{} of {} GB ({}%)
+Лимит трафика неизвестен: введите ключи OneProvider и нажмите «Проверить».	The traffic limit is unknown: enter the OneProvider keys and tap "Check".
+Лимит превышен на {} ГБ — OneProvider берёт доплату за перерасход.	The limit is exceeded by {} GB — OneProvider charges extra for the overage.
+Лимит не превышен, но близко: осталось {} ГБ.	The limit is not exceeded, but close: {} GB left.
+Лимит не превышен: осталось {} ГБ.	The limit is not exceeded: {} GB left.
+Непонятный ответ токена (CBOR).	Unintelligible token response (CBOR).
+Токен не поддерживает этот алгоритм ключа.	The token does not support this key algorithm.
+Токен отказал (операция отменена на токене).	The token refused (the operation was cancelled on the token).
+В токене нет места для нового резидентного ключа — удалите ненужные в программе производителя.	The token has no room for a new resident key — delete unneeded ones in the manufacturer's program.
+Токен не поддерживает этот режим.	The token does not support this mode.
+На токене нет этого ключа: вставьте тот токен, на котором ключ создавали.	This key is not on the token: insert the token on which the key was created.
+Не дождался касания токена — попробуйте ещё раз и коснитесь токена.	The token touch was not detected in time — try again and touch the token.
+Неверный PIN токена.	Wrong token PIN.
+PIN токена заблокирован — сбросьте его в программе производителя.	The token PIN is blocked — reset it in the manufacturer's program.
+Слишком много неверных PIN подряд: выньте токен и вставьте снова.	Too many wrong PINs in a row: remove the token and insert it again.
+На токене не задан PIN, а для резидентного ключа он нужен: задайте PIN в Yubico Authenticator или Рутокен MFA Manager.	No PIN is set on the token, and a resident key needs it: set a PIN in Yubico Authenticator or Rutoken MFA Manager.
+Токен требует PIN для этой операции.	The token requires a PIN for this operation.
+Токен ответил ошибкой FIDO2 0x%02X.	The token responded with FIDO2 error 0x%02X.
+Пустой ответ токена.	Empty token response.
+Непонятный ответ токена.	Unintelligible token response.
+Токен вернул ключ неизвестного типа.	The token returned a key of an unknown type.
+Токен не вернул данные ключа.	The token did not return the key data.
+Токен не вернул подпись.	The token did not return a signature.
+Непонятный ответ токена при подписи.	Unintelligible token response during signing.
+Токен не дал ключ для PIN.	The token did not provide a key for the PIN.
+Токен не выдал доступ по PIN.	The token did not grant PIN access.
+Токен не умеет показывать резидентные ключи.	The token cannot list resident keys.
+Этот токен понимает только U2F — резидентные ключи на нём невозможны.	This token understands only U2F — resident keys are impossible on it.
+Этот токен не умеет хранить резидентные ключи.	This token cannot store resident keys.
+Создание ключа отменено: PIN не введён.	Key creation cancelled: no PIN entered.
+Токен не поддерживает FIDO2, а ключ ed25519 — только FIDO2.	The token does not support FIDO2, and an ed25519 key needs FIDO2.
+Загрузка отменена: PIN не введён.	Loading cancelled: no PIN entered.
+Аппаратный ключ	Hardware key
+Рутокен: сбой обмена по USB (пакет {} вместо {}).	Rutoken: USB exchange failure (packet {} instead of {}).
+Токен: ошибка USB-обмена {}.	Token: USB exchange error {}.
+Токен: неожиданный ответ по USB.	Token: unexpected USB response.
+Токен по NFC ответил ошибкой %04X.	The token over NFC responded with error %04X.
+NFC-токен	NFC token
+Это не FIDO-токен или на нём нет приложения U2F.	This is not a FIDO token or it has no U2F application.
+Токен не поддерживает FIDO2 (CTAP2).	The token does not support FIDO2 (CTAP2).
+Не дождался касания Рутокена — попробуйте ещё раз и коснитесь токена.	The Rutoken touch was not detected in time — try again and touch the token.
+Этот токен не знает ключ: приложите тот Рутокен, на котором ключ создавали.	This token does not know the key: hold the Rutoken on which the key was created.
+Рутокен ответил ошибкой %04X.	The Rutoken responded with error %04X.
+Непонятный ответ Рутокена при создании ключа.	Unintelligible Rutoken response when creating the key.
+Непонятный ответ Рутокена при подписи.	Unintelligible Rutoken response when signing.
+Не удалось открыть файл.	Could not open the file.
+Не удалось открыть файл для записи.	Could not open the file for writing.
+телефона	the phone
+телефоне	the phone
+Вход по Рутокену отменён.	Rutoken login cancelled.
+Рутокен не найден: вставьте его в разъём USB-C или приложите к задней крышке телефона (NFC должен быть включён).	Rutoken not found: insert it into the USB-C port or hold it to the back of the phone (NFC must be on).
+Рутокен: не удалось отправить данные по USB — переподключите токен.	Rutoken: could not send data over USB — reconnect the token.
+Рутокен не отвечает по USB.	The Rutoken does not respond over USB.
+USB-токен	USB token
+Обновить	Refresh
+Ключи API	API keys
+Указаны	Set
+Нужны для работы с OneProvider	Needed to work with OneProvider
+Мои VPS	My VPS
+Серверов: {}	Servers: {}
+Загрузить список VPS	Load the VPS list
+В аккаунте нет VPS.	There are no VPS in the account.
+Выбрать все	Select all
+Снять выбор	Clear selection
+Удалить выбранные ({})	Delete selected ({})
+Новый VPS	New VPS
+Купить VPS в OneProvider вручную	Buy a VPS at OneProvider manually
+Имя хоста (например, vpn1)	Host name (for example, vpn1)
+Создать VPS	Create VPS
+SSH-ключи кабинета	Dashboard SSH keys
+Ключей: {}	Keys: {}
+Обновить список ключей	Refresh the key list
+Загрузить SSH-ключи	Load SSH keys
+В кабинете нет SSH-ключей.	There are no SSH keys in the dashboard.
+Удалить ключ	Delete key
+Добавить ключ	Add key
+Название	Name
+Публичный ключ (ssh-ed25519 AAAA…)	Public key (ssh-ed25519 AAAA…)
+Взять из приватного ключа «Доступа к серверам»	Take from the private key in "Server access"
+Добавить ключ в кабинет	Add key to the dashboard
+Сюда вставляется только публичная часть (.pub).	Only the public part (.pub) is pasted here.
+Новый ключ сразу отмечается для создаваемых VPS. Чтобы приложение входило по нему, его приватная часть должна быть в «Инструменты» → «Доступ к серверам».	The new key is immediately marked for VPS being created. For the app to log in with it, its private part must be in "Tools" → "Server access".
+Журнал OneProvider	OneProvider log
+{} vCPU · {} · {} ГБ · {} ГБ трафика	{} vCPU · {} · {} GB · {} GB of traffic
+ · {}/мес	 · {}/mo
+Подставить в «Доступ к серверам»	Put into "Server access"
+VPS создан	VPS created
+Скрыть	Hide
+Показать	Show
+Пароль root	Root password
+Копировать пароль	Copy password
+IP и пароль root подставятся в «Инструменты → Доступ к серверам». Подождите 1–3 минуты, пока VPS загрузится.	The IP and root password will be put into "Tools → Server access". Wait 1–3 minutes for the VPS to boot.
+Создать VPS?	Create the VPS?
+Имя: {}\nЛокация: {}\nТариф: {}\nОС: {}\nSSH-ключей: {}\n\nСтоимость: {}/мес ({}/час) спишется с баланса аккаунта OneProvider.	Name: {}\nLocation: {}\nPlan: {}\nOS: {}\nSSH keys: {}\n\nThe cost {}/mo ({}/h) will be charged to the OneProvider account balance.
+Создать	Create
+Удалить SSH-ключ?	Delete the SSH key?
+Ключ «{}» будет удалён из кабинета OneProvider. На уже созданных VPS он останется, но для новых VPS выбрать его будет нельзя.	The key "{}" will be deleted from the OneProvider dashboard. It stays on already created VPS, but it cannot be chosen for new VPS.
+Удалить	Delete
+Удалить {} VPS?	Delete {} VPS?
+Серверы и все данные на них будут уничтожены безвозвратно:\n	The servers and all data on them will be destroyed irreversibly:\n
+Доплата за трафик	Traffic overage charge
+Провайдер сообщает о перерасходе трафика. Если удалить сейчас, будет списана доплата:\n	The provider reports a traffic overage. If you delete now, an extra charge will be made:\n
+• {}: {} ГБ сверх лимита, доплата {}	• {}: {} GB over the limit, extra charge {}
+. Без доплаты — подождать {} ч, не используя VPS.	. Without an extra charge — wait {} h without using the VPS.
+Удалить с доплатой	Delete with the extra charge
+Не удалять	Do not delete
+Аккаунт и домен	Account and domain
+Домен не указан	Domain not set
+Обновить список	Refresh the list
+Загрузить записи	Load records
+Записи {}	Records {}
+Показано: {}	Shown: {}
+Только A/AAAA (адреса серверов)	Only A/AAAA (server addresses)
+Записей нет.	No records.
+Корневые NS-записи защищены: без них домен перестанет работать.	The root NS records are protected: without them the domain will stop working.
+Журнал DNS	DNS log
+ · системная	 · system
+Защищена	Protected
+Добавить запись	Add record
+Имя (поддомен)	Name (subdomain)
+Пусто или @ — сам домен	Empty or @ — the domain itself
+IPv4-адрес	IPv4 address
+IPv6-адрес	IPv6 address
+Целевое имя (куда указывает)	Target name (where it points)
+Почтовый сервер (имя хоста)	Mail server (host name)
+Текст записи	Record text
+Подставить IP сервера	Put the server IP
+TTL, сек	TTL, s
+Приоритет	Priority
+Будет создано: {}  {}  {}	Will be created: {}  {}  {}
+Удалить {} зап.?	Delete {} rec.?
+Будут безвозвратно удалены:\n	Will be deleted permanently:\n
+{}: скопировано	{}: copied
+Свернуть	Collapse
+Развернуть	Expand
+Подробнее	More
+Результат	Result
+Журнал	Log
+Копировать	Copy
+Копировать ссылку	Copy link
+QR-код ссылки {}	Link QR code {}
+Поделиться ссылкой	Share the link
+Поделиться	Share
+В клиенте (Happ, INCY, Hiddify…) выберите «Добавить из буфера» или «Сканировать QR». Ссылка содержит пароли — не публикуйте её.	In the client (Happ, INCY, Hiddify…) choose "Add from clipboard" or "Scan QR". The link contains passwords — do not publish it.
+Копировать журнал	Copy the log
+Отмена	Cancel
+Ключи для всех серверов	Keys for all servers
+Список пуст	The list is empty
+Ключей: {} · на новые серверы не ставятся	Keys: {} · not installed on new servers
+Ключей: {} · ставятся на новые серверы	Keys: {} · installed on new servers
+Открытые ключи SSH (например, YubiKey), которые приложение добавляет в authorized_keys каждого сервера, который создаёт или переносит.	SSH public keys (for example, YubiKey) that the app adds to authorized_keys of every server it creates or moves.
+Ключ SSH	SSH key
+Добавить из файла .pub…	Add from a .pub file…
+Или вставьте строку ключа	Or paste the key line
+Ставить на новые серверы	Install on new servers
+При создании сервера и при «Заменить сервер» на Главной	When creating a server and on "Replace server" on Home
+Добавить на сервер {}	Add to server {}
+Добавить на все серверы Главной	Add to all Home servers
+Ключи только добавляются: уже стоящие на сервере ключи и пароль не меняются.	Keys are only added: keys already on the server and the password do not change.
+Подходят ключи ed25519, RSA, ECDSA и ключи аппаратных токенов (sk-ssh-ed25519, sk-ecdsa) — для последних на сервере нужен OpenSSH 8.2 или новее (Debian 11+, Ubuntu 20.04+). Файл .pub может содержать несколько ключей — по одному на строку. Список уходит в копию серверов («Сохранить копию» на Главной).	Ed25519, RSA, ECDSA keys and hardware token keys (sk-ssh-ed25519, sk-ecdsa) work — for the latter the server needs OpenSSH 8.2 or newer (Debian 11+, Ubuntu 20.04+). A .pub file may contain several keys — one per line. The list goes into the server backup ("Save backup" on Home).
+Добавить ключи на {}?	Add the keys to {}?
+В authorized_keys сервера будут добавлены: {}.	These will be added to the server's authorized_keys: {}.
+Добавить	Add
+Добавить ключи на все серверы Главной?	Add the keys to all Home servers?
+Серверы: {}.\nКлючи: {}.	Servers: {}.\nKeys: {}.
+Убрать ключ из списка?	Remove the key from the list?
+{} больше не будет ставиться на новые серверы. С серверов, где он уже стоит, он не удаляется.	{} will no longer be installed on new servers. It is not removed from servers where it is already installed.
+Убрать	Remove
+Порт	Port
+Пользователь	User
+Пароль	Password
+Приватный ключ (вставьте текст)	Private key (paste the text)
+Выбрать файл ключа…	Choose a key file…
+Пароль от ключа (если есть)	Key password (if any)
+Пароль для sudo	Password for sudo
+IP-адрес сервера	Server IP address
+Приложение войдёт на сервер и запомнит данные входа (зашифрованно). Сам сервер не меняется, пока вы на него не переедете. Если пароль и ключ не указаны, берутся сохранённые для этого адреса.	The app will log in to the server and remember the login data (encrypted). The server itself does not change until you move to it. If no password or key is given, the ones saved for this address are used.
+Проверяю сервер…	Checking the server…
+Добавить в свободные серверы	Add to free servers
+только что	just now
+{} мин назад	{} min ago
+{} ч назад	{} h ago
+вчера	yesterday
+{} дн назад	{} d ago
+Баланс OneProvider: 	OneProvider balance: 
+Копия сервера устарела: без неё ссылки не восстановить	The server backup is out of date: without it the links cannot be restored
+Сохранить	Save
+Люди ({})	People ({})
+У каждого свои ключи — можно отключить одного	Each has their own keys — you can disable one
+Я (владелец)	Me (owner)
+ключи сервера	server keys
+отключён	disabled
+свои ключи и подписка	own keys and subscription
+Добавить человека	Add a person
+Сначала создайте сервер.	First create a server.
+Telegram-прокси общий для всех — отключить его одному человеку нельзя.	The Telegram proxy is shared by everyone — it cannot be disabled for one person.
+Новый человек	New person
+Имя (например, Мама)	Name (for example, Mom)
+Далее	Next
+Изменить людей?	Change the people?
+Применить	Apply
+Ссылки {}	Links {}
+Включить	Enable
+Отключить	Disable
+Я	Me
+Поделиться ссылками	Share the links
+Поделиться всеми	Share all
+Ссылки	Links
+Скопировать всё	Copy all
+Лучше всего — подписка: Happ сам подтянет новые ключи и протоколы. Добавьте её через «+» → «Из буфера» или QR.	Best of all — the subscription: Happ will pick up new keys and protocols by itself. Add it via "+" → "From clipboard" or QR.
+Подписка Happ	Happ subscription
+Если Happ не открывает подписку — нажмите «Обновить сервер» (ключи не меняются).	If Happ does not open the subscription — tap "Update server" (the keys do not change).
+Обновить сервер	Update server
+Откройте ссылку vpn:// в AmneziaVPN (5.0.2 или новее) или отсканируйте QR.	Open the vpn:// link in AmneziaVPN (5.0.2 or newer) or scan the QR.
+Откройте ссылку на телефоне — Telegram предложит подключить прокси. Он общий для всех людей.	Open the link on the phone — Telegram will offer to connect the proxy. It is shared by all people.
+Главная	Home
+Ещё	More
+Сохранить копию	Save backup
+Восстановить из файла	Restore from file
+Перевести VLESS на свой домен	Move VLESS to your own domain
+Доступ по SSH	SSH access
+Удалить сервер	Delete server
+Остановить	Stop
+Заменить сервер	Replace server
+Ход выполнения	Progress
+Свободный сервер: {}	Free server: {}
+Остановка срабатывает между шагами. Уже созданный VPS останется в OneProvider.	Stopping happens between steps. An already created VPS will remain at OneProvider.
+Остановка срабатывает между шагами.	Stopping happens between steps.
+Исправить доступ по SSH	Fix SSH access
+На мобильном интернете в России надёжнее VLESS (TCP): UDP, на котором работает Hysteria2, операторы часто режут.	On mobile internet in Russia VLESS (TCP) is more reliable: UDP, which Hysteria2 uses, is often cut by operators.
+Сервер {} из {} · нажмите, чтобы выбрать другой	Server {} of {} · tap to choose another
+Один сервер · нажмите, чтобы добавить ещё	One server · tap to add more
+Выбрать сервер	Choose a server
+VPS ещё не создан	The VPS is not created yet
+перенесён 	moved 
+проверен 	checked 
+Удалить {}	Delete {}
+Создать новый сервер	Create a new server
+Добавить работающий сервер	Add a running server
+С доменом — сервер попадёт на Главную: приложение по SSH прочитает его пароли и ключи, и нынешние ссылки станут постоянными. Только IP, без домена — сервер попадёт в «Свободные серверы»: на него можно перевести любой сервер Главной («Заменить сервер» → «Свободный сервер»). При добавлении сервер не изменяется.	With a domain — the server goes to Home: the app reads its passwords and keys over SSH, and the current links become permanent. IP only, without a domain — the server goes to "Free servers": any Home server can be moved to it ("Replace server" → "Free server"). Adding does not change the server.
+Домен сервера (необязательно, например vpn2.example.org)	Server domain (optional, for example vpn2.example.org)
+IP-адрес (если пусто — по домену)	IP address (if empty — by the domain)
+Если пароль и ключ не указаны, берутся сохранённые для этого адреса («Инструменты → Доступ по SSH»).	If no password or key is given, the ones saved for this address are used ("Tools → SSH access").
+Добавить на Главную	Add to Home
+Постоянные ссылки	Permanent links
+Проверено {}	Checked {}
+Ещё не проверялся — нажмите «Проверить»	Not checked yet — tap "Check"
+Сертификат до {}	Certificate until {}
+Сертификат ещё не сохранён	The certificate is not saved yet
+VLESS маскируется под ваш домен	VLESS masks as your domain
+VLESS маскируется под {}	VLESS masks as {}
+VLESS XHTTP · тот же порт {}/TCP	VLESS XHTTP · the same port {}/TCP
+Hysteria2 · порт {}/UDP	Hysteria2 · port {}/UDP
+AmneziaWG 3.1 · порт {}/UDP	AmneziaWG 3.1 · port {}/UDP
+Telegram-прокси · порт {}/TCP	Telegram proxy · port {}/TCP
+Проверить	Check
+Живая	Live
+VLESS может блокироваться	VLESS may be blocked
+Маскировка под чужой сайт ({}) в России часто режется: имя не совпадает с адресом сервера.	Masking as someone else's site ({}) is often cut in Russia: the name does not match the server address.
+Перевести на свой домен	Move to your own domain
+Создать сервер	Create server
+Заменить сервер {}	Replace server {}
+Свободный сервер	Free server
+Будет создан профиль {} и куплен VPS.	The profile {} will be created and a VPS bought.
+Ссылки {} переедут на готовый сервер: A-запись переводится на его IP, протоколы этого сервера заменяются. Новый VPS не покупается.	The {} links will move to a ready server: the A record is switched to its IP, the protocols on that server are replaced. A new VPS is not bought.
+Ссылки {} останутся прежними — клиентам ничего менять не нужно.	The {} links will stay the same — clients do not need to change anything.
+Поддомен	Subdomain
+TTL, с	TTL, s
+Укажите домен в карточке «Аккаунты».	Specify the domain in the "Accounts" card.
+В ссылках будет: {}	The links will have: {}
+Не ставить	Do not install
+Прежняя ссылка, тот же порт, что у VLESS	The previous link, the same port as VLESS
+Ещё одна ссылка для Happ: VLESS + Reality поверх XHTTP	One more link for Happ: VLESS + Reality over XHTTP
+Прежняя ссылка, порт {}/UDP	The previous link, port {}/UDP
+Третья ссылка — для AmneziaVPN	The third link — for AmneziaVPN
+Режим изменится — ссылку AmneziaWG нужно будет добавить заново	The mode will change — the AmneziaWG link will have to be added again
+Сильнее маскировка, но скорость может упасть в десятки раз	Stronger masking, but the speed may drop tens of times
+Выключен: нормальная скорость (рекомендуется)	Off: normal speed (recommended)
+Безопасность	Security
+В конце: вход только по ключу, обновления, файрвол, fail2ban	At the end: key-only login, updates, firewall, fail2ban
+Вход по паролю root останется	The root password login will remain
+Переехать	Move
+Запустить	Start
+Свободных серверов пока нет	No free servers yet
+Здесь появляются VPS, которые вы оставили после переезда (кнопка «Оставить»), и серверы, добавленные по IP. Серверы, на которых работают другие серверы Главной, сюда не попадают — иначе их ссылки сломались бы. Добавьте любой сервер кнопкой ниже — и ссылки {} можно будет перенести на него.	VPS that you kept after a move (the "Keep" button) and servers added by IP appear here. Servers that run other Home servers do not appear here — their links would break. Add any server with the button below — and the {} links can be moved to it.
+прежний сервер профиля	the profile's previous server
+добавлен вручную	added manually
+вход по ключу	key login
+Не найден в OneProvider — возможно, удалён	Not found at OneProvider — it may be deleted
+Есть в аккаунте OneProvider	Present in the OneProvider account
+Убрать из списка	Remove from the list
+Сверить с OneProvider	Compare with OneProvider
+Добавить сервер по IP	Add a server by IP
+Убрать из списка?	Remove from the list?
+{} ({}) пропадёт из этого списка. Сам сервер и его протоколы не изменятся	{} ({}) will disappear from this list. The server itself and its protocols will not change
+ — удалить VPS можно во вкладке «VPS/DNS».	 — you can delete the VPS in the "VPS/DNS" tab.
+Удалить {}?	Delete {}?
+«Удалить из списка» — убрать только строку в приложении: сервер, VPS и DNS продолжат работать, но перенести сервер с прежними ссылками можно будет только из сохранённой копии.	"Remove from the list" — removes only the row in the app: the server, VPS and DNS keep working, but the server with the previous links can then be moved only from a saved backup.
+«Удалить VPS и DNS» — ещё и удалить VPS в OneProvider и A-запись в name.com. Ссылки перестанут работать.	"Delete VPS and DNS" — also deletes the VPS at OneProvider and the A record at name.com. The links will stop working.
+Удалить из списка	Remove from the list
+Удалить VPS и DNS	Delete VPS and DNS
+Сохранить без пароля	Save without a password
+Сохранить с паролем	Save with a password
+В копии: все серверы Главной с ключами ссылок, «Доступ к серверам» (адрес, пароль root, SSH-ключ), имя и ключи OneProvider и name.com.	The backup includes: all Home servers with the link keys, "Server access" (address, root password, SSH key), and the OneProvider and name.com name and keys.
+Пароль (необязательно)	Password (optional)
+Без пароля файл НЕ зашифрован: кто его найдёт, получит доступ к вашим серверам и сможет покупать VPS за ваш счёт. Храните его надёжно и никому не пересылайте.	Without a password the file is NOT encrypted: whoever finds it will get access to your servers and can buy VPS at your expense. Store it securely and do not send it to anyone.
+Пароль — не короче 8 символов.	The password must be at least 8 characters.
+Запомните пароль: без него копию открыть нельзя.	Remember the password: the backup cannot be opened without it.
+Переехать на свободный сервер?	Move to a free server?
+Сервер {} ({}) станет основным для {}. VPS не покупается.\n\nA-запись {} будет переведена на {}	Server {} ({}) will become the main one for {}. A VPS is not bought.\n\nThe A record {} will be switched to {}
+ (сейчас {})	 (now {})
+, затем на него ставятся 	, then these are installed on it: 
+ с ключами профиля	 with the profile keys
+ и включается безопасность.	 and security is turned on.
+\n\nПротоколы, которые раньше стояли на этом сервере, будут заменены: прежние ссылки на него перестанут работать. Ссылки {} останутся прежними. Обычно 5–15 минут; не закрывайте приложение.	\n\nThe protocols that were previously on this server will be replaced: the previous links to it will stop working. The {} links will stay the same. Usually 5–15 minutes; do not close the app.
+Создать сервер?	Create the server?
+Переехать на новый VPS?	Move to a new VPS?
+VPS для {}:\n{}\n{}\n{}\n\nСтоимость: {}/мес ({}/час) — спишется с баланса OneProvider.\n\nA-запись {} будет переведена на новый IP	VPS for {}:\n{}\n{}\n{}\n\nCost: {}/mo ({}/h) — will be charged to the OneProvider balance.\n\nThe A record {} will be switched to the new IP
+, затем установка: 	, then installation: 
+ (AmneziaWG на Debian 12 — с новым ядром и перезагрузкой)	 (AmneziaWG on Debian 12 — with a new kernel and a reboot)
+, а в конце — включение безопасности.	, and at the end — turning on security.
+, без безопасности.	, without security.
+ Ссылки останутся прежними.	 The links will stay the same.
+ Обычно 10–20 минут; не закрывайте приложение.	 Usually 10–20 minutes; do not close the app.
+Перевести VLESS на свой домен?	Move VLESS to your own domain?
+На текущем сервере {} будут переустановлены Hysteria2 и VLESS. VLESS станет маскироваться под {} вместо {}.\n\nСсылка VLESS изменится один раз (параметр sni) — её нужно заново импортировать в Happ у всех клиентов. Ссылка Hysteria2 не меняется.	On the current server {} Hysteria2 and VLESS will be reinstalled. VLESS will mask as {} instead of {}.\n\nThe VLESS link will change once (the sni parameter) — it must be imported into Happ again on all clients. The Hysteria2 link does not change.
+Перевести	Move
+Удалить VPS и DNS?	Delete the VPS and DNS?
+Безвозвратно будут удалены:\n	These will be deleted permanently:\n
+• VPS — у сервера его нет\n	• VPS — the server has none\n
+• VPS {} — НЕ удаляется: на нём работает другой сервер списка\n	• VPS {} — NOT deleted: another server from the list runs on it\n
+• VPS {} ({}) в OneProvider — со всеми данными\n	• VPS {} ({}) at OneProvider — with all data\n
+• A-запись {} в name.com\n• строка {} в списке и ключи ссылок на {}\n\nВсе ссылки этого сервера перестанут работать у всех клиентов.	• The A record {} at name.com\n• the row {} in the list and the link keys for {}\n\nAll links of this server will stop working for all clients.
+У VPS сервера {} перерасход трафика {} ГБ. При удалении будет списано {}. Удалить?	The VPS of server {} has a traffic overage of {} GB. {} will be charged on deletion. Delete?
+Удалить и оплатить	Delete and pay
+Оставить	Keep
+Заменить профиль?	Replace the profile?
+Текущий профиль {} будет заменён профилем {} из файла. Ссылки станут такими, как в копии.	The current profile {} will be replaced with the profile {} from the file. The links will become as in the backup.
+Заменить	Replace
+Оставить текущий	Keep the current
+Удалить старый VPS?	Delete the old VPS?
+Новый сервер работает. Старый VPS {} ({}) больше не нужен. Удалить его в OneProvider? Все данные на нём будут уничтожены.	The new server is running. The old VPS {} ({}) is no longer needed. Delete it at OneProvider? All data on it will be destroyed.
+У старого VPS перерасход трафика {} ГБ. При удалении будет списано {}. Удалить?	The old VPS has a traffic overage of {} GB. {} will be charged on deletion. Delete?
+Копия зашифрована	The backup is encrypted
+Пароль от копии	Backup password
+Открыть	Open
+Заменить настройки доступа?	Replace the access settings?
+В копии есть настройки «Доступа к серверам»	The backup has "Server access" settings
+, SSH-ключ и ключи OneProvider и name.com. На {} они уже заполнены и отличаются. Заменить их данными из копии?	, the SSH key and the OneProvider and name.com keys. On {} they are already filled in and differ. Replace them with the data from the backup?
+Оставить текущие	Keep the current
+Hysteria2 + Salamander (порт {}/UDP)	Hysteria2 + Salamander (port {}/UDP)
+VLESS + Reality (порт {}/TCP, маскировка под 	VLESS + Reality (port {}/TCP, masking as 
+VLESS XHTTP (тот же порт)	VLESS XHTTP (the same port)
+AmneziaWG 3.1 (порт {}/UDP)	AmneziaWG 3.1 (port {}/UDP)
+Telegram-прокси	Telegram proxy
+Аппаратные ключи	Hardware keys
+Ключей нет	No keys
+Вход по ключу включён · {}	Key login is on · {}
+Ключ проверен на сервере	The key is verified on the server
+Ключей: {} — добавьте на сервер и проверьте	Keys: {} — add them to the server and check
+Рутокен MFA (USB-C) или YubiKey 5C: закрытый ключ хранится только в токене, при входе нужно лишь коснуться его — без PIN.	Rutoken MFA (USB-C) or YubiKey 5C: the private key is stored only in the token, and logging in just needs a touch — no PIN.
+Ключ для входа	Login key
+Добавить ключ с токена…	Add a key from the token…
+Загрузить резидентный ключ с токена	Load a resident key from the token
+Добавить ключ на сервер {}	Add the key to server {}
+Проверить вход	Check login
+Входить по аппаратному ключу	Log in with a hardware key
+«Доступ к серверам» и серверы Главной — касанием токена	"Server access" and the Home servers — with a token touch
+Сначала проверьте вход по выбранному ключу	First check login with the selected key
+Нерезидентный ключ хранится в приложении, токен лишь подписывает. Резидентный — в самом токене, его можно загрузить на новый телефон.	A non-resident key is stored in the app, the token only signs. A resident key is in the token itself, and can be loaded on a new phone.
+Для резидентного ключа токен может один раз попросить PIN — при создании или загрузке; PIN не сохраняется, вход всё равно по касанию. YubiKey 5.7 даёт ключ ed25519, Рутокен MFA — ecdsa (P-256). На сервере нужен OpenSSH 8.2 или новее (Debian 11+, Ubuntu 20.04+). Каждое подключение — одно касание, поэтому «Проверить» на Главной попросит коснуться 2–3 раза. Пароль и обычный SSH-ключ оставьте запасным входом, чтобы не потерять доступ, если токен потеряется.	For a resident key the token may ask for a PIN once — when creating or loading; the PIN is not saved, and login is still by touch. YubiKey 5.7 gives an ed25519 key, Rutoken MFA — ecdsa (P-256). The server needs OpenSSH 8.2 or newer (Debian 11+, Ubuntu 20.04+). Every connection is one touch, so "Check" on Home will ask you to touch 2–3 times. Keep the password and a regular SSH key as a fallback login so you do not lose access if the token is lost.
+Какой ключ создать?	Which key to create?
+Нерезидентный — проще: PIN не нужен, ключ хранится в приложении (и в копии серверов).	Non-resident — simpler: no PIN needed, the key is stored in the app (and in the server backup).
+Резидентный — хранится в токене: его можно загрузить на другой телефон. Токен может один раз попросить PIN.	Resident — stored in the token: it can be loaded on another phone. The token may ask for a PIN once.
+Резидентный	Resident
+Нерезидентный	Non-resident
+Удалить ключ из приложения?	Delete the key from the app?
+{}. Ключ перестанет использоваться для входа. На серверах строка ключа и в токене резидентный ключ остаются.	{}. The key will no longer be used for login. The key line on servers and the resident key in the token remain.
+PIN токена	Token PIN
+Продолжить	Continue
+Инструменты	Tools
+Новый сервер	New server
+Сервер подключается впервые. Сверьте отпечаток с тем, что показывает панель хостинга, и доверяйте, только если он совпадает.\n\n{}	The server is connecting for the first time. Compare the fingerprint with what the hosting panel shows, and trust it only if it matches.\n\n{}
+Доверять	Trust
+Приложение упало в прошлый раз	The app crashed last time
+Пришлите этот отчёт — по нему видно, где ошибка. В нём только место ошибки и модель {}, без ключей и паролей.	Send this report — it shows where the error is. It contains only the place of the error and the model {}, no keys or passwords.
+Отчёт	Report
+Скопировать	Copy
+Отчёт о падении vpngramm	vpngramm crash report
+Переезд {} не завершён	The move of {} is not finished
+Прежний сервер {} не менялся — на него можно вернуться. Чтобы вместо этого доделать установку на новом сервере, откройте «Ссылки» → «Обновить сервер».	The previous server {} did not change — you can go back to it. To finish the installation on the new server instead, open "Links" → "Update server".
+Откатить переезд	Roll back the move
+Откатить переезд {}?	Roll back the move of {}?
+• A-запись {} в name.com вернётся на {}.	• The A record {} at name.com will return to {}.
+• A-запись не менялась — DNS не трогается.	• The A record did not change — DNS is not touched.
+• Сервер на Главной снова будет работать с прежним VPS {}; ссылки те же.	• The server on Home will work with the previous VPS {} again; the links are the same.
+• Новый VPS{} куплен и оплачивается: его можно удалить или оставить в «Свободных серверах», чтобы переехать на него позже без покупки.	• The new VPS{} is bought and billed: you can delete it or keep it in "Free servers" to move to it later without buying.
+• Свободный сервер {} останется в списке свободных.	• The free server {} will remain in the list of free ones.
+Откатить и удалить новый VPS	Roll back and delete the new VPS
+Откатить, VPS оставить	Roll back, keep the VPS
+Откатить	Roll back
+Протоколы	Protocols
+Нет протоколов	No protocols
+У сервера ещё нет VPS — сначала создайте его.	The server has no VPS yet — create it first.
+Читаю протоколы с сервера…	Reading protocols from the server…
+Протоколы читаются с сервера по SSH.	The protocols are read from the server over SSH.
+Прочитать с сервера	Read from the server
+Галочка — протокол стоит на сервере. Отметьте или снимите и нажмите «Применить»: отмеченные установятся с постоянными ссылками (они попадут и в подписку Happ), снятые — удалятся с сервера.	A check mark — the protocol is on the server. Check or uncheck and tap "Apply": checked ones will be installed with permanent links (they also go into the Happ subscription), unchecked ones will be removed from the server.
+Установить: 	Install: 
+Удалить: 	Delete: 
+С сервера	From the server
+Изменить протоколы {}?	Change the protocols of {}?
+Установить: {}. Ключи создаются один раз и хранятся в профиле — ссылки постоянные, они появятся и в подписке Happ.	Install: {}. The keys are created once and stored in the profile — the links are permanent, they also appear in the Happ subscription.
+ AmneziaWG ставится 5–15 минут (на Debian 12 — с новым ядром и перезагрузкой).	 AmneziaWG takes 5–15 minutes to install (on Debian 12 — with a new kernel and a reboot).
+Удалить: {}. Их ссылки перестанут работать у всех людей.	Delete: {}. Their links will stop working for all people.
+ Вместе с Hysteria2 перестанет открываться подписка Happ (её отдаёт Hysteria2).	 Together with Hysteria2 the Happ subscription will stop opening (Hysteria2 serves it).
+Ссылки остальных протоколов не изменятся.	The links of the other protocols will not change.
+установлен	installed
+будет установлен	will be installed
+будет удалён	will be deleted
+не установлен	not installed
+Ключи — в кабинете panel.op-net.com, раздел API.	The keys are in the panel.op-net.com dashboard, the API section.
+Нажмите «Click to Reveal». Ключи хранятся на {} в зашифрованном виде. Если в кабинете включён Whitelist, добавьте в него IP {}.	Tap "Click to Reveal". The keys are stored on {} in encrypted form. If Whitelist is on in the dashboard, add the IP {} to it.
+Логин name.com	name.com login
+API-токен name.com	name.com API token
+Домен, например example.com	Domain, for example example.com
+Токен: name.com → Account Settings → API Token Management.	Token: name.com → Account Settings → API Token Management.
+Логин, домен и токен запоминаются; токен хранится на {} в зашифрованном виде.	The login, domain and token are remembered; the token is stored on {} in encrypted form.
+Аккаунты	Accounts
+OneProvider и name.com подключены	OneProvider and name.com are connected
+Нужны ключи OneProvider и токен name.com	OneProvider keys and the name.com token are needed
+IP-адрес или домен сервера	Server IP address or domain
+Сервер запомнится после первого подключения	The server will be remembered after the first connection
+Сохранённых серверов: {}	Saved servers: {}
+Сохранённые серверы	Saved servers
+{} · порт {} · 	{} · port {} · 
+ключ	key
+Удалить {} из списка	Delete {} from the list
+Удалить сервер из списка?	Delete the server from the list?
+{}@{}:{} и сохранённые для него пароль и ключ будут удалены с {}. Сам сервер не затрагивается.	{}@{}:{} and the password and key saved for it will be deleted from {}. The server itself is not affected.
+адрес не указан	no address set
+ · не применено	 · not applied
+Сервер	Server
+Главная · 	Home ·
+IP не указан	IP not set
+любой адрес, сохранённые серверы	any address, saved servers
+Изменения ещё не сохранены — нажмите «Применить» или отмените их.	The changes are not saved yet — tap "Apply" or cancel them.
+Отменить изменения	Cancel the changes
+Этими данными приложение входит на {} — с Главной и из «Инструментов». Пароль и ключ хранятся на {} зашифрованными.	With this data the app logs in to {} — from Home and from "Tools". The password and key are stored on {} encrypted.
+Пароль и ключ хранятся на {} зашифрованными.	The password and key are stored on {} encrypted.
+Выберите сервер Главной, чтобы исправить его IP, порт, пользователя, пароль или ключ: после «Применить» Главная входит на сервер уже с новыми данными. IP меняется только в приложении — A-запись домена правится во вкладке «VPS/DNS». «Другой сервер» — любой адрес; после первого входа он попадает в список сохранённых. Чтобы поставить VPN на чужой сервер, не добавляя его к своим, — блок «Произвольный VPS». Поддерживаются ключи ed25519, RSA, ECDSA (OpenSSH, PEM, PuTTY .ppk). Пользователю не root нужен sudo и его пароль.	Choose a Home server to fix its IP, port, user, password or key: after "Apply" Home logs in to the server with the new data. The IP changes only in the app — the domain's A record is edited in the "VPS/DNS" tab. "Another server" — any address; after the first login it goes into the saved list. To install a VPN on someone else's server without adding it to yours — the "Custom VPS" block. ed25519, RSA, ECDSA keys are supported (OpenSSH, PEM, PuTTY .ppk). A non-root user needs sudo and its password.
+Загрузить локации, тарифы и ключи	Load locations, plans and keys
+Тарифы: только доступные к заказу и с IPv4 в тарифе. После загрузки их можно отфильтровать по цене и трафику.	Plans: only those available to order and with IPv4 in the plan. After loading, you can filter them by price and traffic.
+Под фильтр ({}) ничего не подходит — поднимите цену или уменьшите трафик.	Nothing fits the filter ({}) — raise the price or reduce the traffic.
+Подходящих локаций нет.	No suitable locations.
+Регион	Region
+Выберите…	Choose…
+все недоступны	all unavailable
+локаций: {}	locations: {}
+ · от {}	 · from {}
+Локация	Location
+ · недоступна ({})	 · unavailable ({})
+ · недоступна (проверено {})	 · unavailable (checked {})
+В этой локации провайдер недавно ответил «нет мест». Лучше выбрать другую.	In this location the provider recently answered "no capacity". It is better to choose another.
+Тариф	Plan
+В этой локации нет доступных тарифов.	There are no available plans in this location.
+Фильтр скрыл тарифов в этой локации: {}.	The filter hid plans in this location: {}.
+${}/мес · ${}/час	${}/mo · ${}/h
+ · {} Мбит/с	 · {} Mbit/s
+Операционная система	Operating system
+SSH-ключи из кабинета	SSH keys from the dashboard
+В кабинете нет SSH-ключей — вход будет по паролю root, который выдаст провайдер.	There are no SSH keys in the dashboard — login will be with the root password that the provider gives.
+Измеряю пинг до локаций…	Measuring the ping to the locations…
+Пинг до {} неизвестен: нет адреса для замера и города нет в справочнике.	The ping to {} is unknown: no address to measure and the city is not in the directory.
+Пинг до {}: {} — замер с этого устройства.	Ping to {}: {} — measured from this device.
+Пинг до {}: {} — оценка по расстоянию. Точный замер появится, когда в локации будет ваш VPS.	Ping to {}: {} — an estimate by distance. An exact measurement will appear when your VPS is in the location.
+Измерить пинг	Measure ping
+Цена до	Price up to
+любая	any
+${}/мес	${}/mo
+Трафик от	Traffic from
+любой	any
+Сбросить фильтр	Reset the filter
+Ничего не выбрано	Nothing selected
+UDP, очень быстрый; даёт сертификат и сайт, под которые маскируется VLESS	UDP, very fast; provides the certificate and site that VLESS masks as
+Порт Hysteria2 (UDP)	Hysteria2 port (UDP)
+E-mail для Let's Encrypt (необязательно)	E-mail for Let's Encrypt (optional)
+Сайт-маскировка (https://…)	Masking site (https://…)
+TCP — надёжнее всего на мобильном интернете в России	TCP — the most reliable on mobile internet in Russia
+Порт VLESS (TCP)	VLESS port (TCP)
+Ещё одна ссылка для Happ — тот же порт и ключи	One more link for Happ — the same port and keys
+Маскировка под свой домен: сертификат и сайт даёт Hysteria2. Нужны открытые 80/TCP, 443/TCP и 443/UDP.	Masking as your own domain: the certificate and site come from Hysteria2. Ports 80/TCP, 443/TCP and 443/UDP must be open.
+Сайт для маскировки Reality	Reality masking site
+Без Hysteria2 VLESS маскируется под чужой сайт. В России такую маскировку режут чаще: имя сайта не совпадает с адресом сервера. Надёжнее включить Hysteria2.	Without Hysteria2, VLESS masks as someone else's site. In Russia this masking is cut more often: the site name does not match the server address. It is more reliable to turn on Hysteria2.
+Для приложения AmneziaVPN	For the AmneziaVPN app
+Порт AmneziaWG (UDP)	AmneziaWG port (UDP)
+Модуль ядра собирается 5–15 минут; на Debian 12 сначала ставится ядро 6.12 и сервер перезагружается.	The kernel module takes 5–15 minutes to build; on Debian 12 kernel 6.12 is installed first and the server reboots.
+MTProto (mtg) с маскировкой FakeTLS — только для Telegram	MTProto (mtg) with FakeTLS masking — for Telegram only
+Порт Telegram (TCP)	Telegram port (TCP)
+Домен маскировки Telegram	Telegram masking domain
+Порт {}/TCP уже занят VLESS — укажите другой, например 993.	Port {}/TCP is already used by VLESS — specify another, for example 993.
+Доступ к серверам	Server access
+Защитить сервер	Secure server
+Обновления и вход только по SSH-ключу	Updates and key-only SSH login
+Для сервера из «Доступа по SSH»: обновления, автообновления, вход только по SSH-ключу, файрвол и fail2ban. Протоколы и ссылки не меняются.	For the server from "SSH access": updates, automatic updates, key-only SSH login, firewall and fail2ban. The protocols and links do not change.
+Можно повторять: уже защищённый сервер получит файрвол и fail2ban.	Can be repeated: an already secured server gets the firewall and fail2ban.
+Файрвол: снаружи открыты только SSH и порты VPN — другие службы на сервере станут недоступны извне. fail2ban банит за перебор паролей SSH; SSH ужесточён (LoginGraceTime 30, MaxAuthTries 3, без X11). Если после включения файрвола войти не удастся, через 3 минуты он снимется сам.	Firewall: only SSH and VPN ports are open from outside — other services on the server become unreachable from outside. fail2ban bans for SSH password guessing; SSH is hardened (LoginGraceTime 30, MaxAuthTries 3, no X11). If you cannot log in after the firewall is enabled, it removes itself in 3 minutes.
+Защитить сервер {}	Secure server {}
+Сервис	Service
+Забыть пароли и токены	Forget passwords and tokens
+Удалить с {} сохранённые пароли, ключ SSH и токены	Delete the saved passwords, SSH key and tokens from {}
+Сбросить доверенные серверы	Reset trusted servers
+Снова спрашивать отпечаток при подключении	Ask for the fingerprint again when connecting
+О приложении	About the app
+Защитить сервер {}?	Secure server {}?
+На сервере обновятся пакеты и включатся автообновления, вход по паролю будет отключён — только после того, как вход по SSH-ключу проверен. Нужен приватный SSH-ключ, уже добавленный на сервер.\nФайрвол: снаружи открыты только SSH и порты VPN — другие службы на сервере станут недоступны извне. fail2ban банит за перебор паролей SSH; SSH ужесточён (LoginGraceTime 30, MaxAuthTries 3, без X11).	The server's packages will be updated and automatic updates enabled, and password login will be disabled — only after key login is verified. A private SSH key already added to the server is needed.\nFirewall: only SSH and VPN ports are open from outside — other services on the server become unreachable from outside. fail2ban bans for SSH password guessing; SSH is hardened (LoginGraceTime 30, MaxAuthTries 3, no X11).
+Защитить	Secure
+Забыть пароли и токены?	Forget passwords and tokens?
+С {} будут удалены сохранённые пароли, приватный ключ SSH, ключи OneProvider и токен name.com. Серверы и профиль Главной не затрагиваются.	The saved passwords, the private SSH key, the OneProvider keys and the name.com token will be deleted from {}. The servers and the Home profile are not affected.
+Забыть	Forget
+Сбросить доверенные серверы?	Reset trusted servers?
+При следующем подключении к каждому серверу приложение снова покажет его отпечаток и спросит, доверять ли ему.	On the next connection to each server the app will show its fingerprint again and ask whether to trust it.
+Сбросить	Reset
+Произвольный VPS	Custom VPS
+Установка VPN на любой сервер	Install a VPN on any server
+Установка на любой сервер — по адресу и паролю или SSH-ключу, без покупки VPS; на Главную сервер не добавляется. Домен нужен только для маскировки VLESS под свой сервер.	Installing on any server — by address and password or SSH key, without buying a VPS; the server is not added to Home. A domain is needed only to mask VLESS as your own server.
+Статус	Status
+Что ставить	What to install
+Выбрано: {} — «Установить» поставит всё по очереди.	Selected: {} — "Install" will install everything in turn.
+Hysteria2 + Salamander: быстрый протокол поверх UDP (QUIC), самоподписанный сертификат.	Hysteria2 + Salamander: a fast protocol over UDP (QUIC), self-signed certificate.
+VLESS + Reality (Xray): выглядит как обычный HTTPS к чужому сайту, поверх TCP.	VLESS + Reality (Xray): looks like ordinary HTTPS to someone else's site, over TCP.
+VLESS + Reality + XHTTP: тот же Xray и порт, что у VLESS, трафик идёт как HTTP-запросы. Ставится вместе с VLESS.	VLESS + Reality + XHTTP: the same Xray and port as VLESS, traffic goes as HTTP requests. Installed together with VLESS.
+AmneziaWG 3.1: WireGuard с маскировкой, для приложения AmneziaVPN. Работает поверх UDP.	AmneziaWG 3.1: WireGuard with masking, for the AmneziaVPN app. Works over UDP.
+MTProto-прокси для Telegram (mtg) в режиме FakeTLS.	MTProto proxy for Telegram (mtg) in FakeTLS mode.
+ В списке можно отметить несколько.	 You can select several in the list.
+Параметры Hysteria2	Hysteria2 options
+Порт {}/UDP · SNI {}	Port {}/UDP · SNI {}
+SNI самоподписанного сертификата	Self-signed certificate SNI
+Без домена сертификат самоподписанный: в ссылке его отпечаток, клиенты проверяют именно его.	Without a domain the certificate is self-signed: its fingerprint is in the link, and clients check exactly that.
+Параметры VLESS	VLESS options
+Порт {}/TCP · маскировка под 	Port {}/TCP · masking as 
+свой сервер (домен не указан)	your own server (no domain set)
+Маскировка под свой сервер	Masking as your own server
+Рекомендуется — как на Главной	Recommended — as on Home
+Домен сервера	Server domain
+Должен уже указывать на IP сервера (A-запись у регистратора)	It must already point to the server IP (an A record at the registrar)
+Вместе с VLESS ставится Hysteria2 — получите и её ссылку.	Hysteria2 is installed together with VLESS — you will get its link too.
+Hysteria2 получает сертификат Let's Encrypt на ваш домен и отдаёт сайт, под который маскируется VLESS (и XHTTP). Имя и адрес совпадают — провайдеру не к чему придраться. Перед установкой приложение проверит, что домен указывает на этот сервер; DNS оно не меняет. Нужны открытые 80/TCP, 443/TCP и 443/UDP.	Hysteria2 gets a Let's Encrypt certificate for your domain and serves the site that VLESS (and XHTTP) masks as. The name and address match — the provider has nothing to object to. Before installing, the app checks that the domain points to this server; it does not change DNS. Ports 80/TCP, 443/TCP and 443/UDP must be open.
+Сайт для маскировки Reality (SNI)	Reality masking site (SNI)
+Крупный сайт с TLS 1.3, например www.microsoft.com. В России подключения с чужим сайтом часто режут — лучше маскировка под свой сервер.	A large TLS 1.3 site, for example www.microsoft.com. In Russia connections with someone else's site are often cut — masking as your own server is better.
+Параметры AmneziaWG	AmneziaWG options
+Порт {}/UDP · RandomTrailers 	Port {}/UDP · RandomTrailers 
+вкл	on
+выкл	off
+Не 443 — его занимает Hysteria2	Not 443 — it is used by Hysteria2
+Ставится модуль ядра AmneziaWG 3.1 — 5–15 минут, на Debian 12 с перезагрузкой сервера.	The AmneziaWG 3.1 kernel module is installed — 5–15 minutes, on Debian 12 with a server reboot.
+Параметры Telegram-прокси	Telegram proxy options
+Порт {}/TCP · маскировка под {}	Port {}/TCP · masking as {}
+Порт (TCP)	Port (TCP)
+Домен маскировки (FakeTLS)	Masking domain (FakeTLS)
+443 — лучший порт, если на сервере нет VLESS; иначе, например, 8443.	443 is the best port if the server has no VLESS; otherwise, for example, 8443.
+Защитить после установки: 	Secure after installation: 
+выкл (нет SSH-ключа)	off (no SSH key)
+Защитить сервер после установки	Secure the server after installation
+Нужен SSH-ключ — выберите «SSH-ключ» в блоке «Сервер»	An SSH key is needed — choose "SSH key" in the "Server" block
+Вход по ключу, обновления, файрвол, fail2ban	Key login, updates, firewall, fail2ban
+Без обновлений, вход по паролю остаётся	No updates, password login remains
+Файрвол: снаружи открыты только SSH и порты VPN — другие службы на сервере станут недоступны извне. fail2ban банит за перебор паролей SSH; SSH ужесточён (LoginGraceTime 30, MaxAuthTries 3, без X11). Если по ключу войти не удастся, защита не включается, а VPN остаётся рабочим.	Firewall: only SSH and VPN ports are open from outside — other services on the server become unreachable from outside. fail2ban bans for SSH password guessing; SSH is hardened (LoginGraceTime 30, MaxAuthTries 3, no X11). If key login fails, protection is not enabled and the VPN keeps working.
+Выполняется…	Running…
+Установить ({})	Install ({})
+Установить	Install
+Перезапустить	Restart
+Живая проверка	Live check
+Установить {}?	Install {}?
+Сервер: {}.\nБудет поставлено: {}	Server: {}.\nWill be installed: {}
+ (VLESS с маскировкой под {}, вместе с Hysteria2)	 (VLESS masking as {}, together with Hysteria2)
+. Если эти протоколы уже стоят, они переустановятся с новыми ключами — старые ссылки перестанут работать.	. If these protocols are already installed, they will be reinstalled with new keys — the old links will stop working.
+\nПосле установки: вход только по SSH-ключу и обновления.	\nAfter installation: key-only SSH login and updates.
+Обновления системы, автообновления и вход только по SSH-ключу (ключ — в блоке «Сервер»). Протоколы и ссылки не меняются.\nФайрвол: снаружи открыты только SSH и порты VPN — другие службы на сервере станут недоступны извне. fail2ban банит за перебор паролей SSH; SSH ужесточён (LoginGraceTime 30, MaxAuthTries 3, без X11). Займёт 5–15 минут.	System updates, automatic updates and key-only SSH login (the key is in the "Server" block). The protocols and links do not change.\nFirewall: only SSH and VPN ports are open from outside — other services on the server become unreachable from outside. fail2ban bans for SSH password guessing; SSH is hardened (LoginGraceTime 30, MaxAuthTries 3, no X11). Takes 5–15 minutes.
+Удалить {} с сервера {}?	Delete {} from server {}?
+• Hysteria2: служба hysteria-server будет остановлена, программа и /etc/hysteria удалены.	• Hysteria2: the hysteria-server service will be stopped, the program and /etc/hysteria removed.
+• VLESS: служба xray будет остановлена, Xray и /usr/local/etc/xray удалены (вместе с XHTTP).	• VLESS: the xray service will be stopped, Xray and /usr/local/etc/xray removed (together with XHTTP).
+• VLESS XHTTP: убирается из конфигурации Xray, обычный VLESS остаётся.	• VLESS XHTTP: removed from the Xray configuration, ordinary VLESS remains.
+• AmneziaWG: служба awg-quick@awg0 будет остановлена, конфигурация удалена.	• AmneziaWG: the awg-quick@awg0 service will be stopped, the configuration removed.
+• Telegram: служба mtg будет остановлена, программа и /etc/mtg.toml удалены.	• Telegram: the mtg service will be stopped, the program and /etc/mtg.toml removed.
+\nСтарые ссылки перестанут работать.	\nThe old links will stop working.
+Не указан	Not set
+Запомненные серверы	Remembered servers
+Пока нет — сервер запомнится после первого входа	None yet — the server will be remembered after the first login
+Выбрать ({})	Choose ({})
+Убрать {} из списка	Remove {} from the list
+Сервер запоминается только здесь, после первого входа; пароль и ключ — на {} зашифрованными.	The server is remembered only here, after the first login; the password and key on {} encrypted.
+На Главную, в «Доступ по SSH» и в контроль серверов такие серверы не попадают. Убрать сервер из списка — значок корзины в списке; сам сервер при этом не меняется. Поддерживаются ключи ed25519, RSA, ECDSA (OpenSSH, PEM, PuTTY .ppk).	Such servers do not go to Home, "SSH access" or server monitoring. To remove a server from the list — the trash icon in the list; the server itself does not change. ed25519, RSA, ECDSA keys are supported (OpenSSH, PEM, PuTTY .ppk).
+Убрать сервер из списка?	Remove the server from the list?
+Имя и протоколы	Name and protocols
+VPN-сервер за 4 шага	A VPN server in 4 steps
+Шаг {} из {}: {}	Step {} of {}: {}
+Здесь покупаются серверы. Нужны ключи API из кабинета OneProvider.	Servers are bought here. API keys from the OneProvider dashboard are needed.
+Проверить ключи	Check the keys
+Ключи работают: доступно локаций — {}.	The keys work: available locations — {}.
+Здесь ваш домен: приложение само направит имя сервера на его IP.	Your domain is here: the app will point the server name to its IP by itself.
+Проверить доступ	Check access
+Домен {} найден, записей: {}.	Domain {} found, records: {}.
+Укажите поддомен.	Specify a subdomain.
+В конце: вход только по SSH-ключу, обновления, файрвол, fail2ban	At the end: key-only SSH login, updates, firewall, fail2ban
+Выберите регион, локацию и тариф — сервер будет куплен и настроен (10–20 минут).	Choose a region, location and plan — the server will be bought and set up (10–20 minutes).
+Назад	Back
+У меня уже есть сервер — добавить его	I already have a server — add it
+Язык интерфейса	Interface language
+Выбор запоминается. Иврит показывается справа налево.	The choice is remembered. Hebrew is shown right to left.
+Русский	Русский
+Закрыть vpngramm?	Close vpngramm?
+Сейчас идёт работа с сервером. Если закрыть окно, она прервётся на середине — потом её можно будет запустить заново.	Work with a server is in progress. If you close the window, it will be interrupted midway — you can start it again later.
+Закрыть	Close
+Подождать	Wait
+Скопировано — вставьте в мессенджер или письмо (Ctrl+V)	Copied — paste it into a messenger or an e-mail (Ctrl+V)
+Выберите файл	Choose a file
+Сохранить копию	Save backup
+Выберите файл ключа	Choose a key file
+Вход по Рутокену есть только в версии для Android.	Rutoken login is available only in the Android version.
+компьютера	the computer
+компьютере	the computer
+Ядро {} старее 6.7	Kernel {} is older than 6.7
+IP ещё нет	no IP yet
+появится через минуту — обновите список	it will appear in a minute — refresh the list
+(укажите имя на главной)	(enter the name on Home)
+токен	token
+ОШИБКА: 	ERROR: 
+ПРЕДУПРЕЖДЕНИЕ: 	WARNING: 
+ПРОБЛЕМА: 	PROBLEM: 
+ИНФО: 	INFO: 
+ВАЖНО: 	IMPORTANT: 
+ОШИБКА: нужны права root	ERROR: root rights are required
+Установка Hysteria2	Installing Hysteria2
+ОШИБКА: Hysteria2 не установилась — не удалось скачать установщик (get.hy2.sh). Проверьте интернет на сервере.	ERROR: Hysteria2 was not installed — could not download the installer (get.hy2.sh). Check the server's internet.
+Запись конфигурации /etc/hysteria/config.yaml	Writing the configuration /etc/hysteria/config.yaml
+Домена нет — выпускаю самоподписанный сертификат (CN={})	No domain — issuing a self-signed certificate (CN={})
+ВАЖНО: если у хостинга есть свой файрвол (Security Group), откройте там: {}.	IMPORTANT: if your hosting has its own firewall (Security Group), open there: {}.
+Запуск службы hysteria-server	Starting the hysteria-server service
+ПРЕДУПРЕЖДЕНИЕ: служба ждёт сертификат Let's Encrypt для {} (DNS ещё не дошёл до Let's Encrypt).	WARNING: the service is waiting for a Let's Encrypt certificate for {} (DNS has not reached Let's Encrypt yet).
+Служба сама повторяет попытку каждые 30 секунд; ссылка заработает, как только сертификат будет выдан.	The service retries by itself every 30 seconds; the link will work as soon as the certificate is issued.
+ОШИБКА: служба не запустилась. Последние строки журнала:	ERROR: the service did not start. The last log lines:
+Готово	Done
+Настройка файрвола	Configuring the firewall
+Открыты порты {} ({}).	Ports opened {} ({}).
+Локальный файрвол не ограничивает входящие — менять ничего не нужно.	The local firewall does not restrict incoming traffic — nothing needs to be changed.
+Службы	Services
+служба {} работает	service {} is running
+служба {} перезапускалась {} раз — она падает (журнал ниже)	service {} restarted {} times — it keeps crashing (log below)
+служба {} не работает ({})	service {} is not running ({})
+Hysteria2 слушает {}/UDP	Hysteria2 listens on {}/UDP
+никто не слушает {}/UDP — Hysteria2 не принимает подключения	nobody listens on {}/UDP — Hysteria2 does not accept connections
+Hysteria2 не получила сертификат Let's Encrypt	Hysteria2 did not get a Let's Encrypt certificate
+VLESS (Xray) слушает {}/TCP	VLESS (Xray) listens on {}/TCP
+никто не слушает {}/TCP — VLESS не принимает подключения	nobody listens on {}/TCP — VLESS does not accept connections
+конфигурация Xray верна	the Xray configuration is valid
+конфигурация Xray с ошибкой	the Xray configuration has an error
+модуль ядра AmneziaWG загружен	the AmneziaWG kernel module is loaded
+модуль ядра AmneziaWG не загружен (ядро {})	the AmneziaWG kernel module is not loaded (kernel {})
+интерфейс awg0 поднят, порт {}/UDP	the awg0 interface is up, port {}/UDP
+интерфейс awg0 не поднят	the awg0 interface is not up
+AmneziaWG: клиент ещё не подключался	AmneziaWG: the client has not connected yet
+Сертификат {}	Certificate {}
+сертификат есть, действует до {}	the certificate exists, valid until {}
+сертификат просрочен ({})	the certificate has expired ({})
+сертификата Let's Encrypt нет — без него Hysteria2 не работает (нужны открытый 80/TCP и верный DNS)	there is no Let's Encrypt certificate — Hysteria2 does not work without it (open 80/TCP and correct DNS are needed)
+DNS имени {}	DNS of the name {}
+внешний IPv4 сервера узнать не удалось	could not find out the server's external IPv4
+публичные DNS не знают имя {}	public DNS does not know the name {}
+{} → {} (этот сервер, по данным публичных DNS)	{} → {} (this server, according to public DNS)
+{} указывает на {}, а у сервера IPv4 {}	{} points to {}, but the server's IPv4 is {}
+в /etc/hosts имя {} указано как {} — так прописал хостер, клиентам это не мешает	in /etc/hosts the name {} is set as {} — the hoster set it so, it does not bother clients
+Выход сервера в интернет	The server's internet access
+DNS на сервере работает	DNS on the server works
+сервер не может разрешать имена (DNS) — проверьте /etc/resolv.conf	the server cannot resolve names (DNS) — check /etc/resolv.conf
+IPv4: интернет есть	IPv4: the internet is available
+IPv4: сервер не выходит в интернет (ответ {})	IPv4: the server has no internet access (response {})
+IPv6: интернет есть	IPv6: the internet is available
+IPv6 настроен, но не работает — прокси выходят только по IPv4, это не мешает	IPv6 is configured but does not work — the proxies go out over IPv4 only, this does not matter
+сайт маскировки Reality {} доступен	the Reality masking site {} is reachable
+сайт маскировки Reality {} недоступен с сервера — VLESS не будет работать	the Reality masking site {} is unreachable from the server — VLESS will not work
+Подключения клиентов (за 30 минут)	Client connections (last 30 minutes)
+проверка честная, только если перед ней вы включили ссылку в Happ и открыли любой сайт	the check is valid only if before it you turned on the link in Happ and opened any site
+Hysteria2: клиенты подключаются — подключений: {}, последнее с {}	Hysteria2: clients are connecting — connections: {}, the last from {}
+Hysteria2: подключений не было — трафик телефона до сервера не доходит. Похоже, оператор блокирует UDP (так часто бывает на мобильном интернете). Используйте VLESS или Wi-Fi	Hysteria2: there were no connections — the phone's traffic does not reach the server. It looks like the operator blocks UDP (this often happens on mobile internet). Use VLESS or Wi-Fi
+VLESS: клиенты подключаются — открыто соединений: {}, последнее с {}	VLESS: clients are connecting — open connections: {}, the last from {}
+VLESS: подключений не было — трафик телефона до сервера не доходит (или ссылку VLESS ещё не включали)	VLESS: there were no connections — the phone's traffic does not reach the server (or the VLESS link has not been turned on yet)
+VLESS: журнал подключений не включён (сервер установлен старой версией) — переустановите VLESS	VLESS: the connection log is not enabled (the server was installed by an old version) — reinstall VLESS
+Время и файрвол	Time and firewall
+время синхронизировано	time is synchronized
+время не синхронизировано по NTP: {} UTC	time is not synchronized over NTP: {} UTC
+файрвол vpngramm включён: снаружи открыты только SSH и порты VPN	the vpngramm firewall is on: only SSH and VPN ports are open from outside
+файрвол vpngramm: {} открыт	vpngramm firewall: {} is open
+файрвол vpngramm: {} закрыт — нажмите «Защитить сервер» ещё раз	vpngramm firewall: {} is closed — tap "Secure server" again
+fail2ban: сейчас забанено адресов — {}, всего банов — {}	fail2ban: currently banned addresses — {}, total bans — {}
+ufw: {} открыт	ufw: {} is open
+ufw включён, но {} не открыт	ufw is on, but {} is not open
+iptables: {} открыт	iptables: {} is open
+iptables запрещает входящие, {} не открыт	iptables blocks incoming traffic, {} is not open
+локальный файрвол не ограничивает входящие	the local firewall does not restrict incoming traffic
+если всё OK, а интернета нет — проверьте файрвол в панели хостинга: должны быть открыты {}	if everything is OK but there is no internet — check the firewall in the hosting panel: {} must be open
+ПРОБЛЕМА: результат живой проверки не найден — запустите её ещё раз	PROBLEM: the live check result was not found — run it again
+ПРЕДУПРЕЖДЕНИЕ: сертификат ещё не выпущен (DNS или порт 80?) — копия не сохранена.	WARNING: the certificate has not been issued yet (DNS or port 80?) — the copy was not saved.
+ПРЕДУПРЕЖДЕНИЕ: TCP-порт {} уже занят другой программой:	WARNING: TCP port {} is already used by another program:
+Установка Xray	Installing Xray
+Установка Xray не удалась (попытка {} из 3), повтор через 15 с…	Xray installation failed (attempt {} of 3), retrying in 15 s…
+Не удалось скачать установщик Xray (попытка {} из 3).	Could not download the Xray installer (attempt {} of 3).
+Версия Xray: {}	Xray version: {}
+ОШИБКА: Xray не установился — не удалось скачать установщик или Xray с GitHub. Проверьте интернет на сервере.	ERROR: Xray was not installed — could not download the installer or Xray from GitHub. Check the server's internet.
+Можно повторить: «Обновить сервер» на Главной или «Установить» ещё раз — ключи и ссылки не изменятся.	You can repeat: "Update server" on Home or "Install" again — the keys and links will not change.
+Ключи Reality — из постоянного профиля	Reality keys — from the permanent profile
+Генерация ключей Reality	Generating Reality keys
+ОШИБКА: не удалось разобрать вывод xray x25519:	ERROR: could not parse the output of xray x25519:
+Запись конфигурации {}	Writing the configuration {}
+ОШИБКА: Xray отклонил конфигурацию:	ERROR: Xray rejected the configuration:
+ВАЖНО: если у хостинга есть свой файрвол (Security Group), откройте TCP-порт {} там.	IMPORTANT: if your hosting has its own firewall (Security Group), open TCP port {} there.
+Запуск службы xray	Starting the xray service
+Не установлен.	Not installed.
+Слушающие порты	Listening ports
+не найдено	not found
+Перезапуск {}	Restarting {}
+Остановка и удаление Hysteria2	Stopping and removing Hysteria2
+Готово.	Done.
+Остановка и удаление Xray (VLESS)	Stopping and removing Xray (VLESS)
+Остановка и удаление AmneziaWG	Stopping and removing AmneziaWG
+Конфигурация удалена (пакеты amneziawg остались — они ничего не делают без конфигурации).	The configuration was removed (the amneziawg packages remain — they do nothing without a configuration).
+XHTTP на сервере не установлен.	XHTTP is not installed on the server.
+ОШИБКА: конфигурация без XHTTP не прошла проверку — оставлена прежняя.	ERROR: the configuration without XHTTP did not pass the check — the previous one was kept.
+XHTTP удалён, обычный VLESS работает как раньше.	XHTTP removed, ordinary VLESS works as before.
+Hysteria2: найдена конфигурация (порт {}/udp).	Hysteria2: configuration found (port {}/udp).
+VLESS: найдена конфигурация (порт {}/tcp).	VLESS: configuration found (port {}/tcp).
+VLESS XHTTP: найден (тот же порт {}/tcp).	VLESS XHTTP: found (the same port {}/tcp).
+Xray установлен не этим приложением — собрать ссылку VLESS автоматически нельзя.	Xray was not installed by this app — the VLESS link cannot be built automatically.
+AmneziaWG: найдена конфигурация (порт {}/udp).	AmneziaWG: configuration found (port {}/udp).
+Telegram-прокси: найдена конфигурация (порт {}/tcp).	Telegram proxy: configuration found (port {}/tcp).
+На сервере не найдено протоколов, установленных этим приложением.	No protocols installed by this app were found on the server.
+Установка обновлений системы (может занять несколько минут)	Installing system updates (may take several minutes)
+Включение автообновлений (unattended-upgrades)	Enabling automatic updates (unattended-upgrades)
+Автообновления безопасности включены.	Automatic security updates are enabled.
+Включение автообновлений (apk upgrade раз в сутки)	Enabling automatic updates (apk upgrade daily)
+Автообновления включены.	Automatic updates are enabled.
+Включение автообновлений (dnf-automatic)	Enabling automatic updates (dnf-automatic)
+Включение автообновлений (yum-cron)	Enabling automatic updates (yum-cron)
+ПРЕДУПРЕЖДЕНИЕ: неизвестный менеджер пакетов — обновления пропущены.	WARNING: unknown package manager — updates skipped.
+Обновления требуют перезагрузки.	The updates require a reboot.
+{} — продолжаю следить за ним.	{} — continuing to follow it.
+ОШИБКА: AmneziaWG ставится только на Debian, Ubuntu и Alpine	ERROR: AmneziaWG is installed only on Debian, Ubuntu and Alpine
+ОШИБКА: VPS на контейнерной виртуализации ({}) — модуль ядра AmneziaWG на нём не установить.	ERROR: the VPS uses container virtualization ({}) — the AmneziaWG kernel module cannot be installed on it.
+{}, ядро {}, виртуализация {}	{}, kernel {}, virtualization {}
+Ядро {} старее 6.7 — ставлю новое ядро из bookworm-backports	Kernel {} is older than 6.7 — installing a new kernel from bookworm-backports
+Новое ядро установлено — нужна перезагрузка.	The new kernel is installed — a reboot is needed.
+ПРЕДУПРЕЖДЕНИЕ: ядро {} старее 6.7 — AmneziaWG 3.1 на нём почти не проверялся.	WARNING: kernel {} is older than 6.7 — AmneziaWG 3.1 has hardly been tested on it.
+Репозиторий Amnezia	Amnezia repository
+ОШИБКА: ключ репозитория Amnezia не совпал с ожидаемым	ERROR: the Amnezia repository key did not match the expected one
+Поставлю AmneziaWG из исходников Amnezia на GitHub.	I will install AmneziaWG from the Amnezia sources on GitHub.
+Сборка модуля ядра AmneziaWG (DKMS) — несколько минут	Building the AmneziaWG kernel module (DKMS) — a few minutes
+ОШИБКА: AmneziaWG не установить: сервер не открывает ни репозиторий Amnezia (Launchpad), ни GitHub. 	ERROR: AmneziaWG cannot be installed: the server opens neither the Amnezia repository (Launchpad) nor GitHub. 
+ОШИБКА: модуль AmneziaWG собран, но не загрузился. Частая причина — Secure Boot у VPS.	ERROR: the AmneziaWG module was built but did not load. A common cause is Secure Boot on the VPS.
+Модуль: {}, {}	Module: {}, {}
+Конфигурация AmneziaWG (порт {}/UDP)	AmneziaWG configuration (port {}/UDP)
+ОШИБКА: не удалось определить сетевой интерфейс	ERROR: could not determine the network interface
+UFW: открыт {}/udp	UFW: {}/udp opened
+firewalld: открыт {}/udp	firewalld: {}/udp opened
+Запуск awg-quick@awg0	Starting awg-quick@awg0
+ОШИБКА: служба AmneziaWG не запустилась:	ERROR: the AmneziaWG service did not start:
+Служба работает, порт {}/UDP.	The service is running, port {}/UDP.
+ВАЖНО: если у хостинга есть свой файрвол (Security Group), откройте там {}/udp.	IMPORTANT: if your hosting has its own firewall (Security Group), open {}/udp there.
+ОШИБКА: на сервере OpenSSH {}, а ключи аппаратных токенов (sk-…) понимает OpenSSH 8.2 и новее — обновите систему сервера	ERROR: the server has OpenSSH {}, and hardware token keys (sk-…) are understood by OpenSSH 8.2 and newer — update the server system
+Ключ {} уже есть на сервере.	The key {} is already on the server.
+✓ Ключ {} добавлен в authorized_keys.	✓ The key {} was added to authorized_keys.
+Отключение входа по паролю в SSH	Disabling password login in SSH
+ОШИБКА: sshd отклонил конфигурацию — изменения откатываются.	ERROR: sshd rejected the configuration — the changes are being rolled back.
+ОШИБКА: после изменений вход по паролю всё ещё включён (PasswordAuthentication={}). Откат.	ERROR: after the changes password login is still on (PasswordAuthentication={}). Rolling back.
+Вход по паролю отключён, вход по ключу оставлен (PasswordAuthentication=no).	Password login disabled, key login kept (PasswordAuthentication=no).
+SSH ужесточён: LoginGraceTime 30, MaxAuthTries 3, X11Forwarding no.	SSH hardened: LoginGraceTime 30, MaxAuthTries 3, X11Forwarding no.
+Файрвол: снаружи только SSH и порты VPN	Firewall: only SSH and VPN ports from outside
+ОШИБКА: нужна система со службами systemd или OpenRC	ERROR: a system with systemd or OpenRC services is required
+ОШИБКА: не удалось поставить nftables	ERROR: could not install nftables
+ОШИБКА: не удалось поставить таймер отката — файрвол не включаю	ERROR: could not set the rollback timer — not enabling the firewall
+Проверяю вход новым подключением; без подтверждения правила снимутся через 3 минуты.	Checking login with a new connection; without confirmation the rules will be removed in 3 minutes.
+✓ Файрвол vpngramm включён и будет включаться после перезагрузки.	✓ The vpngramm firewall is on and will turn on after a reboot.
+fail2ban: бан за перебор паролей SSH	fail2ban: ban for SSH password guessing
+ОШИБКА: fail2ban ставится только на Debian, Ubuntu и Alpine	ERROR: fail2ban is installed only on Debian, Ubuntu and Alpine
+Менеджер пакетов занят или недоступен — повтор через 20 с…	The package manager is busy or unavailable — retrying in 20 s…
+ОШИБКА: не удалось поставить fail2ban	ERROR: could not install fail2ban
+✓ fail2ban следит за SSH (порт {}): 5 неудачных входов за 10 минут — бан на час, повторно — дольше.	✓ fail2ban watches SSH (port {}): 5 failed logins in 10 minutes — a ban for an hour, repeated — longer.
+ОШИБКА: fail2ban не запустил защиту SSH:	ERROR: fail2ban did not start SSH protection:
+Перезагрузка сервера	Rebooting the server
+Сервер перезагрузится через 3 секунды.	The server will reboot in 3 seconds.
+ОШИБКА: неподдерживаемая архитектура {}	ERROR: unsupported architecture {}
+ОШИБКА: TCP-порт {} уже занят другой программой — выберите другой порт:	ERROR: TCP port {} is already used by another program — choose another port:
+Загрузка mtg (github.com/9seconds/mtg)	Downloading mtg (github.com/9seconds/mtg)
+Секрет FakeTLS и конфигурация /etc/mtg.toml	FakeTLS secret and the configuration /etc/mtg.toml
+ОШИБКА: mtg не выдал FakeTLS-секрет	ERROR: mtg did not produce a FakeTLS secret
+Запуск службы mtg	Starting the mtg service
+Telegram-прокси (mtg) на сервере не установлен.	The Telegram proxy (mtg) is not installed on the server.
+Telegram-прокси (mtg)	Telegram proxy (mtg)
+Служба: {}	Service: {}
+Перезапуск mtg	Restarting mtg
+Остановка и удаление Telegram-прокси (mtg)	Stopping and removing the Telegram proxy (mtg)
+ОШИБКА: нет nft (пакет nftables)	ERROR: no nft (nftables package)
+ОШИБКА: nftables не принял правила	ERROR: nftables did not accept the rules
+Файрвол vpngramm: открыты SSH ({}/tcp) и порты VPN: {}.	vpngramm firewall: SSH ({}/tcp) and VPN ports are open: {}.
+Файрвол vpngramm снят.	The vpngramm firewall was removed.
+использование: vpngramm-fw apply|print|ports|off	usage: vpngramm-fw apply|print|ports|off
+==> Живая проверка: {} секунд	==> Live check: {} seconds
+ИНФО: подробный журнал Xray включить не удалось — VLESS не проверяется	INFO: could not enable the detailed Xray log — VLESS is not checked
+ИНФО: начало {} — выключите и снова включите в Happ VLESS, откройте сайт; затем то же с Hysteria2	INFO: start {} — turn VLESS off and on again in Happ, open a site; then the same with Hysteria2
+ИНФО: IP телефона (без VPN): {}	INFO: the phone's IP (without VPN): {}
+ПРОБЛЕМА: VLESS: за {} с к серверу не было ни одного TCP-подключения на 443 — Happ до сервера не дошёл (не та ссылка/адрес, VPN не включался или трафик блокируется по пути)	PROBLEM: VLESS: in {} s there was not a single TCP connection to port 443 on the server — Happ did not reach the server (wrong link/address, the VPN was not turned on, or traffic is blocked on the way)
+ИНФО: подключений к 443/TCP: {}, из них с {}: {}) (ключ подошёл {}, ключ не подошёл {}, неверный shortId {}, оборвались до проверки ключа {})	INFO: connections to 443/TCP: {}, of them from {}: {}) (key matched {}, key did not match {}, wrong shortId {}, dropped before the key check {})
+OK: VLESS работает на сервере: через него с {} открывались сайты ({} соединений)	OK: VLESS works on the server: sites were opened through it from {} ({} connections)
+ПРОБЛЕМА: VLESS: ключ Reality подошёл, но UUID пользователя не тот — в Happ старая ссылка. Удалите её и импортируйте заново	PROBLEM: VLESS: the Reality key matched but the user's UUID is wrong — Happ has an old link. Delete it and import again
+ПРОБЛЕМА: VLESS: клиент подключился, но не открыл ни одного сайта — проверьте в Happ режим маршрутизации	PROBLEM: VLESS: the client connected but opened no sites — check the routing mode in Happ
+ПРОБЛЕМА: VLESS: ключ подошёл, но shortId (sid) не тот — в Happ старая или изменённая ссылка. Удалите её и импортируйте заново	PROBLEM: VLESS: the key matched but the shortId (sid) is wrong — Happ has an old or changed link. Delete it and import again
+ПРОБЛЕМА: VLESS: телефон ({}) дошёл до сервера, но ключ Reality (pbk) не подошёл — в Happ старая или неполная ссылка, либо рукопожатие портится по пути. Удалите ссылку VLESS в Happ и импортируйте заново	PROBLEM: VLESS: the phone ({}) reached the server but the Reality key (pbk) did not match — Happ has an old or incomplete link, or the handshake is corrupted on the way. Delete the VLESS link in Happ and import again
+ПРОБЛЕМА: VLESS: подключения были, но ни одно не прошло по ключу Reality (pbk) — если это ваш телефон, в Happ старая или неполная ссылка, либо рукопожатие портится по пути	PROBLEM: VLESS: there were connections but none passed the Reality key (pbk) — if this is your phone, Happ has an old or incomplete link, or the handshake is corrupted on the way
+ПРОБЛЕМА: VLESS: телефон подключается к серверу, но рукопожатие обрывается по пути — провайдер (ТСПУ) режет Reality с чужим сайтом маскировки. Переведите VLESS на свой домен (Комбайн+ → «Перевести VLESS на свой домен»)	PROBLEM: VLESS: the phone connects to the server but the handshake is cut on the way — the provider (TSPU) cuts Reality with someone else's masking site. Move VLESS to your own domain (Combine+ → "Move VLESS to your own domain")
+ИНФО: UDP-пакетов на сервер за окно: {}	INFO: UDP packets to the server during the window: {}
+OK: Hysteria2 работает на сервере: клиент {} подключился, запросов к сайтам: {}	OK: Hysteria2 works on the server: client {} connected, requests to sites: {}
+ПРОБЛЕМА: Hysteria2: клиент {} подключился, но не открыл ни одного сайта — проверьте в Happ режим маршрутизации	PROBLEM: Hysteria2: client {} connected but opened no sites — check the routing mode in Happ
+ПРОБЛЕМА: Hysteria2: телефон дошёл до сервера, но пароль не подошёл — в Happ старая ссылка. Удалите её и импортируйте заново	PROBLEM: Hysteria2: the phone reached the server but the password did not match — Happ has an old link. Delete it and import again
+ПРОБЛЕМА: Hysteria2: шифрование (obfs) прошло, но вход не завершился — соединение обрывается по пути	PROBLEM: Hysteria2: encryption (obfs) passed but the login did not complete — the connection is cut on the way
+ПРОБЛЕМА: Hysteria2: UDP-пакеты до сервера доходят ({}), но не расшифровываются — пароль (или obfs salamander) в Happ не совпадает со ссылкой. Удалите ссылку Hysteria2 в Happ и импортируйте заново. Если Happ был включён ещё до начала проверки — выключите и включите его и повторите	PROBLEM: Hysteria2: UDP packets reach the server ({}) but are not decrypted — the password (or obfs salamander) in Happ does not match the link. Delete the Hysteria2 link in Happ and import again. If Happ was turned on before the check began — turn it off and on and repeat
+ПРОБЛЕМА: Hysteria2: UDP-пакеты от телефона до сервера не доходят — оператор или сеть блокирует UDP. Используйте VLESS	PROBLEM: Hysteria2: UDP packets from the phone do not reach the server — the operator or network blocks UDP. Use VLESS
+Живая проверка завершена.	The live check is complete.
+DNS сервера не разрешает {} — узнаю его адрес через DNS-over-HTTPS (1.1.1.1, 8.8.8.8)	The server's DNS does not resolve {} — finding out its address through DNS-over-HTTPS (1.1.1.1, 8.8.8.8)
+DNS-over-HTTPS тоже недоступен	DNS-over-HTTPS is unavailable too
+Временно: {} → {} (строка в {} уберётся после установки)	Temporarily: {} → {} (the line in {} will be removed after the installation)
+Репозиторий Amnezia пока недоступен ({}) — повтор через {} с (попытка {}) из {})	The Amnezia repository is not available yet ({}) — retrying in {} s (attempt {}) of {})
+Репозиторий Amnezia недоступен с этого сервера ({}): {}.	The Amnezia repository is unavailable from this server ({}): {}.
+ОШИБКА: {} {} на GitHub — коммит {}, а ожидался {}. Собирать не буду.	ERROR: {} {} on GitHub — commit {}, but {} was expected. I will not build.
+Скачан {} {} ({})	Downloaded {} {} ({})
+Собираю AmneziaWG из исходников Amnezia на GitHub: модуль {}, утилиты {}	Building AmneziaWG from the Amnezia sources on GitHub: module {}, tools {}
+ОШИБКА: не удалось подготовить исходники модуля для DKMS	ERROR: could not prepare the module sources for DKMS
+ОШИБКА: dkms add amneziawg не прошёл	ERROR: dkms add amneziawg failed
+ОШИБКА: модуль AmneziaWG не собрался под ядро {}. Конец журнала сборки:	ERROR: the AmneziaWG module did not build for kernel {}. The end of the build log:
+ОШИБКА: dkms install amneziawg не прошёл	ERROR: dkms install amneziawg failed
+Модуль ядра собран и установлен (DKMS)	The kernel module was built and installed (DKMS)
+ОШИБКА: утилиты AmneziaWG не собрались	ERROR: the AmneziaWG tools did not build
+ОШИБКА: утилиты AmneziaWG не установились	ERROR: the AmneziaWG tools were not installed
+Утилиты awg и awg-quick установлены	The awg and awg-quick tools are installed
+AmneziaWG на Alpine: amneziawg-go (userspace) — несколько минут	AmneziaWG on Alpine: amneziawg-go (userspace) — a few minutes
+Alpine: ядро {}. Модуля ядра AmneziaWG для Alpine нет — собираю amneziawg-go и утилиты из исходников Amnezia.	Alpine: kernel {}. There is no AmneziaWG kernel module for Alpine — building amneziawg-go and the tools from the Amnezia sources.
+ОШИБКА: не удалось поставить пакеты для сборки (apk).	ERROR: could not install the build packages (apk).
+ОШИБКА: у сервера нет устройства /dev/net/tun — включите TUN/TAP в панели хостинга.	ERROR: the server has no /dev/net/tun device — enable TUN/TAP in the hosting panel.
+Сборка amneziawg-go (Go скачает нужные модули)…	Building amneziawg-go (Go will download the needed modules)…
+ОШИБКА: amneziawg-go не собрался. Конец журнала сборки:	ERROR: amneziawg-go did not build. The end of the build log:
+Модуль: amneziawg-go {}, {}	Module: amneziawg-go {}, {}
+Проверка системы	System check
+ОШИБКА: {} слишком старая. Поддерживаются Debian 11 и новее, Ubuntu 22.04 и новее, Alpine Linux.	ERROR: {} is too old. Debian 11 and newer, Ubuntu 22.04 and newer, and Alpine Linux are supported.
+ОШИБКА: нужна система со службами systemd (Debian, Ubuntu) или OpenRC (Alpine).	ERROR: a system with systemd (Debian, Ubuntu) or OpenRC (Alpine) services is required.
+ОШИБКА: не найден менеджер пакетов (apt или apk).	ERROR: no package manager (apt or apk) found.
+ОШИБКА: не найден менеджер пакетов, установите вручную: {}	ERROR: no package manager found, install manually: {}
+Служба {} не найдена	Service {} not found
+Ставлю vnstat для учёта трафика…	Installing vnstat for traffic accounting…
