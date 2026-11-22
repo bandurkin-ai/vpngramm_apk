@@ -9,7 +9,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import app.hy2setup.i18n.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,6 +18,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import app.hy2setup.MainViewModel
+import app.hy2setup.i18n.I18n
+import app.hy2setup.i18n.Lang
 import app.hy2setup.platform.Device
 
 /** Инструменты: доступ к серверам (SSH и аппаратные ключи), произвольный VPS, служебные действия. Новый сервер создаётся на Главной. */
@@ -28,6 +30,7 @@ fun ToolsScreen(vm: MainViewModel) {
     androidx.compose.runtime.LaunchedEffect(Unit) { vm.accessRefresh() }
 
     ScreenFrame(title = "Инструменты", running = vm.running) {
+        LanguageCard(vm)
         Text("Доступ к серверам", style = MaterialTheme.typography.titleMedium)
         SshAccessCard(vm)
         DefaultKeysCard(vm)
@@ -70,6 +73,15 @@ fun ToolsScreen(vm: MainViewModel) {
             "При следующем подключении к каждому серверу приложение снова покажет его отпечаток и спросит, доверять ли ему.",
             "Сбросить", onConfirm = { ask = null; vm.forgetHosts() }, onDismiss = { ask = null },
         )
+    }
+}
+
+/** Язык интерфейса: русский, английский, иврит. Выбор действует сразу и запоминается. */
+@Composable
+private fun LanguageCard(vm: MainViewModel) {
+    SectionCard("Язык интерфейса", AppIcons.Language, subtitle = I18n.lang.native, collapsible = false) {
+        Segmented(Lang.entries.map { it to it.native }, I18n.lang, vm::setLanguage)
+        Hint("Выбор запоминается. Иврит показывается справа налево.")
     }
 }
 

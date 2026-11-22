@@ -206,6 +206,11 @@ class OneProviderClient(
         return parseDestroy(response(call("POST", "/vm/destroy", params)))
     }
 
+    /** Перезагружает VPS (POST /vm/reboot, vm_id). Ошибка API — [OneProviderException]. */
+    suspend fun rebootVm(vmId: String) {
+        response(call("POST", "/vm/reboot", listOf("vm_id" to vmId)))
+    }
+
     /** Добавляет публичный SSH-ключ в кабинет. Возвращает созданный ключ (с UUID). */
     suspend fun addSshKey(name: String, publicKey: String): OpSshKey? {
         val r = response(call("POST", "/vm/sshkey/new", listOf("key_name" to name, "key_value" to publicKey)))

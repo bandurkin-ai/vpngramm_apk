@@ -169,6 +169,18 @@ class OneProviderClientTest {
     }
 
     @Test
+    fun rebootSendsVmId() = runBlocking {
+        handler = { ok("""{"message":"Virtual server rebooted"}""") }
+        client().rebootVm("123")
+        assertEquals("/vm/reboot", seen.last().path)
+        assertEquals("POST", seen.last().method)
+        assertEquals("123", seen.last().form["vm_id"])
+        handler = { Resp(400, """{"result":"error","error":{"message":"VM is not running","code":404}}""") }
+        val e = runCatching { client().rebootVm("123") }.exceptionOrNull()
+        assertTrue(e is OneProviderException && e.message!!.contains("VM is not running"))
+    }
+
+    @Test
     fun errorCode8xxIsReported() {
         handler = { Resp(801, """{"result":"error","error":{"message":"Invalid API key","code":801}}""") }
         val e = runCatching { runBlocking { client().sshKeys() } }.exceptionOrNull()

@@ -50,6 +50,10 @@ private const val PLUS_PROFILE = "plusProfile"
 private const val STABLE_PROFILES = "stableProfiles"
 private const val ROLLBACK_KEY = "plusRollback"
 
+/** Запись, которая при переезде на новый IP переключается вместе с основной (зона, имя). */
+private const val MCP_ZONE = "aeromike.org"
+private const val MCP_HOST = "mcp"
+
 data class DnsPlan(
     val username: String,
     val token: String,
@@ -217,6 +221,8 @@ class MainViewModel(private val platform: Platform) : BaseViewModel() {
     var opKeyToDelete by mutableStateOf<OpSshKey?>(null)
     var opConfirmCreate by mutableStateOf(false)
     var opConfirmDelete by mutableStateOf(false)
+    /** Окно подтверждения перезагрузки выбранных VPS. */
+    var opConfirmReboot by mutableStateOf(false)
     var opCreated by mutableStateOf<OpCreated?>(null)
     /** VPS из карточки создан с SSH-ключами из кабинета. */
     var opCreatedKeyed by mutableStateOf(false)
@@ -603,6 +609,8 @@ class MainViewModel(private val platform: Platform) : BaseViewModel() {
         launchTask(log) {
             resultLinks.clear()
             if (skipHarden) addLog(log, "Защита пропущена: для неё нужен SSH-ключ (блок «Сервер» → «SSH-ключ»). VPN ставится, вход по паролю остаётся.")
+            addLog(log, "Проверяю систему сервера…")
+            checkLinux(ssh, log)
             val total = jobs.size + if (dnsPlan != null) 1 else 0
             var n = 1
             var dns: DnsDone? = null
@@ -638,6 +646,33 @@ class MainViewModel(private val platform: Platform) : BaseViewModel() {
         }
     }
 
+    /**
+     * Проверка системы сервера при входе: дистрибутив, версия, ядро, служба init, менеджер пакетов. Установка идёт
+     * дальше только на поддерживаемых системах (Debian 11+, Ubuntu 22.04+, Alpine); скрипты подстраиваются сами.
+     */
+    /** Язык интерфейса: сохранённый выбор, а при первом запуске — [default] (по языку устройства). */
+    fun loadLanguage(default: app.hy2setup.i18n.Lang) = app.hy2setup.i18n.I18n.load(prefs, default)
+
+    /** Переключение языка интерфейса в «Инструментах»: действует сразу и запоминается. */
+    fun setLanguage(l: app.hy2setup.i18n.Lang) = app.hy2setup.i18n.I18n.set(l, prefs)
+
+    /** Система сервера, на который идёт текущая установка (определена при входе). */
+    private var serverOs: LinuxInfo? = null
+
+    private suspend fun checkLinux(cfg: SshConfig, target: SnapshotStateList<String>): LinuxInfo {
+        val found = java.util.concurrent.atomic.AtomicReference<LinuxInfo?>(null)
+        val code = runner.runScript(cfg, Scripts.osProbe()) { line ->
+            val info = LinuxInfo.parse(line)
+            if (info != null) found.set(info) else if (!Links.isMarker(line)) postLog(target, line)
+        }
+        val info = found.get() ?: throw IllegalStateException("Не удалось определить систему сервера (код $code) — проверьте, что вход выполняется от root.")
+        addLog(target, "Система сервера: ${info.describe()}")
+        serverOs = info
+        info.problem()?.let { throw IllegalStateException(it) }
+        info.notes().forEach { addLog(target, it) }
+        return info
+    }
+
     /** Порт AmneziaWG из поля или null с сообщением об ошибке. */
     private fun awgPortOrNull(onError: (String) -> Unit): Int? {
         val n = awgPort.trim().toIntOrNull()
@@ -668,7 +703,7 @@ class MainViewModel(private val platform: Platform) : BaseViewModel() {
     private suspend fun awgInstall(ssh: SshConfig, p: AwgParams, target: SnapshotStateList<String>) {
         repeat(2) {
             val reboot = AtomicBoolean(false)
-            val code = BackgroundJob(runner) { postLog(target, it) }.run(ssh, "awg", Scripts.installAwg(p), "Установка AmneziaWG") { line ->
+            val code = BackgroundJob(runner) { postLog(target, it) }.run(ssh, "awg", Scripts.installAwg(p, alpine = serverOs?.isAlpine == true), "Установка AmneziaWG") { line ->
                 if (line.trim() == Scripts.AWG_REBOOT) { reboot.set(true); true } else false
             }
             if (code != 0) throw IllegalStateException("Установка AmneziaWG завершилась с ошибкой (код $code).")
@@ -890,6 +925,17 @@ class MainViewModel(private val platform: Platform) : BaseViewModel() {
         val created = client.createRecord(plan.zone, plan.subdomain, "A", ip, plan.ttl)
         addLog(target, "Создана запись: ${created.displayName.ifEmpty { plan.fqdn }} → $ip (A, TTL ${plan.ttl})")
         return ip
+    }
+
+    /** При переезде A-запись mcp.aeromike.org тоже уходит на новый IP. Сбой не прерывает переезд — только предупреждение. */
+    private suspend fun moveMcpRecord(ip: String, plan: DnsPlan, target: SnapshotStateList<String>) {
+        try {
+            setupDnsRecord(ip, DnsPlan(plan.username, plan.token, MCP_ZONE, MCP_HOST, plan.ttl), allowOverwrite = true, target = target, dropAaaa = true)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            addLog(target, "ПРЕДУПРЕЖДЕНИЕ: запись $MCP_HOST.$MCP_ZONE не обновлена (${e.message}). Исправьте её во вкладке «VPS/DNS».")
+        }
     }
 
     // =====================================================================
@@ -1966,6 +2012,30 @@ class MainViewModel(private val platform: Platform) : BaseViewModel() {
         }
     }
 
+    /** Перезагрузка выбранных VPS в OneProvider (по одному; сбой одного не мешает остальным). */
+    fun opRebootSelected() {
+        opConfirmReboot = false
+        val client = opClient() ?: return
+        val targets = opVms.filter { it.id in opSelected }
+        if (targets.isEmpty()) return
+        launchTask(opLog) {
+            var ok = 0
+            for (vm in targets) {
+                try {
+                    client.rebootVm(vm.id)
+                    ok++
+                    addLog(opLog, "✓ Перезагрузка запущена: ${vm.hostname} (${vm.ip})")
+                } catch (e: OneProviderException) {
+                    addLog(opLog, "✗ ${vm.hostname}: ${e.message}")
+                }
+            }
+            if (ok > 0) addLog(opLog, "Перезагрузка занимает 1–2 минуты. Состояние видно в списке после обновления.")
+            val list = client.listVms()
+            opVms.clear(); opVms.addAll(list)
+            opSelected.retainAll { id -> list.any { it.id == id } }
+        }
+    }
+
     fun opDeleteSelected() {
         opConfirmDelete = false
         val client = opClient() ?: return
@@ -2541,8 +2611,12 @@ class MainViewModel(private val platform: Platform) : BaseViewModel() {
                 addLog(plusLog, "✓ Сервер $ip добавлен в «Свободные серверы»" + facts["os"]?.takeIf { it.isNotEmpty() }?.let { " ($it)" }.orEmpty() +
                     ". Переехать на него: «Заменить сервер» → «Свободный сервер».")
                 if (srv.protocols.isNotEmpty()) addLog(plusLog, "На нём уже стоят: ${srv.protocols.joinToString()} — при переезде они будут заменены протоколами вашего сервера.")
-                if (facts["apt"] == "no") addLog(plusLog, "ПРЕДУПРЕЖДЕНИЕ: на сервере нет apt (не Debian/Ubuntu) — часть протоколов может не установиться.")
-                if (facts["systemd"] == "no") addLog(plusLog, "ПРЕДУПРЕЖДЕНИЕ: на сервере нет systemd — протоколы на него не установятся.")
+                when (facts["os_support"]) {
+                    "old" -> addLog(plusLog, "ПРЕДУПРЕЖДЕНИЕ: система слишком старая — поддерживаются Debian 11+, Ubuntu 22.04+, Alpine; протоколы на него не установятся.")
+                    "other" -> addLog(plusLog, "ПРЕДУПРЕЖДЕНИЕ: система не из списка проверенных (Debian 11+, Ubuntu 22.04+, Alpine) — часть протоколов может не установиться.")
+                }
+                if (facts["init"] == "none") addLog(plusLog, "ПРЕДУПРЕЖДЕНИЕ: на сервере нет ни systemd, ни OpenRC — протоколы на него не установятся.")
+                facts["kernel"]?.takeIf { it.isNotEmpty() }?.let { addLog(plusLog, "Ядро: $it") }
                 clearFreeForm()
                 onDone()
             } catch (e: CancellationException) {
@@ -2705,6 +2779,7 @@ class MainViewModel(private val platform: Platform) : BaseViewModel() {
                     rb.oldIp, DnsPlan(ncUser.trim(), ncToken.trim(), before.zone, before.subdomain, ttlNum),
                     allowOverwrite = true, target = plusLog, dropAaaa = true,
                 )
+                moveMcpRecord(rb.oldIp, DnsPlan(ncUser.trim(), ncToken.trim(), before.zone, before.subdomain, ttlNum), plusLog)
             } else {
                 addLog(plusLog, "A-запись ${rb.fqdn} не менялась — DNS не трогаю.")
             }
@@ -2921,9 +2996,13 @@ class MainViewModel(private val platform: Platform) : BaseViewModel() {
                     done(PlusStep.BOOT)
                 }
 
+                // система нового сервера: подходит ли, какое ядро (под неё подстраиваются скрипты установки)
+                checkLinux(ssh, plusLog)
+
                 // 3. DNS → новый IP
                 step(PlusStep.DNS)
                 setupDnsRecord(ip, plan, allowOverwrite = true, target = plusLog, dropAaaa = true)
+                moveMcpRecord(ip, plan, plusLog)
                 done(PlusStep.DNS)
 
                 // DNS не ждём: Let's Encrypt спрашивает серверы имён name.com, а они знают новую запись сразу.

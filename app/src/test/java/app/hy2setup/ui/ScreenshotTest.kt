@@ -24,6 +24,10 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [34], qualifiers = "w411dp-h891dp-xxhdpi")
 class ScreenshotTest {
+    /** Язык интерфейса — общий для процесса: тесты с MainActivity берут его по языку устройства (en-US в Robolectric). */
+    @org.junit.Before
+    fun russian() = app.hy2setup.i18n.I18n.set(app.hy2setup.i18n.Lang.RU, null)
+
 
     private fun vm(tab: Int, withProfile: Boolean = true) = MainViewModel(ApplicationProvider.getApplicationContext<android.app.Application>()).apply {
         selectedTab = tab

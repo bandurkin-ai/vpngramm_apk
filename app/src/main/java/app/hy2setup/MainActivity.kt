@@ -35,7 +35,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // отчёт о прошлом падении — показать, чтобы его можно было прислать
         vm.crashReport = CrashReport.take(this)
-        setContent { Hy2Theme { AppRoot(vm) } }
+        vm.loadLanguage(app.hy2setup.i18n.Lang.forLocale(java.util.Locale.getDefault()))
+        setContent { Hy2Theme { app.hy2setup.i18n.I18nRoot { AppRoot(vm) } } }
         runCatching { Notifications.ensureChannels(this) }
         runCatching {
             if (Build.VERSION.SDK_INT >= 33 &&
