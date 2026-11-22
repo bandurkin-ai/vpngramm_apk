@@ -221,6 +221,8 @@ class MainViewModel(private val platform: Platform) : BaseViewModel() {
     var opKeyToDelete by mutableStateOf<OpSshKey?>(null)
     var opConfirmCreate by mutableStateOf(false)
     var opConfirmDelete by mutableStateOf(false)
+    /** Окно подтверждения перезагрузки выбранных VPS. */
+    var opConfirmReboot by mutableStateOf(false)
     var opCreated by mutableStateOf<OpCreated?>(null)
     /** VPS из карточки создан с SSH-ключами из кабинета. */
     var opCreatedKeyed by mutableStateOf(false)
@@ -2007,6 +2009,30 @@ class MainViewModel(private val platform: Platform) : BaseViewModel() {
             opHostname = ""
             val list = client.listVms()
             opVms.clear(); opVms.addAll(list); opLoaded = true
+        }
+    }
+
+    /** Перезагрузка выбранных VPS в OneProvider (по одному; сбой одного не мешает остальным). */
+    fun opRebootSelected() {
+        opConfirmReboot = false
+        val client = opClient() ?: return
+        val targets = opVms.filter { it.id in opSelected }
+        if (targets.isEmpty()) return
+        launchTask(opLog) {
+            var ok = 0
+            for (vm in targets) {
+                try {
+                    client.rebootVm(vm.id)
+                    ok++
+                    addLog(opLog, "✓ Перезагрузка запущена: ${vm.hostname} (${vm.ip})")
+                } catch (e: OneProviderException) {
+                    addLog(opLog, "✗ ${vm.hostname}: ${e.message}")
+                }
+            }
+            if (ok > 0) addLog(opLog, "Перезагрузка занимает 1–2 минуты. Состояние видно в списке после обновления.")
+            val list = client.listVms()
+            opVms.clear(); opVms.addAll(list)
+            opSelected.retainAll { id -> list.any { it.id == id } }
         }
     }
 

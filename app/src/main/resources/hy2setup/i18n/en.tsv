@@ -1455,3 +1455,9 @@ Alpine: ядро {}. Модуля ядра AmneziaWG для Alpine нет — с
 ОШИБКА: не найден менеджер пакетов, установите вручную: {}	ERROR: no package manager found, install manually: {}
 Служба {} не найдена	Service {} not found
 Ставлю vnstat для учёта трафика…	Installing vnstat for traffic accounting…
+Перезагрузить выбранные ({})	Reboot selected ({})
+Перезагрузить {} VPS?	Reboot {} VPS?
+Серверы перезагрузятся, подключения прервутся примерно на 1–2 минуты:\n	The servers will reboot, connections will be interrupted for about 1–2 minutes:\n
+Перезагрузить	Reboot
+✓ Перезагрузка запущена: {} ({})	✓ Reboot started: {} ({})
+Перезагрузка занимает 1–2 минуты. Состояние видно в списке после обновления.	A reboot takes 1–2 minutes. The state is visible in the list after refreshing.

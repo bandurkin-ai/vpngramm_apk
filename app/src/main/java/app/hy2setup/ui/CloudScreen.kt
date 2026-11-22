@@ -89,6 +89,9 @@ private fun VpsPart(vm: MainViewModel) {
                 }
             }
             if (vm.opSelected.isNotEmpty()) {
+                FilledTonalButton(onClick = { vm.opConfirmReboot = true }, enabled = !vm.running, modifier = Modifier.fillMaxWidth()) {
+                    Text("Перезагрузить выбранные (${vm.opSelected.size})")
+                }
                 DangerButton("Удалить выбранные (${vm.opSelected.size})", !vm.running) { vm.opConfirmDelete = true }
             }
         }
@@ -216,6 +219,14 @@ private fun VpsDialogs(vm: MainViewModel) {
             "Ключ «${k.name.ifEmpty { k.uuid }}» будет удалён из кабинета OneProvider. На уже созданных VPS он останется, " +
                 "но для новых VPS выбрать его будет нельзя.",
             "Удалить", danger = true, onConfirm = vm::opDeleteKey, onDismiss = { vm.opKeyToDelete = null },
+        )
+    }
+    if (vm.opConfirmReboot) {
+        val items = vm.opVms.filter { it.id in vm.opSelected }
+        ConfirmDialog(
+            "Перезагрузить ${items.size} VPS?",
+            "Серверы перезагрузятся, подключения прервутся примерно на 1–2 минуты:\n" + items.joinToString("\n") { "• ${it.hostname}  ${it.ip}" },
+            "Перезагрузить", onConfirm = vm::opRebootSelected, onDismiss = { vm.opConfirmReboot = false },
         )
     }
     if (vm.opConfirmDelete) {
